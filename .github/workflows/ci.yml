@@ -1,0 +1,35 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=html,json
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: playwright-report/
+      - name: Export JSON report
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-json-report
+          path: playwright-report.json
+      - name: Send results to Google Sheets
+        run: node src/report/googleSheets.js
+      - name: Send results to Discord
+        run: node src/report/discord.js

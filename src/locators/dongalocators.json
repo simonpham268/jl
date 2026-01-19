@@ -1,0 +1,429 @@
+{
+  "Đăng Nhập": {
+    "": {
+      "ClosePopup": ".icon-close-circle-fill",
+      "SignIn": "#login_btn",
+      "UserName": "[name=\"username\"]",
+      "Password": "[name=\"password\"]",
+      "Submit": ".btn-login",
+      "VerifyType": "element",
+      "Verify": "//img[@alt='avatar DA88']"
+    }
+  },
+  "Homepage": {
+    "Tìm Kiếm": {
+      "ClosePopup": ".icon-close-circle-fill",
+      "Step_1": "[alt=\"icon-search DA88\"]",
+      "Step_2": "internal:text=\"game thịnh hành\"i",
+      "Step_3": ".result__list--games >  div:nth-child(1)",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": "#GameCanvas"
+    },
+    "Floating menu - Livechat": {
+      "VerifyType": "element",
+      "Verify": ".floating__item:nth-child(1) .icon"
+    },
+    "Floating menu - Telegram DA88": {
+      "VerifyType": "element",
+      "Verify": ".floating__item:nth-child(2) .icon"
+    },
+    "Floating menu - Cộng đồng bet thủ": {
+      "VerifyType": "element",
+      "Verify": ".floating__item:nth-child(3) .icon"
+    },
+    "Floating menu - Fanpage DA88": {
+      "VerifyType": "element",
+      "Verify": ".floating__item:nth-child(4) .icon"
+    },
+    "Hero Banner": {
+      "VerifyType": "element",
+      "Verify": ".hero-banner"
+    },
+    "Lobby Thể Thao": {
+      "Step_1": "[alt=\"sport DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/sports"
+    },
+    "Lobby Table Games": {
+      "Step_1": "[alt=\"Table games DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=tables&provider=all"
+    },
+    "Lobby Lô Đề": {
+      "Step_1": "[alt=\"Lô đề DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=lo_de&provider=all"
+    },
+    "Lobby Live Casino": {
+      "Step_1": "[alt=\"live_casino DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/casino?type=all&partner=all"
+    },
+    "Lobby Nổ Hũ": {
+      "Step_1": "[alt=\"Nổ hũ DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=jackpot&provider=all"
+    },
+    "Lobby Game Bài": {
+      "Step_1": "[alt=\"Games bài DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=game_bai&provider=all"
+    },
+    "Lobby Quay Số": {
+      "Step_1": "[alt=\"Quay số DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=lottery&provider=all"
+    },
+    "Lobby Slots": {
+      "Step_1": "[alt=\"Slots DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=slots&provider=all"
+    },
+    "Lobby Bắn Cá": {
+      "Step_1": "[alt=\"Bắn cá DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=fishing&provider=all"
+    },
+    "Lobby Game Nhanh": {
+      "Step_1": "[alt=\"Games nhanh DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=instance_game&provider=all"
+    },
+    "Livestream 1": {
+      "VerifyType": "element",
+      "Verify": ".live-stream"
+    },
+    "Livestream 2": {
+      "VerifyType": "element",
+      "Verify": ".thumb-wrapper:nth-child(1) > .thumb"
+    },
+    "Livestream 3": {
+      "VerifyType": "element",
+      "Verify": ".thumb-wrapper:nth-child(2) > .thumb"
+    },
+    "Live Casino - Pragmatic": {
+      "Step_1": ".btn-dark > .base-button--content",
+      "Step_2": "[alt=\"pragmatic DA88\"]",
+      "VerifyType": "url",
+      "Verify": "pragmatic"
+    },
+    "Live Casino - Evolution": {
+      "Step_1": ".btn-dark > .base-button--content",
+      "Step_2": "[alt=\"evo DA88\"]",
+      "VerifyType": "url",
+      "Verify": "evo"
+    },
+    "Live Casino - Hit": {
+      "Step_1": ".btn-dark > .base-button--content",
+      "Step_2": "[alt=\"hitclub DA88\"]",
+      "VerifyType": "url",
+      "Verify": "hit"
+    },
+    "Live Casino - Ezugi": {
+      "Step_1": ".btn-dark > .base-button--content",
+      "Step_2": "[alt=\"ezugi DA88\"]",
+      "VerifyType": "url",
+      "Verify": "ezugi"
+    },
+    "Live Casino - B52": {
+      "Step_1": ".btn-dark > .base-button--content",
+      "Step_2": "[alt=\"b52 DA88\"]",
+      "VerifyType": "url",
+      "Verify": "b52"
+    },
+    "Nhiều người chơi - Game 1": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(1)"
+    },
+    "Nhiều người chơi - Game 2": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(2)"
+    },
+    "Nhiều người chơi - Game 3": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(3)"
+    },
+    "Nhiều người chơi - Game 4": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(4)"
+    },
+    "Nhiều người chơi - Game 5": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(5)"
+    },
+    "Nhiều người chơi - Game 6": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(6)"
+    },
+    "Nhiều người chơi - Game 7": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(7)"
+    },
+    "Nhiều người chơi - Game 8": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(8)"
+    },
+    "Nhiều người chơi - Game 9": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(9)"
+    },
+    "Nhiều người chơi - Game 10": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(10)"
+    },
+    "Nhiều người chơi - Game 11": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(11)"
+    },
+    "Nhiều người chơi - Game 12": {
+      "VerifyType": "element",
+      "Verify": ".section-game__content--list > div:nth-child(12)"
+    },
+    "Footer - Lịch thi đấu": {
+      "Step_1": "[id=\"Lịch thi đấu\"]",
+      "VerifyType": "url",
+      "Verify": "/sports/schedule"
+    },
+    "Footer - Cược thể thao": {
+      "Step_1": "[id=\"Cược thể thao\"]",
+      "VerifyType": "url",
+      "Verify": "/sports"
+    },
+    "Footer - Bắn cá": {
+      "Step_1": ".row-footer [id=\"Bắn cá\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=fishing&provider=all"
+    },
+    "Footer - Nổ hũ": {
+      "Step_1": ".row-footer [id=\"Nổ hũ\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=jackpot&provider=all"
+    },
+    "Footer - Table games": {
+      "Step_1": ".row-footer  [id=\"Table games\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=tables&provider=all"
+    },
+    "Footer - Slots": {
+      "Step_1": ".row-footer [id=\"Slots\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=slots&provider=all"
+    },
+    "Footer - Lô Đề": {
+      "Step_1": ".row-footer [id=\"Lô đề\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=lo_de&provider=all"
+    },
+    "Footer - Quay số": {
+      "Step_1": ".row-footer [id=\"Quay số\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=lottery&provider=all"
+    },
+    "Footer - Game nhanh": {
+      "Step_1": ".row-footer [id=\"Games nhanh\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=instance_game&provider=all"
+    },
+    "Footer - Game bài": {
+      "Step_1": ".row-footer [id=\"Games bài\"]",
+      "VerifyType": "url",
+      "Verify": "/games?type=game_bai&provider=all"
+    },
+    "Footer - Giới thiệu DA88": {
+      "Step_1": "[id=\"Giới thiệu DA88\"]",
+      "VerifyType": "url",
+      "Verify": "/about-us"
+    },
+    "Footer - Điều kiện - Điều khoản": {
+      "Step_1": "[id=\"Điều kiện - Điều khoản\"]",
+      "VerifyType": "url",
+      "Verify": "/about-us?page=policy"
+    },
+    "Footer - Bảo mật": {
+      "Step_1": "[id=\"Bảo mật\"]",
+      "VerifyType": "url",
+      "Verify": "/about-us?page=security"
+    },
+    "Footer - Chơi games có trách nhiệm": {
+      "Step_1": "[id=\"Chơi games có trách nhiệm\"]",
+      "VerifyType": "url",
+      "Verify": "/about-us?page=responsibility"
+    },
+    "Footer - Quy định chung": {
+      "Step_1": "[id=\"Quy định chung\"]",
+      "VerifyType": "url",
+      "Verify": "/about-us?page=rule"
+    },
+    "Footer - Khuyến mãi/Sự kiện": {
+      "Step_1": "[id=\"Khuyến mãi /Sự kiện\"]",
+      "VerifyType": "url",
+      "Verify": "/khuyen-mai"
+    },
+    "Footer -  Tin Tức": {
+      "Step_1": "internal:role=link[name=\"Tin tức\"i]",
+      "VerifyType": "url",
+      "Verify": "/tin-tuc"
+    }
+  },
+  "Tài Khoản": {
+    "Thông tin cá nhân": {
+      "Step_1": "//img[@alt='avatar DA88']",
+      "Step_2": "[id=\"Thông tin cá nhân\"]",
+      "VerifyType": "element",
+      "Verify": ".profile__content"
+    },
+    "Xác thực SĐT": {
+      "Step_1": "//img[@alt='avatar DA88']",
+      "Step_2": "[id=\"Thông tin cá nhân\"]",
+      "Step_3": ".base-input:nth-child(3) .label-right-block-text",
+      "VerifyType": "element",
+      "Verify": ".base-button--btn-primary"
+    },
+    "Tiền Thưởng": {
+      "Step_1": "//img[@alt='avatar DA88']",
+      "Step_2": "[id=\"Phần thưởng\"]",
+      "VerifyType": "element",
+      "Verify": ".bonus-page"
+    },
+    "Mua Bán P2P": {
+      "Step_1": "//img[@alt='avatar DA88']",
+      "Step_2": "[id=\"Giao dịch P2P\"]",
+      "VerifyType": "url",
+      "Verify": "/account/trading-p2p"
+    },
+    "Lịch sử giao dịch": {
+      "Step_1": "//img[@alt='avatar DA88']",
+      "Step_2": "[id=\"Lịch sử\"]",
+      "VerifyType": "element",
+      "Verify": ".content"
+    },
+    "Lịch sử Cá Cược": {
+      "Step_1": "//img[@alt='avatar DA88']",
+      "Step_2": "[id=\"Lịch sử\"]",
+      "Step_3": "[id=\"tab-Lịch sử cá cược\"]",
+      "VerifyType": "element",
+      "Verify": ".history-table"
+    }
+  },
+  "Nạp Tiền": {
+    "Ngân hàng - Codepay": {
+      "Deposit": "#deposit-btn-header-pc",
+      "DepositAmount": ".sugguest-amount__value > .base-button:nth-child(1)",
+      "Submit": "internal:role=button[name=\"Lấy mã nạp tiền\"i]",
+      "VerifyType": "element",
+      "Verify": ".qr-code"
+    }
+  },
+  "Rút Tiền": {
+    "Ngân hàng": {
+      "Withdraw": "#withdraw-btn-header-pc",
+      "WithdrawAmount": "[placeholder=\"Nhập số tiền cần rút\"]",
+      "Submit": "#submit-withdraw-bank-btn",
+      "VerifyType": "string",
+      "Verify": "Phiếu rút đang được duyệt"
+    },
+    "Tiền Ảo": {
+      "Withdraw": "#withdraw-btn-header-pc",
+      "Type": "[id=\"tab-Tiền ảo\"]",
+      "WithdrawAmount": "[placeholder=\"Nhập số tiền cần rút\"]",
+      "WithdrawCryptoWallet": "[placeholder=\"Nhập địa chỉ ví bạn sẽ rút tiền về\"]",
+      "Submit": "#submit-withdraw-bank-btn",
+      "VerifyType": "string",
+      "Verify": "Phiếu rút đang được duyệt"
+    }
+  },
+  "Table Games": {
+    "JILI": {
+      "Url": "/games?type=tables&provider=jili&sort=",
+      "Step_1": ".effect-image >> nth=0",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": "#GameCanvas"
+    }
+  },
+  "Đá Gà": {
+    "JILI": {
+      "Url": "/games?type=da_ga&provider=jili&sort=",
+      "Step_1": ".effect-image >> nth=0",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": "#GameCanvas"
+    },
+    "GA28": {
+      "Url": "/games?type=da_ga",
+      "Step_1": ".effect-image >> nth=0",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": ".undo-wrapper"
+    }
+  },
+  "Game Nhanh": {
+    "JILI": {
+      "Url": "/games?type=instance_game&provider=jili&sort=",
+      "Step_1": ".effect-image >> nth=0",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": "#GameCanvas"
+    }
+  },
+  "Bắn Cá": {
+    "JILI": {
+      "Url": "/games?type=fishing&provider=jili&sort=",
+      "Step_1": ".effect-image >> nth=0",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": "#GameCanvas"
+    }
+  },
+  "Quay Số": {
+    "JILI": {
+      "Url": "/games?type=lottery&provider=jili&sort=",
+      "Step_1": ".effect-image >> nth=0",
+      "IsSwitchPage": true,
+      "VerifyType": "element",
+      "Verify": "#GameCanvas"
+    }
+  },
+  "Mini Game": {
+    "Vé Số Cào Cào": {
+      "Step_1": "#vergo-minigame > div > div > div > img",
+      "Step_2": "div:nth-child(1) > .c2-mn-hover:nth-child(3)",
+      "VerifyType": "element",
+      "Verify": "c2-mn-vscao"
+    }
+  },
+  "Đăng Xuất": {
+    "": {
+      "Avatar": "//img[@alt='avatar DA88']",
+      "Logout": "internal:text=\"Đăng xuất\"i",
+      "VerifyType": "element",
+      "Verify": "#login_btn"
+    }
+  },
+  "Đăng Ký": {
+    "": {
+      "Signup": "#register_btn",
+      "UserName": ".base-input:nth-child(2) input",
+      "Password": ".base-input--password input",
+      "Phone": ".base-input__wrap > input:nth-child(1)",
+      "Submit": ".btn-login",
+      "VerifyType": "element",
+      "Verify": "//img[@alt='avatar DA88']"
+    }
+  },
+  "Thêm Ngân hàng": {
+    "": {
+      "ClosePopup": ".icon-close-circle-fill",
+      "Avatar": "//img[@alt='avatar DA88']",
+      "Profile": "[id=\"Thông tin cá nhân\"]",
+      "ManageBank": "internal:text=\"Quản lý ngân hàng\"i",
+      "AddBank": "internal:text=\"Thêm ngân hàng\"i",
+      "AccountNumber": "internal:attr=[placeholder=\"Nhập số tài khoản\"i]",
+      "FullName": "internal:attr=[placeholder=\"Nhập tên chủ thẻ\"i]",
+      "Submit": "internal:text=\"Xác nhận\"i",
+      "VerifyType": "element",
+      "Verify": ".bank__userlist"
+    }
+  }
+}
