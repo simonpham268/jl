@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "chrome:donga": "cross-env BRAND=DONGA npx playwright test --project=chromium",
-    "chrome:bachkhoa": "cross-env BRAND=BACHKHOA npx playwright test --project=chromium",
+    "chrome": "npx playwright test --project=chromium",
+    "firefox": "npx playwright test --project=firefox",
     "allure": "npx allure generate allure-results --clean -o allure-report &&npx allure open allure-report"
   },
   "keywords": [],

@@ -1,103 +1,84 @@
-# TypeScript Playwright Automation Project
+# Playwright Automation Project
 
-This project is a browser automation framework using [Playwright](https://playwright.dev/) with TypeScript. It is structured for scalable, maintainable end-to-end (E2E) testing, and includes utilities, flows, page object models, and Google Sheets reporting integration.
+This project is a Playwright-based automation framework for UI, API, and performance testing. It is organized for scalability and maintainability, with a clear separation of concerns and reusable utilities.
 
 ## Project Structure
 
 ```
-ts/
+playwright-auto/
 ├── package.json                # Project dependencies and scripts
 ├── playwright.config.ts        # Playwright configuration
 ├── src/
-│   ├── globalSetup.ts          # Global setup for Playwright
-│   ├── data/                   # Test data files
-│   ├── flows/                  # Business logic flows
-│   │   ├── commonflow.ts
-│   │   └── homeflow.ts
+│   ├── globalSetup.ts          # Global setup for Playwright tests
+│   ├── globalTeardown.ts       # Global teardown for Playwright tests
+│   ├── data/
+│   │   └── testData.ts         # Test data definitions
+│   ├── flows/
+│   │   ├── commonflow.ts       # Common test flows
+│   │   └── homeflow.ts         # Home page specific flows
 │   ├── google/
-│   │   └── googleapis-services.json
-│   ├── locators/               # Element locator files
-│   │   ├── bachkhoalocators.json
-│   │   └── dongalocators.json
-│   ├── pages/                  # Page Object Model classes
-│   │   ├── BasePage.ts
-│   │   ├── HomePage.ts
-│   │   └── LoginPage.ts
-│   ├── tests/                  # Test specs
-│   │   └── example.spec.ts
-│   └── utils/                  # Utility functions
-│       ├── locatorUtils.ts
-│       ├── tabUtils.ts
-│       ├── waitUtils.ts
-│       └── googleUtils.ts      # Google Sheets reporting integration
-├── storage/
-│   └── auth.json               # Storage state for authentication
-├── allure-results/             # Allure test results (generated)
-├── playwright-report/          # Playwright HTML reports (generated)
-├── test-results/               # Test result artifacts (generated)
+│   │   └── googleapis-services.json # Google API service definitions
+│   ├── locators/               # Element locators (files not shown)
+│   ├── pages/
+│   │   ├── BasePage.ts         # Base page object
+│   │   ├── CartPage.ts         # Cart page object
+│   │   ├── HomePage.ts         # Home page object
+│   │   └── LoginPage.ts        # Login page object
+│   ├── tests/
+│   │   ├── api/
+│   │   │   └── apiRegression.spec.ts # API regression tests
+│   │   ├── performance/
+│   │   │   └── performance.spec.ts   # Performance tests
+│   │   └── ui/
+│   │       └── login.spec.ts         # UI login tests
+│   └── utils/
+│       ├── googleUtils.ts      # Google-related utilities
+│       ├── reportUtils.ts      # Reporting utilities
+│       ├── tabUtils.ts         # Tab management utilities
+│       └── waitUtils.ts        # Wait utilities
+├── allure-results/             # Allure test result files
+├── test-results/               # Playwright test result files
 ```
 
 ## Getting Started
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v16+ recommended)
-- [npm](https://www.npmjs.com/)
-
-### Install Dependencies
-```bash
-npm install
-```
-
-### Run Tests
-- Run all tests:
-  ```bash
-  npx playwright test
-  ```
-- Run with a specific browser (example: Chrome):
-  ```bash
-  npm run chrome:donga
-  ```
-
-### Generate and View Reports
-- After running tests, view the Playwright report:
-  ```bash
-  npx playwright show-report
-  ```
-- Allure results are in the `allure-results/` folder (if configured).
-
-## Key Concepts
-- **Page Object Model (POM):** Encapsulates page structure and actions in `src/pages/`.
-- **Flows:** Business logic and user flows in `src/flows/`.
-- **Locators:** Centralized element selectors in `src/locators/`.
-- **Utils:** Reusable utility functions in `src/utils/`.
-- **Google Sheet Integration:** `src/utils/googleUtils.ts` enables sending test reports to Google Sheets using the Google Sheets API for automated reporting.
-
-## Customization
-- Add new tests in `src/tests/`.
-- Add new pages in `src/pages/` and update locators as needed.
-- Update Playwright settings in `playwright.config.ts`.
-- Configure Google Sheets integration in `src/utils/googleUtils.ts` and `src/google/googleapis-services.json` for automated report uploads.
-
-## Google Sheets Integration
-
-`src/utils/googleUtils.ts` enables sending test results to a Google Sheet for centralized reporting. The integration uses the Google Sheets API.
-
-### Setup Google Sheets Integration
-1. **Google API Credentials:**
-   - Place your Google API service account credentials in `src/google/googleapis-services.json`.
-2. **Configure Sheet Details:**
-   - Update `googleUtils.ts` with your target Google Sheet ID and range.
-3. **Send Report Example:**
-   - After your tests, call the reporting function in `googleUtils.ts` to upload results:
-     ```ts
-     import { sendReportToGoogleSheet } from './utils/googleUtils';
-     // ...after tests
-     await sendReportToGoogleSheet(reportData);
+1. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+2. **Run tests:**
+   ```sh
+   npx playwright test
+   ```
+3. **View Allure reports:**
+   - Generate and open the Allure report after running tests:
+     ```sh
+     npx allure serve allure-results
      ```
 
-### Notes
-- Ensure your Google service account has access to the target Google Sheet.
-- Refer to comments in `googleUtils.ts` for usage details and customization.
+## Key Folders
+- **src/pages/**: Page Object Model classes for UI automation.
+- **src/flows/**: Common and feature-specific test flows.
+- **src/tests/**: Test specifications for UI, API, and performance.
+- **src/utils/**: Utility functions for various test operations.
+- **src/data/**: Centralized test data.
+- **allure-results/**: Allure test results for reporting.
+- **test-results/**: Playwright's raw test results.
 
-## License
-This project is for internal use. Add a license if distributing externally.
+## Configuration
+- **playwright.config.ts**: Main configuration for Playwright (browsers, test settings, etc).
+- **globalSetup.ts / globalTeardown.ts**: Scripts for setup and teardown logic before/after all tests.
+
+## Customization
+- Add new page objects in `src/pages/` for new UI sections.
+- Add new flows in `src/flows/` for reusable test steps.
+- Add or update test data in `src/data/testData.ts`.
+- Add new tests in the appropriate folder under `src/tests/`.
+
+## Dependencies
+- [Playwright](https://playwright.dev/)
+- [Allure Reporter](https://docs.qameta.io/allure/)
+
+---
+
+Feel free to update this README as your project evolves!

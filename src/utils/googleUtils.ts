@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const jsonPath = path.join(__dirname, '../google/googleapis-services.json');
-const rootFolderId = '1CZmr9HJefmYbaNN1KoYwDG316OMCEwlw';
+const rootFolderId = 'root-folder-id-here'; 
 
 const auth = new google.auth.GoogleAuth({
     credentials: JSON.parse(
@@ -89,12 +89,12 @@ export async function createSheet(spreadsheetId: string, data: Set<Object>) {
 }
 
 /**
- * Create Alive Daily Sheet in Google Drive
+ * Create Test Sheet in Google Drive
  * @param domain 
  * @param date 
  * @returns 
  */
-export async function createAliveDailySheet(
+export async function createTestSheet(
     domain: string,
     date = new Date()
 ) {
@@ -104,11 +104,11 @@ export async function createAliveDailySheet(
     const dd = String(date.getDate()).padStart(2, '0');
     const yyyy = year;
 
-    const rootFolder = await getOrCreateFolder('DONTCLICK', rootFolderId);
+    const rootFolder = await getOrCreateFolder('FOLDERNAME', rootFolderId);
     const bingbongFolder = await getOrCreateFolder(domain, rootFolder);
     const monthFolder = await getOrCreateFolder(`${monthFormat}-${year}`, bingbongFolder);
 
-    const fileName = `${domain}_Alive_Daily_${dd}-${mm}-${yyyy}`;
+    const fileName = `${domain}_TEST_${dd}-${mm}-${yyyy}`;
 
     const sheetId = await createSpreadsheet(fileName);
     await moveFileToFolder(sheetId, monthFolder);

@@ -1,0 +1,28 @@
+Test Case ID,Test Case Name,Precondition,Test Steps,Test Data,Expected Result,Actual Result,Status,Notes
+TC_LOGIN_001,Login with valid credentials,User is on login page,1. Open login modal
+2. Enter valid username and password
+3. Click login,Username: testuser
+Password: testpass,User is logged in and welcome message is displayed,,, 
+TC_LOGIN_002,Login with invalid credentials,User is on login page,1. Open login modal
+2. Enter invalid username and password
+3. Click login,Username: wronguser
+Password: wrongpass,Error popup appears indicating wrong credentials,,, 
+TC_CHECKOUT_001,Add product to cart after login,User is logged in,1. Search for product
+2. Click product link
+3. Click 'Add to cart'
+4. Accept alert,Product: Samsung galaxy s6,Product is added to cart and alert is accepted,,, 
+TC_CHECKOUT_002,Checkout with product in cart,User is logged in and product is in cart,1. Go to cart
+2. Click 'Place Order'
+3. Fill order details
+4. Click 'Purchase',Name: John Doe
+Country: USA
+City: New York
+Credit Card: 4111111111111111
+Month: 01
+Year: 2026,Order confirmation modal appears with success message,,, 
+TC_CHECKOUT_003,Checkout with empty cart,User is logged in and cart is empty,1. Go to cart
+2. Click 'Place Order'
+3. Click 'Purchase',,Alert or validation error appears indicating cart is empty or fields are missing,,, 
+TC_CHECKOUT_004,Add product to cart without login,User is not logged in,1. Search for product
+2. Click product link
+3. Click 'Add to cart',Product: Samsung galaxy s6,Alert or redirect to login appears,,, 

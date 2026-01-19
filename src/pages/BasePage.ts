@@ -1,24 +1,16 @@
-import { Page } from '@playwright/test';
-import { waitLocator } from '../utils/waitUtils';
+import { Page } from "@playwright/test";
 
 export class BasePage {
-    protected page: Page;
+  protected page: Page;
 
-    constructor(page: Page) {
-        this.page = page;
-    }
+  constructor(page: Page) {
+    this.page = page;
+  }
 
-    async clickIfExists(stringLocator: string): Promise<void> {
-        const locator = this.page.locator(stringLocator);
-        if (stringLocator !== '' && await waitLocator(locator, 'visible')) {
-            await locator.click();
-        }
-    }
+  async goToBaseURL() {
+    const url = process.env.URL || "https://www.demoblaze.com/";
+    if (!url) throw new Error("URL is not defined in environment variables");
+    await this.page.goto(url);
+  }
 
-    async fillIfExists(stringLocator: string, value: string): Promise<void> {
-        const locator = this.page.locator(stringLocator);
-        if (stringLocator !== '' && await waitLocator(locator, 'visible')) {
-            await locator.fill(value);
-        }
-    }
 }

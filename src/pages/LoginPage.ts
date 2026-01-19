@@ -1,34 +1,51 @@
-import { expect, Page } from '@playwright/test';
-import { waitLocator } from '../utils/waitUtils';
-import { getStringLocator } from '../utils/locatorUtils';
-import { BasePage } from './BasePage';
+import { expect, Locator, Page } from "@playwright/test";
+import { BasePage } from "./BasePage";
 
-const url = process.env.BASE_URL || '';
 export class LoginPage extends BasePage {
+  private loginText: Locator;
+  private usernameInput: Locator;
+  private passwordInput: Locator;
+  private loginButton: Locator;
+  private closeModalButton: Locator;
+  private userWelcome: Locator;
 
-    constructor(page: Page) {
-        super(page);
-    }
+  constructor(page: Page) {
+    super(page);
+    this.usernameInput = this.page.locator("#loginusername");
+    this.passwordInput = this.page.locator("#loginpassword");
+    this.loginButton = this.page.getByRole("button", { name: "Log in" });
+    this.loginText = this.page.locator("#login2");
+    this.closeModalButton = this.page.locator("#logInModal .close");
+    this.userWelcome = this.page.locator("#nameofuser");
+  }
 
-    async navigateToPage(): Promise<void> {
-        await this.page.goto(url);
-    }
+  async openLoginModal() {
+    await this.loginText.click();
+  }
 
-    async isLoginSuccessful(): Promise<void> {
-        await expect.soft(this.page.locator(getStringLocator('Đăng Nhập', "", 'Verify'))).toBeVisible();
-    }
+  async login(username: string, password: string) {
+    await this.usernameInput.fill(username);
+    await this.passwordInput.fill(password);
+    await this.loginButton.click();
+  }
 
-    async closePopUpIfExists(): Promise<void> {
-        await this.clickIfExists(getStringLocator('Đăng Nhập', "", 'ClosePopup'));
-    }
+  async isWrongCredentialPopupVisible(): Promise<void> {
+    const dialog = await this.page.waitForEvent("dialog");
+    expect(dialog.message()).toContain("Wrong password.");
+    await dialog.dismiss();
+  }
 
-    async openLoginFormIfExists(): Promise<void> {
-        await this.clickIfExists(getStringLocator('Đăng Nhập', "", 'SignIn'));
-    }
+  async isMissingCredentialPopupVisible(): Promise<void> {
+    const dialog = await this.page.waitForEvent("dialog");
+    expect(dialog.message()).toContain("Please fill out Username and Password.");
+    await dialog.dismiss();
+  }
 
-    async submitUserAndPassword(username: string, password: string): Promise<void> {
-        await this.fillIfExists(getStringLocator('Đăng Nhập', "", 'UserName'), username);
-        await this.fillIfExists(getStringLocator('Đăng Nhập', "", 'Password'), password);
-        await this.clickIfExists(getStringLocator('Đăng Nhập', "", 'Submit'));
-    }
+  async isLoggedIn(): Promise<void> {
+    return await expect(this.userWelcome).toBeVisible();
+  }
+
+  async closeLoginModal() {
+    await this.closeModalButton.click();
+  }
 }

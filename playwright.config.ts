@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: path.resolve(__dirname, `.env.${process.env.BRAND?.toLocaleLowerCase()}`) });
+dotenv.config({ path: path.resolve(__dirname, `.env`) });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -41,7 +41,6 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    storageState: 'storage/auth.json'
   },
 
   /* Configure projects for major browsers */
