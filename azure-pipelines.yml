@@ -331,35 +331,3 @@ stages:
       displayName: 'Parse Test Results'
       condition: always()
 
-    # Send Slack Notification
-    - task: SlackNotification@1
-      displayName: 'Send Slack Notification'
-      condition: always()
-      inputs:
-        SlackApiToken: '$(SLACK_BOT_TOKEN)' # Set this in Pipeline Variables
-        Channel: '${{ parameters.slackChannel }}'
-        Message: |
-          🧪 **Playwright Test Results - ${{ parameters.environment }}**
-          
-          📊 **Summary:**
-          • Total Tests: $(TotalTests)
-          • ✅ Passed: $(PassedTests) 
-          • ❌ Failed: $(FailedTests)
-          • ⏭️ Skipped: $(SkippedTests)
-          • 📈 Success Rate: $(SuccessRate)%
-          
-          🔧 **Configuration:**
-          • Environment: ${{ parameters.environment }}
-          • Browser: ${{ parameters.browser }}
-          • Plan ID: ${{ parameters.planid }}
-          • Branch: ${{ parameters.branch }}
-          • Tag Filter: ${{ parameters.specificTag }}
-          
-          📋 **Build Info:**
-          • Build: [$(Build.BuildNumber)]($(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId))
-          • Status: $(OverallStatus)
-          • Duration: $(Build.Duration)
-          
-          📁 **Reports:**
-          • [Allure Report]($(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)
-      
