@@ -202,7 +202,6 @@ stages:
         echo "Branch: ${{ parameters.branch }}"
         echo "Tag Filter: ${{ parameters.specificTag }}"
         echo "Browser: ${{ parameters.browser }}"
-        echo "Screenshots: ${{ parameters.enableScreenshots }}"
         echo "Slack Channel: ${{ parameters.slackChannel }}"
         echo "Agent Pool: ${{ parameters.agentPool }}"
         echo "Agent Label: ${{ parameters.agentLabel }}"
