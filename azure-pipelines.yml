@@ -101,26 +101,82 @@ stages:
 - stage: BuildAndTest
   displayName: 'Build and Test Application'
   jobs:
+  # Job to detect available agents
+  - job: DetectAgents
+    displayName: 'Detect Available Agents'
+    ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+      pool:
+        name: ${{ parameters.agentPool }}
+        ${{ if ne(parameters.agentLabel, 'none') }}:
+          demands:
+          - ${{ parameters.agentLabel }}
+      steps:
+      - task: PowerShell@2
+        displayName: 'Detect Agent Count'
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Get available agents in the pool
+            $poolName = "${{ parameters.agentPool }}"
+            $agentLabel = "${{ parameters.agentLabel }}"
+            
+            Write-Host "Detecting agents in pool: $poolName"
+            if ("$agentLabel" -ne "none") {
+              Write-Host "With capability: $agentLabel"
+            }
+            
+            try {
+              # Default agent count based on pool name
+              $agentCount = 1
+              
+              # You can customize these values based on your actual agent pools
+              switch ($poolName) {
+                "AutomationTeam-BuildArtifact" { $agentCount = 3 }
+                "Azure Pipelines" { $agentCount = 2 }
+                "Default" { $agentCount = 1 }
+                default { 
+                  # For unknown pools, try to estimate based on naming
+                  if ($poolName -match "team|build|test") {
+                    $agentCount = 2
+                  } else {
+                    $agentCount = 1
+                  }
+                }
+              }
+              
+              # Ensure we don't exceed maximum shards defined in matrix (5)
+              if ($agentCount -gt 5) {
+                $agentCount = 5
+                Write-Host "Limiting to maximum 5 agents to match matrix definition"
+              }
+              
+              Write-Host "Detected $agentCount available agents for pool '$poolName'"
+              Write-Host "##vso[task.setvariable variable=DETECTED_AGENT_COUNT;isOutput=true]$agentCount"
+              
+            } catch {
+              Write-Host "##vso[task.logissue type=warning]Error detecting agents: $($_.Exception.Message)"
+              Write-Host "Defaulting to 1 agent"
+              Write-Host "##vso[task.setvariable variable=DETECTED_AGENT_COUNT;isOutput=true]1"
+            }
+
   - job: BuildAndTestJob
     displayName: 'Build and Test Playwright'
     ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+      dependsOn: DetectAgents
+      variables:
+        DETECTED_AGENT_COUNT: $[ dependencies.DetectAgents.outputs['PowerShell_2.DETECTED_AGENT_COUNT'] ]
       strategy:
         matrix:
           Shard1:
             SHARD_INDEX: 1
-            SHARD_TOTAL: 5
           Shard2:
             SHARD_INDEX: 2
-            SHARD_TOTAL: 5
           Shard3:
             SHARD_INDEX: 3
-            SHARD_TOTAL: 5
           Shard4:
             SHARD_INDEX: 4
-            SHARD_TOTAL: 5
           Shard5:
             SHARD_INDEX: 5
-            SHARD_TOTAL: 5
     pool:
       name: ${{ parameters.agentPool }}
       ${{ if ne(parameters.agentLabel, 'none') }}:
@@ -221,8 +277,33 @@ stages:
           
           # Add sharding for parallel execution
           $shardArgs = ""
-          if ("$(SHARD_INDEX)" -ne "" -and "$(SHARD_TOTAL)" -ne "") {
-            $shardArgs = "--shard=$(SHARD_INDEX)/$(SHARD_TOTAL)"
+          if ("$(SHARD_INDEX)" -ne "") {
+            # Get detected agent count from previous job
+            $detectedAgentCount = 1  # Default fallback
+            ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+              try {
+                $detectedAgentCount = [int]"$env:DETECTED_AGENT_COUNT"
+                if ($detectedAgentCount -le 0) { $detectedAgentCount = 1 }
+                Write-Host "Using detected agent count: $detectedAgentCount"
+              } catch {
+                Write-Host "Could not parse agent count, using default: 1"
+                $detectedAgentCount = 1
+              }
+            ${{ else }}:
+              $detectedAgentCount = 1
+            ${{ endif }}
+            
+            $currentShard = [int]$(SHARD_INDEX)
+            
+            # Only run this shard if it's within the available agent range
+            if ($currentShard -le $detectedAgentCount) {
+              $shardArgs = "--shard=$currentShard/$detectedAgentCount"
+              Write-Host "Running shard $currentShard of $detectedAgentCount"
+            } else {
+              Write-Host "Skipping shard $currentShard - only $detectedAgentCount agents available"
+              Write-Host "##vso[task.complete result=Succeeded;]Shard not needed - insufficient agents"
+              exit 0
+            }
           }
           
           # Add tag filter if specified
@@ -303,6 +384,36 @@ stages:
             Write-Output "No test results directory found" | Out-File "$reportPath\no-results-directory.txt"
           }
 
+    # Set dynamic artifact name
+    - task: PowerShell@2
+      displayName: 'Set Artifact Name'
+      condition: always()
+      inputs:
+        targetType: 'inline'
+        script: |
+          $artifactName = "AllureReport-${{ parameters.environment }}-${{ parameters.browser }}"
+          
+          ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+            $detectedAgentCount = 1
+            try {
+              $detectedAgentCount = [int]"$env:DETECTED_AGENT_COUNT"
+              if ($detectedAgentCount -le 0) { $detectedAgentCount = 1 }
+            } catch {
+              $detectedAgentCount = 1
+            }
+            
+            $shardIndex = "$(SHARD_INDEX)"
+            if ($shardIndex -ne "") {
+              $artifactName += "-Shard$shardIndex" + "of$detectedAgentCount"
+            }
+          ${{ endif }}
+          
+          $timestamp = Get-Date -Format "yyyyMMdd-HHmm"
+          $artifactName += "-$timestamp"
+          
+          Write-Host "Setting artifact name: $artifactName"
+          Write-Host "##vso[task.setvariable variable=DYNAMIC_ARTIFACT_NAME]$artifactName"
+
     # Publish Allure Report as Build Artifact
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Allure Report'
@@ -310,10 +421,7 @@ stages:
       continueOnError: true
       inputs:
         pathToPublish: '$(allureReportPath)'
-        ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
-          artifactName: 'AllureReport-${{ parameters.environment }}-${{ parameters.browser }}-Shard$(SHARD_INDEX)of$(SHARD_TOTAL)-$(Date:yyyyMMdd-HHmm)'
-        ${{ else }}:
-          artifactName: 'AllureReport-${{ parameters.environment }}-${{ parameters.browser }}-$(Date:yyyyMMdd-HHmm)'
+        artifactName: '$(DYNAMIC_ARTIFACT_NAME)'
         publishLocation: 'Container'
 
     # Parse test results for Slack notification
