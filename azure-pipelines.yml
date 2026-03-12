@@ -62,9 +62,9 @@ parameters:
 - name: agentLabel
   displayName: 'Agent Label (agents with this capability will be used)'
   type: string
-  default: ''
+  default: 'none'
   values:
-    - ''
+    - 'none'
     - 'regression'
     - 'smoke_stg' 
     - 'smoke_live'
@@ -123,7 +123,7 @@ stages:
             SHARD_TOTAL: 5
     pool:
       name: ${{ parameters.agentPool }}
-      ${{ if ne(parameters.agentLabel, '') }}:
+      ${{ if ne(parameters.agentLabel, 'none') }}:
         demands:
         - ${{ parameters.agentLabel }}
     timeoutInMinutes: 180  # Per job timeout (all parallel jobs run within this time)
