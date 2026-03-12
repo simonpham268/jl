@@ -168,32 +168,38 @@ stages:
         echo "Browsers installed successfully"
       displayName: 'Install Playwright Browsers'
 
-    - script: |
-        echo "Building TypeScript source..."
-        if (Test-Path "tsconfig.json") {
-          npx tsc --noEmit
-          echo "TypeScript compilation successful"
-        } else {
-          echo "No tsconfig.json found, skipping TypeScript compilation"
-        }
+    - task: PowerShell@2
       displayName: 'Build TypeScript'
       continueOnError: true
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Building TypeScript source..."
+          if (Test-Path "tsconfig.json") {
+            npx tsc --noEmit
+            Write-Host "TypeScript compilation successful"
+          } else {
+            Write-Host "No tsconfig.json found, skipping TypeScript compilation"
+          }
 
-    - script: |
-        echo "Running build validation..."
-        # Validate test files can be loaded
-        npx playwright test --list > test-list.txt
-        $testCount = (Get-Content test-list.txt | Measure-Object -Line).Lines
-        echo "Found $testCount test files"
-        
-        if ($testCount -eq 0) {
-          echo "##vso[task.logissue type=warning]No tests found during build validation"
-          exit 1
-        } else {
-          echo "Build validation successful: $testCount tests discovered"
-        }
+    - task: PowerShell@2
       displayName: 'Validate Build Output'
       name: ValidateBuild
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Running build validation..."
+          # Validate test files can be loaded
+          npx playwright test --list > test-list.txt
+          $testCount = (Get-Content test-list.txt | Measure-Object -Line).Lines
+          Write-Host "Found $testCount test files"
+          
+          if ($testCount -eq 0) {
+            Write-Host "##vso[task.logissue type=warning]No tests found during build validation"
+            exit 1
+          } else {
+            Write-Host "Build validation successful: $testCount tests discovered"
+          }
 
     - script: |
         echo "Pipeline Parameters:"
@@ -210,64 +216,70 @@ stages:
         echo "Source Version: $(Build.SourceVersion)"
       displayName: 'Display Parameters'
 
-    - script: |
-        $env:ENVIRONMENT = "${{ parameters.environment }}"
-        $env:PLAN_ID = "${{ parameters.planid }}"
-        $env:CI = "true"
-        
-        # Use npm run scripts based on environment and browser
-        $npmScript = "test:${{ parameters.environment }}"
-        
-        # Add sharding for parallel execution
-        $shardArgs = ""
-        if ("$(SHARD_INDEX)" -ne "" -and "$(SHARD_TOTAL)" -ne "") {
-          $shardArgs = "--shard=$(SHARD_INDEX)/$(SHARD_TOTAL)"
-        }
-        
-        # Add tag filter if specified
-        if ("${{ parameters.specificTag }}" -ne "") {
-          $grepPattern = "${{ parameters.specificTag }}"
-          
-          # Handle multiple tags: convert smoke.regression to @smoke.*@regression
-          if ($grepPattern.Contains(".") -and -not $grepPattern.StartsWith("@")) {
-            $grepPattern = $grepPattern -replace '\.', '.*@'
-            $grepPattern = "@" + $grepPattern
-          }
-          # Handle OR tags: convert smoke|regression to @smoke|@regression  
-          elseif ($grepPattern.Contains("|") -and -not $grepPattern.StartsWith("@")) {
-            $grepPattern = $grepPattern -replace '\|', '|@'
-            $grepPattern = "@" + $grepPattern
-          }
-          # Single tag: add @ prefix if not present
-          elseif (-not $grepPattern.StartsWith("@")) {
-            $grepPattern = "@" + $grepPattern
-          }
-          
-          $fullCommand = "npm run $npmScript -- $shardArgs --grep=`"$grepPattern`""
-          echo "Executing: $fullCommand"
-          Invoke-Expression $fullCommand
-        } else {
-          $fullCommand = "npm run $npmScript -- $shardArgs"
-          echo "Executing: $fullCommand"  
-          Invoke-Expression $fullCommand
-        }
+    - task: PowerShell@2
       displayName: 'Run Playwright Tests'
       continueOnError: true
       env:
         ENVIRONMENT: ${{ parameters.environment }}
         PLAN_ID: ${{ parameters.planid }}
         CI: true
+      inputs:
+        targetType: 'inline'
+        script: |
+          $env:ENVIRONMENT = "${{ parameters.environment }}"
+          $env:PLAN_ID = "${{ parameters.planid }}"
+          $env:CI = "true"
+          
+          # Use npm run scripts based on environment and browser
+          $npmScript = "test:${{ parameters.environment }}"
+          
+          # Add sharding for parallel execution
+          $shardArgs = ""
+          if ("$(SHARD_INDEX)" -ne "" -and "$(SHARD_TOTAL)" -ne "") {
+            $shardArgs = "--shard=$(SHARD_INDEX)/$(SHARD_TOTAL)"
+          }
+          
+          # Add tag filter if specified
+          if ("${{ parameters.specificTag }}" -ne "") {
+            $grepPattern = "${{ parameters.specificTag }}"
+            
+            # Handle multiple tags: convert smoke.regression to @smoke.*@regression
+            if ($grepPattern.Contains(".") -and -not $grepPattern.StartsWith("@")) {
+              $grepPattern = $grepPattern -replace '\.', '.*@'
+              $grepPattern = "@" + $grepPattern
+            }
+            # Handle OR tags: convert smoke|regression to @smoke|@regression  
+            elseif ($grepPattern.Contains("|") -and -not $grepPattern.StartsWith("@")) {
+              $grepPattern = $grepPattern -replace '\|', '|@'
+              $grepPattern = "@" + $grepPattern
+            }
+            # Single tag: add @ prefix if not present
+            elseif (-not $grepPattern.StartsWith("@")) {
+              $grepPattern = "@" + $grepPattern
+            }
+            
+            $fullCommand = "npm run $npmScript -- $shardArgs --grep=`"$grepPattern`""
+            Write-Host "Executing: $fullCommand"
+            Invoke-Expression $fullCommand
+          } else {
+            $fullCommand = "npm run $npmScript -- $shardArgs"
+            Write-Host "Executing: $fullCommand"  
+            Invoke-Expression $fullCommand
+          }
 
     # Generate Allure Report
-    - script: |
-        if (Test-Path "$(allureResultsPath)") {
-          echo "Generating Allure report..."
-          npx allure generate "$(allureResultsPath)" --clean -o "$(allureReportPath)"
-        } else {
-          echo "No allure results found"
-        }
+    - task: PowerShell@2
       displayName: 'Generate Allure Report'
       condition: always()
+      inputs:
+        targetType: 'inline'
+        script: |
+          if (Test-Path "$(allureResultsPath)") {
+            Write-Host "Generating Allure report..."
+            npx allure generate "$(allureResultsPath)" --clean -o "$(allureReportPath)"
+          } else {
+            Write-Host "No allure results found"
+          }
 
     # Publish Allure Report as Build Artifact
     - task: PublishBuildArtifacts@1
