@@ -64,6 +64,7 @@ parameters:
   type: string
   default: ''
   values:
+    - ''
     - 'regression'
     - 'smoke_stg' 
     - 'smoke_live'
