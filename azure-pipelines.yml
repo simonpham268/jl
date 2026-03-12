@@ -55,10 +55,9 @@ parameters:
 - name: agentPool
   displayName: 'Agent Pool'
   type: string
-  default: 'QCAutomationTeam-Web'
+  default: 'AutomationTeam-BuildArtifact'
   values:
-    - 'QCAutomationTeam-Web'
-    - 'QCAutomationTeam-Mobile'
+    - 'AutomationTeam-BuildArtifact'
 
 - name: agentLabel
   displayName: 'Agent Label (agents with this capability will be used)'
