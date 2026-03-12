@@ -255,22 +255,59 @@ stages:
 
     # Generate Allure Report
     - task: PowerShell@2
-      displayName: 'Generate Allure Report'
+      displayName: 'Install and Generate Allure Report'
       condition: always()
       inputs:
         targetType: 'inline'
         script: |
-          if (Test-Path "$(allureResultsPath)") {
-            Write-Host "Generating Allure report..."
-            npx allure generate "$(allureResultsPath)" --clean -o "$(allureReportPath)"
+          Write-Host "Installing Allure CLI..."
+          npm install -g allure-commandline --force
+          
+          # Always create the report directory first
+          $reportPath = "$(allureReportPath)"
+          Write-Host "Creating report directory: $reportPath"
+          New-Item -ItemType Directory -Force -Path "$reportPath" | Out-Null
+          
+          $resultsPath = "$(allureResultsPath)"
+          Write-Host "Looking for results in: $resultsPath"
+          
+          if (Test-Path "$resultsPath") {
+            $resultFiles = Get-ChildItem -Path "$resultsPath" -Filter "*.json" -ErrorAction SilentlyContinue
+            Write-Host "Found $($resultFiles.Count) result files"
+            
+            if ($resultFiles.Count -gt 0) {
+              Write-Host "Generating Allure report..."
+              Write-Host "Results path: $resultsPath"
+              Write-Host "Report path: $reportPath"
+              
+              try {
+                allure generate "$resultsPath" --clean -o "$reportPath"
+                Write-Host "Allure generate command executed"
+                
+                if (Test-Path "$reportPath\index.html") {
+                  Write-Host "Allure report generated successfully"
+                } else {
+                  Write-Host "##vso[task.logissue type=warning]Allure report index.html not found after generation"
+                  Write-Output "Allure generation completed but no index.html found" | Out-File "$reportPath\generation-log.txt"
+                }
+              } catch {
+                Write-Host "##vso[task.logissue type=warning]Allure generation failed: $($_.Exception.Message)"
+                Write-Output "Allure generation failed: $($_.Exception.Message)" | Out-File "$reportPath\error-log.txt"
+              }
+            } else {
+              Write-Host "No JSON result files found"
+              Write-Output "No test result files were found" | Out-File "$reportPath\no-results.txt"
+            }
           } else {
-            Write-Host "No allure results found"
+            Write-Host "No allure results directory found at: $resultsPath"
+            Write-Output "No test results directory found" | Out-File "$reportPath\no-results-directory.txt"
           }
 
     # Publish Allure Report as Build Artifact
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Allure Report'
       condition: always()
+      continueOnError: true
       inputs:
         pathToPublish: '$(allureReportPath)'
         ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
@@ -280,52 +317,64 @@ stages:
         publishLocation: 'Container'
 
     # Parse test results for Slack notification
-    - powershell: |
-        # Parse Allure results for summary
-        $resultsPath = "$(allureResultsPath)"
-        $totalTests = 0
-        $passedTests = 0
-        $failedTests = 0
-        $skippedTests = 0
-        
-        if (Test-Path $resultsPath) {
-          $resultFiles = Get-ChildItem -Path $resultsPath -Filter "*-result.json"
-          
-          foreach ($file in $resultFiles) {
-            $result = Get-Content $file.FullName | ConvertFrom-Json
-            $totalTests++
-            
-            switch ($result.status) {
-              "passed" { $passedTests++ }
-              "failed" { $failedTests++ }
-              "broken" { $failedTests++ }
-              "skipped" { $skippedTests++ }
-              default { $skippedTests++ }
-            }
-          }
-        }
-        
-        # Set pipeline variables for Slack notification
-        echo "##vso[task.setvariable variable=TotalTests]$totalTests"
-        echo "##vso[task.setvariable variable=PassedTests]$passedTests"
-        echo "##vso[task.setvariable variable=FailedTests]$failedTests"
-        echo "##vso[task.setvariable variable=SkippedTests]$skippedTests"
-        
-        # Calculate success rate
-        if ($totalTests -gt 0) {
-          $successRate = [math]::Round(($passedTests / $totalTests) * 100, 2)
-          echo "##vso[task.setvariable variable=SuccessRate]$successRate"
-        } else {
-          echo "##vso[task.setvariable variable=SuccessRate]0"
-        }
-        
-        # Determine overall status
-        $overallStatus = if ($failedTests -eq 0) { "SUCCESS" } else { "FAILURE" }
-        echo "##vso[task.setvariable variable=OverallStatus]$overallStatus"
-        
-        echo "Test Summary:"
-        echo "Total: $totalTests, Passed: $passedTests, Failed: $failedTests, Skipped: $skippedTests"
-        echo "Success Rate: $successRate%, Overall Status: $overallStatus"
+    - task: PowerShell@2
       displayName: 'Parse Test Results'
       condition: always()
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Parse Allure results for summary
+          $resultsPath = "$(allureResultsPath)"
+          $totalTests = 0
+          $passedTests = 0
+          $failedTests = 0
+          $skippedTests = 0
+          
+          Write-Host "Looking for results in: $resultsPath"
+          
+          if (Test-Path $resultsPath) {
+            $resultFiles = Get-ChildItem -Path $resultsPath -Filter "*-result.json" -ErrorAction SilentlyContinue
+            Write-Host "Found $($resultFiles.Count) result files"
+            
+            foreach ($file in $resultFiles) {
+              try {
+                $result = Get-Content $file.FullName | ConvertFrom-Json
+                $totalTests++
+                
+                switch ($result.status) {
+                  "passed" { $passedTests++ }
+                  "failed" { $failedTests++ }
+                  "broken" { $failedTests++ }
+                  "skipped" { $skippedTests++ }
+                  default { $skippedTests++ }
+                }
+              } catch {
+                Write-Host "Warning: Could not parse result file: $($file.Name)"
+              }
+            }
+          } else {
+            Write-Host "No results directory found"
+          }
+          
+          # Set pipeline variables for Slack notification
+          Write-Host "##vso[task.setvariable variable=TotalTests]$totalTests"
+          Write-Host "##vso[task.setvariable variable=PassedTests]$passedTests"
+          Write-Host "##vso[task.setvariable variable=FailedTests]$failedTests"
+          Write-Host "##vso[task.setvariable variable=SkippedTests]$skippedTests"
+          
+          # Calculate success rate
+          if ($totalTests -gt 0) {
+            $successRate = [math]::Round(($passedTests / $totalTests) * 100, 2)
+            Write-Host "##vso[task.setvariable variable=SuccessRate]$successRate"
+          } else {
+            Write-Host "##vso[task.setvariable variable=SuccessRate]0"
+          }
+          
+          # Determine overall status
+          $overallStatus = if ($failedTests -eq 0) { "SUCCESS" } else { "FAILURE" }
+          Write-Host "##vso[task.setvariable variable=OverallStatus]$overallStatus"
+          
+          Write-Host "Test Summary:"
+          Write-Host "Total: $totalTests, Passed: $passedTests, Failed: $failedTests, Skipped: $skippedTests"
+          Write-Host "Success Rate: $successRate%, Overall Status: $overallStatus"
 
