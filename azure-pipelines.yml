@@ -280,7 +280,9 @@ stages:
           if ("$(SHARD_INDEX)" -ne "") {
             # Get detected agent count from previous job
             $detectedAgentCount = 1  # Default fallback
-            ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+            $parallelExecution = "${{ parameters.parallelExecution }}"
+            
+            if ($parallelExecution -eq "all-agents") {
               try {
                 $detectedAgentCount = [int]"$env:DETECTED_AGENT_COUNT"
                 if ($detectedAgentCount -le 0) { $detectedAgentCount = 1 }
@@ -289,9 +291,9 @@ stages:
                 Write-Host "Could not parse agent count, using default: 1"
                 $detectedAgentCount = 1
               }
-            ${{ else }}:
+            } else {
               $detectedAgentCount = 1
-            ${{ endif }}
+            }
             
             $currentShard = [int]$(SHARD_INDEX)
             
@@ -392,8 +394,9 @@ stages:
         targetType: 'inline'
         script: |
           $artifactName = "AllureReport-${{ parameters.environment }}-${{ parameters.browser }}"
+          $parallelExecution = "${{ parameters.parallelExecution }}"
           
-          ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+          if ($parallelExecution -eq "all-agents") {
             $detectedAgentCount = 1
             try {
               $detectedAgentCount = [int]"$env:DETECTED_AGENT_COUNT"
@@ -406,7 +409,7 @@ stages:
             if ($shardIndex -ne "") {
               $artifactName += "-Shard$shardIndex" + "of$detectedAgentCount"
             }
-          ${{ endif }}
+          }
           
           $timestamp = Get-Date -Format "yyyyMMdd-HHmm"
           $artifactName += "-$timestamp"
