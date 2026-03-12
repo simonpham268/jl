@@ -1,0 +1,366 @@
+# Azure DevOps Pipeline for Playwright Test Automation
+# Supports multiple environments with dynamic parameters and Slack reporting
+
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+
+# Configure repository source
+resources:
+  repositories:
+  - repository: self
+    type: git
+    name: TMS/JobLogicTesting
+    ref: ${{ parameters.branch }}
+
+# Runtime parameters for pipeline execution
+parameters:
+- name: environment
+  displayName: 'Target Environment'
+  type: string
+  default: 'uat'
+  values:
+    - 'uat'
+    - 'staging'
+    - 'prelive'
+
+- name: planid
+  displayName: 'Azure DevOps Test Plan ID'
+  type: string
+  default: ''
+
+- name: branch
+  displayName: 'Source Branch'
+  type: string
+  default: 'master'
+
+- name: specificTag
+  displayName: 'Test Tag Filter (supports regex: smoke, OR logic smoke|regression, AND logic smoke.regression, etc.)'
+  type: string
+  default: ''
+
+- name: browser
+  displayName: 'Browser Project'
+  type: string
+  default: 'chromium'
+  values:
+    - 'chromium'
+    - 'firefox'
+
+- name: agentPool
+  displayName: 'Agent Pool'
+  type: string
+  default: 'QCAutomationTeam-Web'
+  values:
+    - 'QCAutomationTeam-Web'
+    - 'QCAutomationTeam-Mobile'
+
+- name: agentLabel
+  displayName: 'Agent Label (agents with this capability will be used)'
+  type: string
+  default: 'regression'
+  values:
+    - 'regression'
+    - 'smoke_stg' 
+    - 'smoke_live'
+
+- name: parallelExecution
+  displayName: 'Parallel Execution Strategy'  
+  type: string
+  default: 'all-agents'
+  values:
+    - 'single'
+    - 'all-agents'
+
+- name: slackChannel
+  displayName: 'Slack Channel for Reports'
+  type: string
+  default: ''
+
+variables:
+  # Build configuration
+  buildConfiguration: 'Release'
+  
+  # Test configuration
+  ENVIRONMENT: ${{ parameters.environment }}
+  PLAN_ID: ${{ parameters.planid }}
+  CI: true
+  
+  # Paths
+  buildOutputPath: '$(System.DefaultWorkingDirectory)/dist'
+  allureResultsPath: '$(System.DefaultWorkingDirectory)/allure-results'
+  allureReportPath: '$(System.DefaultWorkingDirectory)/allure-report'
+  screenshotsPath: '$(System.DefaultWorkingDirectory)/test-results'
+
+stages:
+- stage: BuildAndTest
+  displayName: 'Build and Test Application'
+  jobs:
+  - job: BuildAndTestJob
+    displayName: 'Build and Test Playwright'
+    ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+      strategy:
+        matrix:
+          Shard1:
+            SHARD_INDEX: 1
+            SHARD_TOTAL: 5
+          Shard2:
+            SHARD_INDEX: 2
+            SHARD_TOTAL: 5
+          Shard3:
+            SHARD_INDEX: 3
+            SHARD_TOTAL: 5
+          Shard4:
+            SHARD_INDEX: 4
+            SHARD_TOTAL: 5
+          Shard5:
+            SHARD_INDEX: 5
+            SHARD_TOTAL: 5
+    pool:
+      name: ${{ parameters.agentPool }}
+      ${{ if ne(parameters.agentLabel, '') }}:
+        demands:
+        - ${{ parameters.agentLabel }}
+    timeoutInMinutes: 180  # Per job timeout (all parallel jobs run within this time)
+    
+    steps:
+    - checkout: self
+      clean: true
+      fetchDepth: 0
+      lfs: true
+    
+    - task: NodeTool@0
+      displayName: 'Setup Node.js'
+      inputs:
+        versionSpec: 'lts/*'
+        checkLatest: true
+
+    - task: Cache@2
+      displayName: 'Cache Node Modules'
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: '$(System.DefaultWorkingDirectory)/node_modules'
+
+    - script: |
+        echo "Fetching from Azure DevOps Repository..."
+        echo "Repository: $(Build.Repository.Name)"
+        echo "Branch: ${{ parameters.branch }}"
+        echo "Commit: $(Build.SourceVersion)"
+        git log --oneline -5
+      displayName: 'Display Repository Info'
+
+    - script: |
+        echo "Installing dependencies..."
+        npm ci --production=false
+        echo "Dependencies installed successfully"
+      displayName: 'Clean Install Dependencies'
+
+    - script: |
+        echo "Installing Playwright browsers..."
+        npx playwright install --with-deps chromium firefox webkit
+        echo "Browsers installed successfully"
+      displayName: 'Install Playwright Browsers'
+
+    - script: |
+        echo "Building TypeScript source..."
+        if (Test-Path "tsconfig.json") {
+          npx tsc --noEmit
+          echo "TypeScript compilation successful"
+        } else {
+          echo "No tsconfig.json found, skipping TypeScript compilation"
+        }
+      displayName: 'Build TypeScript'
+      continueOnError: true
+
+    - script: |
+        echo "Running build validation..."
+        # Validate test files can be loaded
+        npx playwright test --list > test-list.txt
+        $testCount = (Get-Content test-list.txt | Measure-Object -Line).Lines
+        echo "Found $testCount test files"
+        
+        if ($testCount -eq 0) {
+          echo "##vso[task.logissue type=warning]No tests found during build validation"
+          exit 1
+        } else {
+          echo "Build validation successful: $testCount tests discovered"
+        }
+      displayName: 'Validate Build Output'
+      name: ValidateBuild
+
+    - script: |
+        echo "Pipeline Parameters:"
+        echo "Environment: ${{ parameters.environment }}"
+        echo "Plan ID: ${{ parameters.planid }}"
+        echo "Branch: ${{ parameters.branch }}"
+        echo "Tag Filter: ${{ parameters.specificTag }}"
+        echo "Browser: ${{ parameters.browser }}"
+        echo "Screenshots: ${{ parameters.enableScreenshots }}"
+        echo "Slack Channel: ${{ parameters.slackChannel }}"
+        echo "Agent Pool: ${{ parameters.agentPool }}"
+        echo "Agent Label: ${{ parameters.agentLabel }}"
+        echo "Repository: $(Build.Repository.Name)"
+        echo "Build Number: $(Build.BuildNumber)"
+        echo "Source Version: $(Build.SourceVersion)"
+      displayName: 'Display Parameters'
+
+    - script: |
+        $env:ENVIRONMENT = "${{ parameters.environment }}"
+        $env:PLAN_ID = "${{ parameters.planid }}"
+        $env:CI = "true"
+        
+        # Use npm run scripts based on environment and browser
+        $npmScript = "test:${{ parameters.environment }}"
+        
+        # Add sharding for parallel execution
+        $shardArgs = ""
+        if ("$(SHARD_INDEX)" -ne "" -and "$(SHARD_TOTAL)" -ne "") {
+          $shardArgs = "--shard=$(SHARD_INDEX)/$(SHARD_TOTAL)"
+        }
+        
+        # Add tag filter if specified
+        if ("${{ parameters.specificTag }}" -ne "") {
+          $grepPattern = "${{ parameters.specificTag }}"
+          
+          # Handle multiple tags: convert smoke.regression to @smoke.*@regression
+          if ($grepPattern.Contains(".") -and -not $grepPattern.StartsWith("@")) {
+            $grepPattern = $grepPattern -replace '\.', '.*@'
+            $grepPattern = "@" + $grepPattern
+          }
+          # Handle OR tags: convert smoke|regression to @smoke|@regression  
+          elseif ($grepPattern.Contains("|") -and -not $grepPattern.StartsWith("@")) {
+            $grepPattern = $grepPattern -replace '\|', '|@'
+            $grepPattern = "@" + $grepPattern
+          }
+          # Single tag: add @ prefix if not present
+          elseif (-not $grepPattern.StartsWith("@")) {
+            $grepPattern = "@" + $grepPattern
+          }
+          
+          $fullCommand = "npm run $npmScript -- $shardArgs --grep=`"$grepPattern`""
+          echo "Executing: $fullCommand"
+          Invoke-Expression $fullCommand
+        } else {
+          $fullCommand = "npm run $npmScript -- $shardArgs"
+          echo "Executing: $fullCommand"  
+          Invoke-Expression $fullCommand
+        }
+      displayName: 'Run Playwright Tests'
+      continueOnError: true
+      env:
+        ENVIRONMENT: ${{ parameters.environment }}
+        PLAN_ID: ${{ parameters.planid }}
+        CI: true
+
+    # Generate Allure Report
+    - script: |
+        if (Test-Path "$(allureResultsPath)") {
+          echo "Generating Allure report..."
+          npx allure generate "$(allureResultsPath)" --clean -o "$(allureReportPath)"
+        } else {
+          echo "No allure results found"
+        }
+      displayName: 'Generate Allure Report'
+      condition: always()
+
+    # Publish Allure Report as Build Artifact
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Allure Report'
+      condition: always()
+      inputs:
+        pathToPublish: '$(allureReportPath)'
+        ${{ if eq(parameters.parallelExecution, 'all-agents') }}:
+          artifactName: 'AllureReport-${{ parameters.environment }}-${{ parameters.browser }}-Shard$(SHARD_INDEX)of$(SHARD_TOTAL)-$(Date:yyyyMMdd-HHmm)'
+        ${{ else }}:
+          artifactName: 'AllureReport-${{ parameters.environment }}-${{ parameters.browser }}-$(Date:yyyyMMdd-HHmm)'
+        publishLocation: 'Container'
+
+    # Parse test results for Slack notification
+    - powershell: |
+        # Parse Allure results for summary
+        $resultsPath = "$(allureResultsPath)"
+        $totalTests = 0
+        $passedTests = 0
+        $failedTests = 0
+        $skippedTests = 0
+        
+        if (Test-Path $resultsPath) {
+          $resultFiles = Get-ChildItem -Path $resultsPath -Filter "*-result.json"
+          
+          foreach ($file in $resultFiles) {
+            $result = Get-Content $file.FullName | ConvertFrom-Json
+            $totalTests++
+            
+            switch ($result.status) {
+              "passed" { $passedTests++ }
+              "failed" { $failedTests++ }
+              "broken" { $failedTests++ }
+              "skipped" { $skippedTests++ }
+              default { $skippedTests++ }
+            }
+          }
+        }
+        
+        # Set pipeline variables for Slack notification
+        echo "##vso[task.setvariable variable=TotalTests]$totalTests"
+        echo "##vso[task.setvariable variable=PassedTests]$passedTests"
+        echo "##vso[task.setvariable variable=FailedTests]$failedTests"
+        echo "##vso[task.setvariable variable=SkippedTests]$skippedTests"
+        
+        # Calculate success rate
+        if ($totalTests -gt 0) {
+          $successRate = [math]::Round(($passedTests / $totalTests) * 100, 2)
+          echo "##vso[task.setvariable variable=SuccessRate]$successRate"
+        } else {
+          echo "##vso[task.setvariable variable=SuccessRate]0"
+        }
+        
+        # Determine overall status
+        $overallStatus = if ($failedTests -eq 0) { "SUCCESS" } else { "FAILURE" }
+        echo "##vso[task.setvariable variable=OverallStatus]$overallStatus"
+        
+        echo "Test Summary:"
+        echo "Total: $totalTests, Passed: $passedTests, Failed: $failedTests, Skipped: $skippedTests"
+        echo "Success Rate: $successRate%, Overall Status: $overallStatus"
+      displayName: 'Parse Test Results'
+      condition: always()
+
+    # Send Slack Notification
+    - task: SlackNotification@1
+      displayName: 'Send Slack Notification'
+      condition: always()
+      inputs:
+        SlackApiToken: '$(SLACK_BOT_TOKEN)' # Set this in Pipeline Variables
+        Channel: '${{ parameters.slackChannel }}'
+        Message: |
+          🧪 **Playwright Test Results - ${{ parameters.environment }}**
+          
+          📊 **Summary:**
+          • Total Tests: $(TotalTests)
+          • ✅ Passed: $(PassedTests) 
+          • ❌ Failed: $(FailedTests)
+          • ⏭️ Skipped: $(SkippedTests)
+          • 📈 Success Rate: $(SuccessRate)%
+          
+          🔧 **Configuration:**
+          • Environment: ${{ parameters.environment }}
+          • Browser: ${{ parameters.browser }}
+          • Plan ID: ${{ parameters.planid }}
+          • Branch: ${{ parameters.branch }}
+          • Tag Filter: ${{ parameters.specificTag }}
+          
+          📋 **Build Info:**
+          • Build: [$(Build.BuildNumber)]($(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId))
+          • Status: $(OverallStatus)
+          • Duration: $(Build.Duration)
+          
+          📁 **Reports:**
+          • [Allure Report]($(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts)
+      
