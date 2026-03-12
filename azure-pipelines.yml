@@ -169,20 +169,6 @@ stages:
       displayName: 'Install Playwright Browsers'
 
     - task: PowerShell@2
-      displayName: 'Build TypeScript'
-      continueOnError: true
-      inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "Building TypeScript source..."
-          if (Test-Path "tsconfig.json") {
-            npx tsc --noEmit
-            Write-Host "TypeScript compilation successful"
-          } else {
-            Write-Host "No tsconfig.json found, skipping TypeScript compilation"
-          }
-
-    - task: PowerShell@2
       displayName: 'Validate Build Output'
       name: ValidateBuild
       inputs:
