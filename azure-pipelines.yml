@@ -137,7 +137,7 @@ stages:
     - task: NodeTool@0
       displayName: 'Setup Node.js'
       inputs:
-        versionSpec: 'lts/*'
+        versionSpec: '20.x'
         checkLatest: true
 
     - task: Cache@2
