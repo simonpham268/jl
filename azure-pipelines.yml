@@ -166,6 +166,7 @@ stages:
       variables:
         DETECTED_AGENT_COUNT: $[ dependencies.DetectAgents.outputs['PowerShell_2.DETECTED_AGENT_COUNT'] ]
       strategy:
+        maxParallel: 3
         matrix:
           Shard1:
             SHARD_INDEX: 1
@@ -173,10 +174,6 @@ stages:
             SHARD_INDEX: 2
           Shard3:
             SHARD_INDEX: 3
-          Shard4:
-            SHARD_INDEX: 4
-          Shard5:
-            SHARD_INDEX: 5
     pool:
       name: ${{ parameters.agentPool }}
       ${{ if ne(parameters.agentLabel, 'none') }}:
