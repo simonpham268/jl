@@ -131,8 +131,7 @@ stages:
               
               # You can customize these values based on your actual agent pools
               switch ($poolName) {
-                "AutomationTeam-BuildArtifact" { $agentCount = 3 }
-                "Azure Pipelines" { $agentCount = 2 }
+                "Automation-Playwright-Pool" { $agentCount = 3 }
                 "Default" { $agentCount = 1 }
                 default { 
                   # For unknown pools, try to estimate based on naming
