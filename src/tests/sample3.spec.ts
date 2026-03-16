@@ -21,11 +21,6 @@ test.describe('[Add Job] - Add Contact - Delete a new contact in list', () => {
         await loginPage.goToBaseURL();
     });
 
-        // === PART 1: Job Creation Setup ===
-    test('[TC107370] @Regression : Delete contact "test1" and verify removal from job creation', async ({ page }) => {
-        expect(true).toBe(true);
-    });
-
-    test('[TC107557] @Regression : Delete contact "test2" and verify removal from job creation', async ({ page }) => {    
+    test('[TC108008] @Regression : Delete contact "test2" and verify removal from job creation', async ({ page }) => {    
         expect(true).toBe(true);});
 });
