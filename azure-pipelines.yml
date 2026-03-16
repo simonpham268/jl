@@ -221,6 +221,30 @@ stages:
               $currentShard = [int]"$(SHARD_INDEX)"
               $shardArgs = "--shard=$currentShard/$detectedAgentCount"
               Write-Host "Running shard $currentShard of $detectedAgentCount agents"
+              
+              # Add staggered delay to prevent login conflicts
+              switch ($currentShard) {
+                1 { 
+                  Write-Host "Agent 1: Starting immediately"
+                  $delaySeconds = 0 
+                }
+                2 { 
+                  Write-Host "Agent 2: Waiting 2 minutes before starting..."
+                  $delaySeconds = 120 
+                }
+                3 { 
+                  Write-Host "Agent 3: Waiting 4 minutes before starting..."
+                  $delaySeconds = 240 
+                }
+                default {
+                  $delaySeconds = 0
+                }
+              }
+              
+              if ($delaySeconds -gt 0) {
+                Write-Host "Waiting $delaySeconds seconds to stagger login attempts..."
+                Start-Sleep -Seconds $delaySeconds
+              }
             } else {
               $detectedAgentCount = 1
               $currentShard = [int]"$(SHARD_INDEX)"
