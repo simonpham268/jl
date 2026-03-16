@@ -55,9 +55,9 @@ parameters:
 - name: agentPool
   displayName: 'Agent Pool'
   type: string
-  default: 'AutomationTeam-BuildArtifact'
+  default: 'Automation-Playwright-Pool'
   values:
-    - 'AutomationTeam-BuildArtifact'
+    - 'Automation-Playwright-Pool'
 
 - name: agentLabel
   displayName: 'Agent Label (agents with this capability will be used)'
