@@ -30,7 +30,7 @@ parameters:
     - 'prelive'
 
 - name: planid
-  displayName: 'Azure DevOps Test Plan ID'
+  displayName: 'Azure DevOps Test Plan ID (Optional)'
   type: string
   default: ''
 
@@ -40,7 +40,7 @@ parameters:
   default: 'master'
 
 - name: specificTag
-  displayName: 'Test Tag Filter (supports regex: smoke, OR logic smoke|regression, AND logic smoke.regression, etc.)'
+  displayName: 'Test Tag Filter (Optional - supports regex: smoke, OR logic smoke|regression, AND logic smoke.regression, etc.)'
   type: string
   default: ''
 
@@ -78,7 +78,7 @@ parameters:
     - 'all-agents'
 
 - name: slackChannel
-  displayName: 'Slack Channel for Reports'
+  displayName: 'Slack Channel for Reports (Optional)'
   type: string
   default: ''
 
