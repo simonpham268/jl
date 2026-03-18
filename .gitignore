@@ -18,6 +18,7 @@ yarn.lock
 /allure-report/
 /storage/
 /output/
+/input/
 
 # Environment Variables
 .env
