@@ -49,6 +49,28 @@ export default async function globalSetup() {
 
         console.log('Authentication state saved successfully');
 
+        const storageState = JSON.parse(
+            fs.readFileSync('.auth/storageState.json', 'utf-8')
+        );
+
+        // Get cookies only
+        const cookies = storageState.cookies;
+
+        // Get CSRF token
+        const __requestverificationtoken = await page.locator('input[name="__RequestVerificationToken"]').getAttribute('value');
+        if (!__requestverificationtoken) {
+            throw new Error(`Missing __RequestVerificationToken`);
+        }
+
+        const authData = {
+            cookies,
+            __requestverificationtoken
+        };
+
+        // Save authData to file for API testing
+        const authDataPath = path.join(authDir, 'authData.json');
+        fs.writeFileSync(authDataPath, JSON.stringify(authData, null, 2));
+        console.log('Auth data saved to:', authDataPath);
     } catch (error) {
         console.error('Failed to setup authentication:', error);
         throw error;

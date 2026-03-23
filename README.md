@@ -4,31 +4,68 @@
 
 ```text
 playwright-auto/
+├─ .auth/                       # Authentication storage state
 ├─ .github/                     # CI/CD workflows (if available)
 ├─ .vscode/                     # VS Code settings
-├─ docs/                        # Framework documentation
-├─ specs/                       # Test business specs
+├─ allure-results/              # Allure test report results
+├─ build/                       # Build outputs
+├─ input/                       # Input files for test generation
+├─ output/                      # Generated test case markdown files
+├─ test-results/                # Playwright test results
 ├─ src/
 │  ├─ api/
-│  │  ├─ endpoints.ts           # Shared endpoint definitions
-│  │  ├─ joblogic/              # OpenAPI generated client (apis/models/runtime)
+│  │  ├─ base/                  # API client foundation
+│  │  │  ├─ ApiClient.ts        # HTTP client wrapper
+│  │  │  └─ ApiResponse.ts      # Response type definitions
+│  │  ├─ config/                # API configuration
+│  │  │  └─ api.config.ts       # Default headers, timeouts
+│  │  ├─ data/                  # API test data factories
+│  │  │  └─ job.data.ts         # Job data with createJobData()
+│  │  ├─ endpoints/             # Endpoint URL definitions
+│  │  │  └─ job.endpoints.ts    # Job API endpoints
+│  │  ├─ joblogic/              # OpenAPI generated client
 │  │  ├─ models/                # Custom domain models
-│  │  └─ services/              # Service layer for API calls (job, rfq, notification...)
+│  │  │  └─ Job.ts              # Job interfaces
+│  │  └─ services/              # Service layer for API calls
+│  │     └─ JobService.ts       # Job CRUD operations
 │  ├─ constants/                # Shared constants
+│  │  ├─ errorMessages.ts       # Error message constants
+│  │  └─ httpStatus.ts          # HTTP status codes
 │  ├─ data/                     # Static test data
+│  │  └─ testData/              # Test data files
 │  ├─ fixtures/                 # Playwright fixtures
+│  │  ├─ api.fixture.ts         # API client/service fixtures
+│  │  └─ azure-push.fixture.ts  # Azure DevOps integration
 │  ├─ pages/                    # Page Object Model for UI tests
+│  │  ├─ BasePage.ts            # Base page class
+│  │  ├─ HomePage.ts            # Home page
+│  │  ├─ LoginPage.ts           # Login page
+│  │  ├─ Sidebar.ts             # Sidebar navigation
+│  │  └─ ...                    # Other page objects
 │  ├─ tests/
 │  │  ├─ api/                   # API test specs
+│  │  │  ├─ job.api.spec.ts     # Job API tests
+│  │  │  └─ user.api.spec.ts    # User API tests
 │  │  └─ *.spec.ts              # UI/flow test specs
-│  ├─ utils/                    # Utilities (auth, wait, tab, env...)
+│  ├─ utils/                    # Utilities
+│  │  ├─ auth.ts                # Authentication helpers
+│  │  ├─ date.util.ts           # Date formatting utilities
+│  │  ├─ require.env.ts         # Environment variable validation
+│  │  ├─ tab.ts                 # Tab/window utilities
+│  │  ├─ azure-devops/          # Azure DevOps integration
+│  │  │  ├─ azure.ts            # Azure client
+│  │  │  └─ get.azure.tc.ts     # Test case retrieval
+│  │  └─ jira/                  # Jira integration
+│  │     ├─ jira.ts             # Jira client
+│  │     └─ jira.azure.integration.ts
 │  ├─ globalSetup.ts            # Global setup before test execution
-│  ├─ globalTeardown.ts         # Global teardown after test execution
-│  └─ draft.ts                  # Draft/entry file for development
+│  └─ globalTeardown.ts         # Global teardown after test execution
+├─ azure-pipelines.yml          # Azure Pipelines CI/CD
 ├─ playwright.config.ts         # Playwright project configuration
 ├─ swagger.json                 # OpenAPI source
 ├─ openapitools.json            # OpenAPI generator configuration
 ├─ package.json                 # Scripts + dependencies
+├─ tsconfig.json                # TypeScript configuration
 ├─ .env.staging                 # Env staging
 └─ .env.uat                     # Env UAT
 ```
@@ -43,7 +80,7 @@ playwright-auto/
 
 ## Agent Workflow
 - Use 'npx tsx generate.md.ts <testid>' to generate file test-case-<testid>.md
-- Use `prompt.md` as the main instruction source when creating new test scripts.
+- Use `generate-prompt.md` as the main instruction source when creating new test scripts.
 - Use Generator Agent to generate test scripts from test-case-<testid>.md
 - Save generated tests under `src/tests` 
 - Use Healer Agent to automatically fix broken locators, flaky steps, and execution issues in generated scripts.
