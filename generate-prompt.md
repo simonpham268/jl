@@ -30,6 +30,8 @@
      */
     test('[TC{testCaseId}] @{primaryTag} @Regression: {testDescription}', async ({ page }) => {
     ```
+15. **Use Data Builder pattern for test data creation** - Import from `data/testData/`
+16. **Use high-level creation methods** (`createNewEntity(data)`) instead of calling individual field methods
 
 ---
 
@@ -37,13 +39,204 @@
 
 ```
 src/
-├── pages/           # Page Objects extending BasePage
-├── tests/           # Test specifications
-├── fixtures/        # API fixtures and setup
-├── utils/           # Utilities (requireEnv, auth, etc.)
-├── api/services/    # API service classes
-└── constants/       # Application constants
+├── api/                    # API layer
+│   ├── base/               # Base API client and response classes
+│   │   ├── ApiClient.ts
+│   │   └── ApiResponse.ts
+│   ├── config/             # API configuration
+│   │   └── api.config.ts
+│   ├── data/               # API test data
+│   ├── endpoints/          # API endpoint definitions
+│   │   ├── asset.endpoints.ts
+│   │   ├── customer.endpoints.ts
+│   │   ├── job.endpoints.ts
+│   │   ├── ppm-quote.endpoints.ts
+│   │   ├── quote.endpoints.ts
+│   │   ├── site.endpoints.ts
+│   │   └── index.ts
+│   ├── models/             # API models
+│   │   ├── Asset.ts
+│   │   ├── Customer.ts
+│   │   ├── Job.ts
+│   │   ├── PPMQuote.ts
+│   │   ├── Quote.ts
+│   │   ├── Site.ts
+│   │   └── index.ts
+│   └── services/           # API service classes
+│       ├── AssetService.ts
+│       ├── CustomerService.ts
+│       ├── JobService.ts
+│       ├── PPMQuoteService.ts
+│       ├── QuoteService.ts
+│       ├── SiteService.ts
+│       └── index.ts
+├── constants/              # Application constants (errorMessages, httpStatus)
+├── data/                   # Test data layer
+│   └── testData/           # Data builders (Builder pattern)
+│       ├── asset.data.ts
+│       ├── batchInvoice.data.ts
+│       ├── customer.data.ts
+│       ├── customerGroupedInvoice.data.ts
+│       ├── job.data.ts
+│       ├── ppm.data.ts
+│       ├── quote.data.ts
+│       ├── site.data.ts
+│       ├── stockPO.data.ts
+│       ├── stockReorder.data.ts
+│       └── index.ts        # Barrel exports
+├── fixtures/               # Playwright fixtures
+│   └── combined.fixture.ts # API services + Azure DevOps integration (CI only)
+├── pages/                  # Page Objects (organized by domain)
+│   ├── Assets/
+│   ├── Customers/
+│   ├── Engineers/
+│   ├── FormsLogbook/
+│   ├── Invoices/
+│   ├── Jobs/
+│   ├── PPM/
+│   ├── Purchasing/
+│   ├── Quotes/
+│   ├── Refcom/
+│   ├── Reports/
+│   ├── Settings/
+│   ├── Sites/
+│   ├── Stock/
+│   ├── BasePage.ts         # Base class with utilities
+│   ├── HomePage.ts
+│   ├── LoginPage.ts
+│   ├── Sidebar.ts
+│   └── index.ts            # Barrel exports
+├── tests/                  # Test specifications
+│   └── api/                # API tests
+├── utils/                  # Utilities
+│   ├── azured-devops/      # Azure DevOps integration
+│   ├── jira/               # Jira integration
+│   ├── auth.ts
+│   ├── date.util.ts
+│   ├── require.env.ts
+│   └── tab.ts
+├── globalSetup.ts
+└── globalTeardown.ts
 ```
+
+---
+
+## Data Builder Pattern
+
+Test data is managed using the Builder pattern with fluent API for creating test data objects.
+
+### Data Builder Template
+
+```typescript
+/**
+ * Entity Data Module
+ * Builder pattern for creating test data for EntityPage
+ */
+
+export interface EntityData {
+  requiredField1: string;
+  requiredField2: string;
+  optionalField1?: string;
+  optionalField2?: string[];
+}
+
+export class EntityBuilder {
+  private data: EntityData;
+
+  private constructor(requiredField1: string, requiredField2: string) {
+    this.data = {
+      requiredField1,
+      requiredField2
+    };
+  }
+
+  static create(requiredField1: string, requiredField2: string): EntityBuilder {
+    return new EntityBuilder(requiredField1, requiredField2);
+  }
+
+  optionalField1(value: string): EntityBuilder {
+    this.data.optionalField1 = value;
+    return this;
+  }
+
+  optionalField2(values: string[]): EntityBuilder {
+    this.data.optionalField2 = values;
+    return this;
+  }
+
+  build(): EntityData {
+    return { ...this.data };
+  }
+}
+
+// Helper functions
+export function generateUniqueName(prefix: string = 'Auto'): string {
+  return `${prefix} - ${Date.now()}`;
+}
+```
+
+### Using Data Builders in Tests
+
+```typescript
+import { JobBuilder, generateDescription } from '../data/testData/job.data';
+
+// Simple creation with required fields only
+const jobData = JobBuilder.create('Customer A', 'Site A', 'Fix AC').build();
+
+// With additional fields using fluent API
+const jobData = JobBuilder.create('Customer A', 'Site A', 'Fix AC')
+  .jobType('Maintenance')
+  .priorityLevel('High')
+  .engineer('John Doe')
+  .tags(['Urgent', 'HVAC'])
+  .build();
+
+// With generated unique values
+const jobData = JobBuilder.create('Customer A', 'Site A', generateDescription('Test Job'))
+  .referenceNumber(generateRefNumber())
+  .build();
+```
+
+### High-Level Page Methods
+
+Each page with creation forms should have:
+- `createNewEntity(data)` - Fill form and save
+- `fillNewEntityForm(data)` - Fill form only (no save)
+
+```typescript
+// In Page Object
+async createNewJob(data: JobData): Promise<void> {
+  await test.step('Create new Job', async () => {
+    await this.fillNewJobForm(data);
+    await this.clickSave();
+  });
+}
+
+async fillNewJobForm(data: JobData): Promise<void> {
+  await test.step('Fill new Job form', async () => {
+    await this.selectCustomer(data.customerName);
+    await this.selectSite(data.siteName);
+    await this.fillDescription(data.description);
+    if (data.jobType) await this.selectJobType(data.jobType);
+    // ... other optional fields
+  });
+}
+```
+
+### Available Data Builders
+
+| Builder | Required Fields | File |
+|---------|----------------|------|
+| `CustomerBuilder` | customerName | customer.data.ts |
+| `SiteBuilder` | customerName, siteName | site.data.ts |
+| `AssetBuilder` | customer, site, description | asset.data.ts |
+| `JobBuilder` | customerName, siteName, description | job.data.ts |
+| `QuoteBuilder` | customer, site, description | quote.data.ts |
+| `PPMBuilder` | customer, site, description (+ contractType) | ppm.data.ts |
+| `CustomerGroupedInvoiceBuilder` | customer, jobNumbers[] | customerGroupedInvoice.data.ts |
+| `BatchInvoiceBuilder` | startDate, endDate, jobNumbers[] | batchInvoice.data.ts |
+| `StockPOBuilder` | stockDeliveryLocation, supplier | stockPO.data.ts |
+| `StockReorderBuilder` | stockIndices[] | stockReorder.data.ts |
 
 ---
 
@@ -245,6 +438,55 @@ test.describe('Feature Tests', () => {
 });
 ```
 
+### Combined Fixture (API + UI + Azure DevOps)
+
+Use `combined.fixture.ts` for tests that need both API services and UI interactions.
+Azure DevOps result push only runs on CI (`CI=true` or `TF_BUILD=True`).
+
+```typescript
+import { test, expect } from '../fixtures/combined.fixture';
+import { LoginPage } from '../pages/LoginPage';
+
+test.describe('API + UI Tests', () => {
+  
+  /**
+   * ID: 12345
+   * Tags: Smoke, Regression
+   */
+  test('[TC12345] @Smoke @Regression: Create customer via API and verify in UI', async ({ 
+    page, 
+    customerService, 
+    siteService 
+  }) => {
+    // Create data via API (faster setup)
+    const customerResponse = await customerService.createCustomer({ 
+      Name: `Auto Customer ${Date.now()}` 
+    });
+    
+    const siteResponse = await siteService.createSite({
+      CustomerId: customerResponse.body.Id,
+      CustomerName: 'Auto Customer',
+      Name: 'Main Site'
+    });
+    
+    // Verify in UI
+    await page.goto('/customers');
+    await expect(page.locator('.customer-list')).toContainText('Auto Customer');
+    
+    // Result auto-pushed to Azure DevOps on CI
+  });
+});
+```
+
+**Available API Services in Fixture:**
+- `customerService` - Customer CRUD
+- `siteService` - Site CRUD  
+- `assetService` - Asset CRUD
+- `jobService` - Job CRUD
+- `quoteService` - Quote CRUD
+- `ppmQuoteService` - PPM Quote CRUD
+```
+
 ## Essential Commands
 
 ```bash
@@ -289,3 +531,4 @@ npx allure serve allure-results
 - [Playwright Documentation](https://playwright.dev)
 - [Page Object Model](https://playwright.dev/docs/pom)
 - [Best Practices](https://playwright.dev/docs/best-practices)
+- [Intent Mapping Rules](./intent-mapping.md) - Page-specific method mapping documentation

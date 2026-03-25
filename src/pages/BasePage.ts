@@ -1,8 +1,16 @@
 import { Page, Locator } from "@playwright/test";
 import { requireEnv } from "../utils/require.env";
 
+/**
+ * BasePage - Base class for all page objects
+ * Provides common utilities and timeout configurations
+ */
 export class BasePage {
   protected page: Page;
+
+  // ========================
+  // Timeout Configurations
+  // ========================
   protected elementTimeout: number;
   protected waitDisappearTimeout: number;
   protected navigationTimeout: number;
@@ -14,47 +22,85 @@ export class BasePage {
     this.navigationTimeout = parseInt(requireEnv('TIMEOUT_NAVIGATION'));
   }
 
+  // ========================
+  // Navigation Methods
+  // ========================
+
   async goToBaseURL(baseUrl?: string): Promise<void> {
     await this.page.goto(baseUrl || '/');
   }
 
-  /**
-   * Get text content from a locator
-   * @param locator - The locator element
-   * @returns The text content or null if not found
-   */
+  async navigateTo(path: string): Promise<void> {
+    await this.page.goto(path);
+  }
+
+  // ========================
+  // Form Input Methods
+  // ========================
+
+  async fill(fieldName: string, value: string): Promise<void> {
+    await this.page.getByLabel(fieldName).fill(value);
+  }
+
+  async selectOption(fieldName: string, value: string): Promise<void> {
+    await this.page.getByLabel(fieldName).selectOption(value);
+  }
+
+  async check(fieldName: string): Promise<void> {
+    await this.page.getByLabel(fieldName).check();
+  }
+
+  async uncheck(fieldName: string): Promise<void> {
+    await this.page.getByLabel(fieldName).uncheck();
+  }
+
+  async toggle(fieldName: string): Promise<void> {
+    await this.page.getByLabel(fieldName).click();
+  }
+
+  async uploadFile(selector: string, filePath: string | string[]): Promise<void> {
+    await this.page.locator(selector).setInputFiles(filePath);
+  }
+
+  // ========================
+  // Button/Click Methods
+  // ========================
+
+  async clickButton(name: string): Promise<void> {
+    await this.page.getByRole('button', { name }).click();
+  }
+
+  async submit(): Promise<void> {
+    await this.page.getByRole('button', { name: /Submit|Save|Create/i }).click();
+  }
+
+  // ========================
+  // Text/Attribute Methods
+  // ========================
+
   async getText(locator: Locator): Promise<string | null> {
     try {
       const text = await locator.innerText({ timeout: this.elementTimeout });
-      return text && text.trim() ? text.trim() : null;
-    } catch (error) {
+      return text?.trim() || null;
+    } catch {
       return null;
     }
   }
 
-  /**
-   * Get attribute value from a locator
-   * @param locator - The locator element
-   * @param attributeName - The name of the attribute
-   * @returns The attribute value or null if not found
-   */
   async getAttribute(locator: Locator, attributeName: string): Promise<string | null> {
     try {
       const value = await locator.getAttribute(attributeName, { timeout: this.elementTimeout });
-      return value && value.trim() ? value.trim() : null;
-    } catch (error) {
+      return value?.trim() || null;
+    } catch {
       return null;
     }
   }
 
-  /**
-   * Wait for a locator to disappear from the page
-   * @param locator - The locator element to wait for
-   * @param timeout - Timeout in milliseconds (uses TIMEOUT_WAIT_DISAPPEAR from env if not provided)
-   */
-  async waitForLocatorToDisappear(locator: Locator, timeout?: number): Promise<void> {
-    const timeoutMs = timeout ?? this.waitDisappearTimeout;
-    await locator.waitFor({ state: 'hidden', timeout: timeoutMs });
-  }
+  // ========================
+  // Wait Methods
+  // ========================
 
+  async waitForLocatorToDisappear(locator: Locator, timeout?: number): Promise<void> {
+    await locator.waitFor({ state: 'hidden', timeout: timeout ?? this.waitDisappearTimeout });
+  }
 }
