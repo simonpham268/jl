@@ -2,170 +2,201 @@ import { Locator, Page } from "@playwright/test";
 import { BasePage } from "./BasePage";
 import { test } from '@playwright/test';
 
+/**
+ * Sidebar - Page Object for sidebar navigation
+ * Handles menu expansion and navigation to different sections
+ */
 export class Sidebar extends BasePage {
-  // Main navigation locators with fallback selectors
+  // ========================
+  // Locators - Main Menu Items
+  // ========================
+  readonly dashboardLink: Locator;
   readonly jobsMenuLink: Locator;
+  readonly customersMenuLink: Locator;
+
+  // ========================
+  // Locators - Jobs Submenu
+  // ========================
+  readonly jobsSubmenu: Locator;
   readonly allJobsLink: Locator;
   readonly logJobLink: Locator;
-  readonly customersMenuLink: Locator;
-  readonly dashboardLink: Locator;
-  readonly jobsSubmenu: Locator;
+
+  // ========================
+  // Locators - Customers Submenu
+  // ========================
+  readonly customersSubmenu: Locator;
   readonly customersListLink: Locator;
 
   constructor(page: Page) {
     super(page);
-    
-    // Robust selectors for JobLogic sidebar navigation
-    this.jobsMenuLink = this.page.locator(
-      'a[href*="/Job"], .nav-link:has-text("Jobs"), li:has-text("Jobs") > a, [data-toggle="collapse"]:has-text("Jobs")'
-    ).first();
-    
-    this.allJobsLink = this.page.locator(
-      'a[href="/Job"], a[href*="/Job"]:has-text("All Jobs"), .submenu a:has-text("All Jobs"), a:has-text("All Jobs")'
+
+    // Main Menu Items
+    this.dashboardLink = this.page.locator(
+      'a[href="/"], a[href*="/Dashboard"], .nav-link:has-text("Dashboard"), a:has-text("Dashboard")'
     ).first();
 
-    this.logJobLink = this.page.locator(
-      'a[href*="/Job/Create"], a:has-text("Log Job"), .submenu a:has-text("Log Job"), [href*="/Job/Create"]'
+    this.jobsMenuLink = this.page.locator(
+      'a[href*="/Job"], .nav-link:has-text("Jobs"), li:has-text("Jobs") > a, [data-toggle="collapse"]:has-text("Jobs")'
     ).first();
 
     this.customersMenuLink = this.page.locator(
       'a[href*="/Customer"], .nav-link:has-text("Customers"), li:has-text("Customers") > a'
     ).first();
-    
-    this.dashboardLink = this.page.locator(
-      'a[href="/"], a[href*="/Dashboard"], .nav-link:has-text("Dashboard"), a:has-text("Dashboard")'
-    ).first();
-    
+
+    // Jobs Submenu
     this.jobsSubmenu = this.page.locator(
       '.collapse:has(a[href*="/Job"]), .submenu:has(a:has-text("All Jobs")), ul:has(a[href="/Job"])'
     ).first();
-    
+
+    this.allJobsLink = this.page.locator(
+      'a[href="/Job"], a[href*="/Job"]:has-text("All Jobs"), .submenu a:has-text("All Jobs"), a:has-text("All Jobs")'
+    ).first();
+
+    this.logJobLink = this.page.locator(
+      'a[href*="/Job/Create"], a:has-text("Log Job"), .submenu a:has-text("Log Job")'
+    ).first();
+
+    // Customers Submenu
+    this.customersSubmenu = this.page.locator(
+      '.collapse:has(a[href*="/Customer"]), .submenu:has(a[href*="/Customer"])'
+    ).first();
+
     this.customersListLink = this.page.locator(
       'a[href*="/Customer/List"], a[href*="/Customer"]:has-text("List"), .submenu a:has-text("Customers")'
     ).first();
-
-        // Add this locator in the constructor after the existing locators:
-    this.logJobLink = this.page.locator(
-      'a[href*="/Job/Create"], a:has-text("Log Job"), .submenu a:has-text("Log Job"), [href*="/Job/Create"]'
-    ).first();
   }
 
-  /**
-   * Click on Jobs menu to expand or navigate
-   */
-  async clickJobs(): Promise<void> {
-    await test.step('Click on Jobs menu to expand or navigate', async () => {
-      await this.jobsMenuLink.click();
-      await this.page.waitForLoadState('domcontentloaded');
-    });
-  }
+  // ========================
+  // Dashboard Navigation
+  // ========================
 
-  /**
-   * Expand Jobs menu if it's collapsible
-   */
-  async expandJobs(): Promise<void> {
-    await test.step('Expand Jobs menu if it\'s collapsible', async () => {
-      // Check if Jobs menu has submenu and expand if needed
-      const hasSubmenu = await this.jobsSubmenu.isVisible().catch(() => false);
-      
-      if (!hasSubmenu) {
-        await this.jobsMenuLink.click();
-        // Wait for submenu to appear
-        await this.jobsSubmenu.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-      }
-    });
-  }
-
-  /**
-   * Click on All Jobs link in sidebar
-   */
-  async clickAllJobs(): Promise<void> {
-    await test.step('Click on All Jobs link in sidebar', async () => {
-      // Ensure Jobs menu is expanded first
-      await this.expandJobs();
-      
-      await this.allJobsLink.click();
-      await this.page.waitForURL('**/Job**', { timeout: this.navigationTimeout });
-    });
-  }
-
-  /**
-   * Click on Log Job link in sidebar
-   */
-  async clickLogJob(): Promise<void> {
-    await test.step('Click on Log Job link in sidebar', async () => {
-      // Ensure Jobs menu is expanded first
-      // await this.expandJobs();
-      
-      await this.logJobLink.click();
-      await this.page.waitForURL('**/Job/Create**', { timeout: this.navigationTimeout });
-    });
-  }
-
-  /**
-   * Navigate to Dashboard from sidebar
-   */
   async clickDashboard(): Promise<void> {
-    await test.step('Navigate to Dashboard from sidebar', async () => {
+    await test.step('Navigate to Dashboard', async () => {
       await this.dashboardLink.click();
       await this.page.waitForURL('**/', { timeout: this.navigationTimeout });
     });
   }
 
-  /**
-   * Navigate to Customers section
-   */
-  async clickCustomers(): Promise<void> {
-    await test.step('Navigate to Customers section', async () => {
-      await this.customersMenuLink.click();
-      await this.page.waitForURL('**/Customer**', { timeout: this.navigationTimeout });
-    });
-  }
+  // ========================
+  // Jobs Navigation
+  // ========================
 
-  /**
-   * Expand Customers menu if it has submenu
-   */
-  async expandCustomers(): Promise<void> {
-    await test.step('Expand Customers menu if it has submenu', async () => {
-      const customersSubmenu = this.page.locator('.collapse:has(a[href*="/Customer"]), .submenu:has(a[href*="/Customer"])');
-      const hasSubmenu = await customersSubmenu.isVisible().catch(() => false);
-      
-      if (!hasSubmenu) {
-        await this.customersMenuLink.click();
-        await customersSubmenu.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+  async expandJobs(): Promise<void> {
+    await test.step('Expand Jobs menu', async () => {
+      const isExpanded = await this.jobsSubmenu.isVisible().catch(() => false);
+      if (!isExpanded) {
+        await this.jobsMenuLink.click();
+        await this.jobsSubmenu.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
       }
     });
   }
 
-  /**
-   * Navigate to Customers List
-   */
-  async clickCustomersList(): Promise<void> {
-    await test.step('Navigate to Customers List', async () => {
-      await this.expandCustomers();
-      
-      await this.customersListLink.click();
-      await this.page.waitForURL('**/Customer**', { timeout: this.navigationTimeout });
+  async clickJobs(): Promise<void> {
+    await test.step('Click on Jobs menu', async () => {
+      await this.jobsMenuLink.click();
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
-  /**
-   * Check if Jobs menu is expanded
-   */
+  async clickAllJobs(): Promise<void> {
+    await test.step('Navigate to All Jobs', async () => {
+      await this.expandJobs();
+      await this.allJobsLink.click();
+      await this.page.waitForURL('**/Job**', { timeout: this.navigationTimeout });
+    });
+  }
+
+  async clickLogJob(): Promise<void> {
+    await test.step('Navigate to Log Job', async () => {
+      await this.logJobLink.click();
+      await this.page.waitForURL('**/Job/Create**', { timeout: this.navigationTimeout });
+    });
+  }
+
   async isJobsMenuExpanded(): Promise<boolean> {
     return await test.step('Check if Jobs menu is expanded', async () => {
       return await this.jobsSubmenu.isVisible().catch(() => false);
     });
   }
 
+  // ========================
+  // Customers Navigation
+  // ========================
+
+  async expandCustomers(): Promise<void> {
+    await test.step('Expand Customers menu', async () => {
+      const isExpanded = await this.customersSubmenu.isVisible().catch(() => false);
+      if (!isExpanded) {
+        await this.customersMenuLink.click();
+        await this.customersSubmenu.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+      }
+    });
+  }
+
+  async clickCustomers(): Promise<void> {
+    await test.step('Navigate to Customers', async () => {
+      await this.customersMenuLink.click();
+      await this.page.waitForURL('**/Customer**', { timeout: this.navigationTimeout });
+    });
+  }
+
+  async clickCustomersList(): Promise<void> {
+    await test.step('Navigate to Customers List', async () => {
+      await this.expandCustomers();
+      await this.customersListLink.click();
+      await this.page.waitForURL('**/Customer**', { timeout: this.navigationTimeout });
+    });
+  }
+
+  // ========================
+  // Generic Navigation
+  // ========================
+
   /**
-   * Get current active menu item text
+   * Navigate to any menu > subItem in the sidebar
+   * @param menu - Main menu name (e.g., 'Jobs', 'Customers', 'Dashboard')
+   * @param subItem - Submenu item name (e.g., 'Log Job', 'All Jobs')
+   * 
+   * @example
+   * await sidebar.navigateTo('Jobs', 'Log Job');
+   * await sidebar.navigateTo('Customers', 'List');
    */
+  async navigateTo(menu: string, subItem?: string): Promise<void> {
+    await test.step(`Navigate to ${menu}${subItem ? ' > ' + subItem : ''}`, async () => {
+      // Find and click the main menu
+      const menuLocator = this.page.locator(
+        `a:has-text("${menu}"), li:has-text("${menu}") > a, [data-toggle="collapse"]:has-text("${menu}"), .nav-link:has-text("${menu}")`
+      ).first();
+      
+      await menuLocator.click();
+      await this.page.waitForLoadState('domcontentloaded');
+
+      // If subItem is provided, wait for submenu and click
+      if (subItem) {
+        // Wait for submenu to expand
+        const submenuLocator = this.page.locator(
+          `.collapse:has(a:has-text("${subItem}")), .submenu:has(a:has-text("${subItem}")), ul:has(a:has-text("${subItem}"))`
+        ).first();
+        await submenuLocator.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+
+        // Click on submenu item
+        const subItemLocator = this.page.locator(
+          `a:has-text("${subItem}"), .submenu a:has-text("${subItem}")`
+        ).first();
+        await subItemLocator.click();
+        await this.page.waitForLoadState('domcontentloaded');
+      }
+    });
+  }
+
+  // ========================
+  // Utility Methods
+  // ========================
+
   async getActiveMenuItem(): Promise<string | null> {
-    return await test.step('Get current active menu item text', async () => {
+    return await test.step('Get active menu item text', async () => {
       const activeItem = this.page.locator('.nav-link.active, .active > a, [aria-current="page"]').first();
       return await this.getText(activeItem);
     });
   }
-
 }

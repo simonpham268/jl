@@ -1,33 +1,58 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "./BasePage";
-import { test } from '@playwright/test'
+import { requireEnv } from "../utils/require.env";
+import { test } from '@playwright/test';
 
+/**
+ * LoginPage - Page Object for login page
+ * Handles authentication actions
+ */
 export class LoginPage extends BasePage {
-  // Form Elements - declared directly in constructor
+  // ========================
+  // Locators - Form Elements
+  // ========================
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
 
   constructor(page: Page) {
     super(page);
-    
-    // Initialize locators directly with improved selector for login button
-    this.usernameInput = this.page.locator('input[type="email"], input[name*="username" i], input[name*="email" i], input[id*="username" i], input[id*="email" i]');
+
+    // Form Elements with fallback selectors
+    this.usernameInput = this.page.locator(
+      'input[type="email"], input[name*="username" i], input[name*="email" i], input[id*="username" i], input[id*="email" i]'
+    );
     this.passwordInput = this.page.locator('input[type="password"]');
-    // Use only the main login button (not Microsoft Entra)
     this.loginButton = this.page.locator('button#loginButton, button:has-text("Log in")').first();
   }
 
-  /**
-   * Login with provided credentials and wait for home page to load
-   */
+  // ========================
+  // Authentication Methods
+  // ========================
+
   async login(username: string, password: string): Promise<void> {
       await this.usernameInput.fill(username);
       await this.passwordInput.fill(password);
       await this.loginButton.click();
-      // Wait for home page/dashboard to load after login
-      await this.page.waitForURL('https://jluateventbasedjlweb.azurewebsites.net/', { timeout: this.navigationTimeout });
+      await this.page.waitForURL(requireEnv('BASE_URL'), { timeout: this.navigationTimeout });
       await this.page.waitForLoadState('domcontentloaded');
   }
 
+  // async fillUsername(username: string): Promise<void> {
+  //   await test.step(`Fill username: ${username}`, async () => {
+  //     await this.usernameInput.fill(username);
+  //   });
+  // }
+
+  // async fillPassword(password: string): Promise<void> {
+  //   await test.step('Fill password', async () => {
+  //     await this.passwordInput.fill(password);
+  //   });
+  // }
+
+  // async clickLogin(): Promise<void> {
+  //   await test.step('Click login button', async () => {
+  //     await this.loginButton.click();
+  //   });
+  // }
 }

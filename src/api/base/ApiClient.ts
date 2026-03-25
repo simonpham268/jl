@@ -156,7 +156,7 @@ export class ApiClient {
 
     async post<T>(endpoint: string, options?: {
         data?: unknown;
-        form?: Record<string, string | number>;
+        form?: Record<string, string | number | boolean>;
         headers?: Record<string, string>;
     }): Promise<ApiResponse<T>> {
         const response = await this.request.post(this.url(endpoint), {
@@ -169,7 +169,7 @@ export class ApiClient {
 
     async put<T>(endpoint: string, options?: {
         data?: unknown;
-        form?: Record<string, string | number>;
+        form?: Record<string, string | number | boolean>;
         headers?: Record<string, string>;
     }): Promise<ApiResponse<T>> {
         const response = await this.request.put(this.url(endpoint), {
