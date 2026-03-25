@@ -157,6 +157,12 @@ git clone https://joblogicltd.visualstudio.com/TMS/_git/Playwright-Automation
 # Install dependencies
 npm install
 
+# Install Copilot agents for VS Code
+npx playwright init-agents --loop=vscode
+
+# Install Allure CLI (for test reports)
+npm install -g allure-commandline
+
 # Create new branch
 git checkout -b feature/your-feature-name
 ```

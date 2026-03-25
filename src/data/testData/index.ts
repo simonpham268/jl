@@ -9,4 +9,3 @@ export * from './quote.data';
 export * from './site.data';
 export * from './stockPO.data';
 export * from './stockReorder.data';
-export * from './user.data';
