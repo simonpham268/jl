@@ -171,7 +171,7 @@ git checkout -b feature/your-feature-name
 
 #### Step 1: Get Test Case from Azure DevOps
 ```bash
-npx tsx generate.md.ts <testid>
+npm run generate -- <testid>
 ```
 This generates `output/test-case-<testid>.md` with format:
 ```markdown
@@ -187,12 +187,12 @@ This generates `output/test-case-<testid>.md` with format:
     Expected: Job form opens
 ```
 
-#### Step 2: Refine Test Case
+### Step 2: Refine Test Case
 - Review generated markdown
 - Clarify ambiguous steps
 - Add missing expected results
 
-#### Step 3: Generate Script with Agent
+### Step 3: Generate Script with Agent
 1. Select **playwright-test-generator** Agent in Copilot
 2. Attach files:
    - `output/test-case-<testid>.md`
@@ -201,13 +201,13 @@ This generates `output/test-case-<testid>.md` with format:
 3. Prompt: `Generate script and follow strictly these md files`
 4. Save generated test to `src/tests/`
 
-#### Step 4: Fix Issues with Healer Agent
+### Step 4: Fix Issues with Healer Agent
 1. Select **playwright-test-healer** Agent
 2. Attach failing test file
 3. Prompt: `Fix broken locators and flaky steps`
 4. Re-run tests until stable
 
-#### Step 5: Finalize
+### Step 5: Finalize
 ```bash
 # Run test
 npx playwright test src/tests/your-test.spec.ts
@@ -217,3 +217,44 @@ git add .
 git commit -m "feat: add TC<testid> - description"
 git push origin feature/your-feature-name
 ```
+
+---
+
+## Import Test Cases to Azure DevOps Suite
+
+Import test cases from Azure DevOps to a test suite with filters.
+
+### Usage
+```bash
+npm run import-suite -- planId=<id> suiteId=<id> tags=[...] priorities=[...] excludePaths=[...] excludeAuto=[...]
+```
+
+### Parameters
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `planId` | Azure DevOps Test Plan ID | `planId=109583` |
+| `suiteId` | Azure DevOps Test Suite ID | `suiteId=109584` |
+| `tags` | Array of tags to include (OR logic) | `tags=[auto,regression]` |
+| `priorities` | Array of priorities (1-4) | `priorities=[1,2]` |
+| `excludePaths` | Array of area paths to EXCLUDE | `excludePaths=[TMS\QC Team\Bin]` |
+| `excludeAuto` | (Optional) Array of automation statuses to EXCLUDE | `excludeAuto=[Automated]` |
+
+### Examples
+```bash
+# Import test cases with tags "auto" OR "regression", priority 1 or 2
+npm run import-suite -- planId=107558 suiteId=107559 tags=[auto,regression] priorities=[1,2] excludePaths=[]
+
+# Import all except "Automated" test cases
+npm run import-suite -- planId=107558 suiteId=107559 tags=[regression] priorities=[1] excludePaths=[] excludeAuto=[Automated]
+
+# Exclude test cases under specific area path
+npm run import-suite -- planId=107558 suiteId=107559 tags=[smoke] priorities=[] excludePaths=[TMS\QC Team\Bin]
+
+# Combine multiple filters
+npm run import-suite -- planId=109583 suiteId=109584 tags=[vienpham,vientesttest] priorities=[1,2,3] excludePaths=[TMS\QC Team\Bin] excludeAuto=[Automated]
+```
+
+### Automation Status Values
+- `Automated` - Test case is automated
+- `Not Automated` - Test case is not automated
+- `Planned` - Automation is planned
