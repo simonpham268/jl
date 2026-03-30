@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Stock Records tab type
@@ -184,15 +184,15 @@ export class StockRecordsPage extends BasePage {
   async switchToTab(tab: StockRecordsTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'All':
-          await this.allTab.click();
-          break;
-        case 'Active':
-          await this.activeTab.click();
-          break;
-        case 'Suspended':
-          await this.suspendedTab.click();
-          break;
+      case 'All':
+        await this.allTab.click();
+        break;
+      case 'Active':
+        await this.activeTab.click();
+        break;
+      case 'Suspended':
+        await this.suspendedTab.click();
+        break;
       }
       await this.waitForDataLoad();
     });
@@ -204,19 +204,21 @@ export class StockRecordsPage extends BasePage {
   async getTabCount(tab: StockRecordsTab): Promise<number> {
     return await test.step(`Get ${tab} tab count`, async () => {
       let tabLocator: Locator;
+
       switch (tab) {
-        case 'All':
-          tabLocator = this.allTab;
-          break;
-        case 'Active':
-          tabLocator = this.activeTab;
-          break;
-        case 'Suspended':
-          tabLocator = this.suspendedTab;
-          break;
+      case 'All':
+        tabLocator = this.allTab;
+        break;
+      case 'Active':
+        tabLocator = this.activeTab;
+        break;
+      case 'Suspended':
+        tabLocator = this.suspendedTab;
+        break;
       }
       const text = await tabLocator.textContent() || '';
       const match = text.match(/\((\d+)\)/);
+
       return match ? parseInt(match[1], 10) : 0;
     });
   }

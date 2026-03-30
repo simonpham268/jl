@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Forms Logbook item interface
@@ -188,6 +188,7 @@ export class FormsLogbookPage extends BasePage {
   async setShowPrivate(show: boolean): Promise<void> {
     await test.step(`Set show private: ${show}`, async () => {
       const isChecked = await this.showPrivateToggle.locator('input').isChecked().catch(() => false);
+
       if (isChecked !== show) {
         await this.toggleShowPrivate();
       }

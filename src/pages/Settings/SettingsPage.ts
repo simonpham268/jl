@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 
 /**
@@ -244,6 +244,7 @@ export class SettingsPage {
         'FTP Accounts': this.ftpAccountsTile,
       };
       const tile = tileMap[tileName];
+
       if (!tile) {
         throw new Error(`Unknown tile: ${tileName}`);
       }

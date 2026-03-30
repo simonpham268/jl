@@ -44,6 +44,7 @@ function buildUrl(path: string): string {
 async function fetchWorkItem(id: number, fields: string[]): Promise<any | null> {
   const url = buildUrl(`/_apis/wit/workitems/${id}?fields=${fields.join(',')}&api-version=7.1`);
   const response = await fetch(url, { method: 'GET', headers: createHeaders() });
+
   return response.ok ? response.json() : null;
 }
 
@@ -53,7 +54,7 @@ async function fetchWorkItem(id: number, fields: string[]): Promise<any | null> 
 async function importToSuite(testCaseIds: number[], planId: number, suiteId: number): Promise<boolean> {
   const payload = testCaseIds.map(id => ({ workItem: { id: id.toString() } }));
   const url = buildUrl(`/_apis/testplan/Plans/${planId}/Suites/${suiteId}/TestCase?api-version=7.1`);
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: createHeaders(),
@@ -62,6 +63,7 @@ async function importToSuite(testCaseIds: number[], planId: number, suiteId: num
 
   if (!response.ok) {
     const errorText = await response.text();
+
     console.error(`Failed to import: ${response.status} ${response.statusText}\n${errorText}`);
     return false;
   }
@@ -100,12 +102,14 @@ function matchesFilters(
   if (excludeAreaPaths.length) {
     const isExcluded = excludeAreaPaths.some(p => {
       const matches = areaPath.startsWith(p);
+
       // Debug log for exclusion check
       if (matches) {
         console.log(`      [EXCLUDE CHECK] "${areaPath}" starts with "${p}" -> EXCLUDED`);
       }
       return matches;
     });
+
     if (isExcluded) {
       return { matches: false, reason: `Area "${areaPath}" is in excluded paths` };
     }
@@ -131,7 +135,7 @@ async function filterByAreaPath(testCaseIds: number[], areaPaths: string[]): Pro
 
   for (const id of testCaseIds) {
     const workItem = await fetchWorkItem(id, fields);
-    
+
     if (!workItem) {
       console.log(`  TC${id}: Failed to fetch, including by default`);
       filtered.push(id);
@@ -144,11 +148,9 @@ async function filterByAreaPath(testCaseIds: number[], areaPaths: string[]): Pro
 
     console.log(`  TC${id}: ${isIncluded ? '✓' : '✗'} "${title}" (${areaPath})`);
     if (isIncluded) filtered.push(id);
-    
-    await delay();
-  }
 
-  return filtered;
+    await delay();
+  }  return filtered;
 }
 
 /**
@@ -166,7 +168,7 @@ async function filterTestCases(
   for (let i = 0; i < testCaseIds.length; i++) {
     const id = testCaseIds[i];
     const workItem = await fetchWorkItem(id, fields);
-    
+
     if (!workItem) {
       console.log(`  [${i + 1}/${testCaseIds.length}] TC${id}: Failed to fetch, skipping`);
       continue;
@@ -175,14 +177,12 @@ async function filterTestCases(
     const { matches, reason } = matchesFilters(workItem, excludeAreaPaths, priorities, excludeAutoStatuses);
     const title = workItem.fields['System.Title'] || 'Unknown';
     const status = matches ? '✓ INCLUDED' : `✗ EXCLUDED - ${reason}`;
-    
+
     console.log(`  [${i + 1}/${testCaseIds.length}] TC${id}: ${status} - "${title}"`);
     if (matches) filtered.push(id);
-    
-    await delay();
-  }
 
-  return filtered;
+    await delay();
+  }  return filtered;
 }
 
 // ============================================================================
@@ -218,6 +218,7 @@ export async function importTestCasesToSuiteWithFilters(
     // Step 1: Query by tags
     console.log('Step 1: Querying test cases by tags...');
     const testCaseIds: number[] = await getTestCaseIdsByTags(tags);
+
     if (!testCaseIds.length) {
       console.log('No test cases found for provided tags.');
       return false;
@@ -227,6 +228,7 @@ export async function importTestCasesToSuiteWithFilters(
     // Step 2: Apply filters
     console.log('Step 2: Filtering test cases...');
     const filteredIds = await filterTestCases(testCaseIds, excludeAreaPaths, priorities, excludeAutoStatuses);
+
     console.log(`\nFiltered: ${filteredIds.length}/${testCaseIds.length} matched.\n`);
 
     if (!filteredIds.length) {
@@ -237,13 +239,12 @@ export async function importTestCasesToSuiteWithFilters(
     // Step 3: Import
     console.log('Step 3: Importing to suite...');
     const success = await importToSuite(filteredIds, planId, suiteId);
-    
+
     if (success) {
       console.log(`\n=== Import Successful ===`);
       console.log(`Imported ${filteredIds.length} test cases: ${JSON.stringify(filteredIds)}`);
     }
     return success;
-
   } catch (error: any) {
     console.error('Error:', error?.message || error);
     return false;
@@ -276,11 +277,11 @@ export async function importTestCasesToSuite(
     }
 
     const success = await importToSuite(idsToImport, testPlanId, testSuiteId);
+
     if (success) {
       console.log(`Successfully imported ${idsToImport.length} test cases.`);
     }
     return success;
-
   } catch (error: any) {
     console.error(`Error importing:`, error?.message || error);
     return false;
@@ -294,7 +295,7 @@ export async function integrateJiraWithAzureDevOps(
   sprintVersion: string,
   testPlanId?: number,
   testSuiteId?: number,
-  underPath: string[] = ["TMS\\QC Team\\JLWeb Test Cases"]
+  underPath: string[] = ['TMS\\QC Team\\JLWeb Test Cases']
 ): Promise<void> {
   console.log(`=== JIRA → Azure DevOps Integration ===`);
   console.log(`Sprint: ${sprintVersion}\n`);
@@ -338,11 +339,11 @@ export async function integrateJiraWithAzureDevOps(
     if (testPlanId && testSuiteId) {
       console.log(`\nStep 4: Importing to Test Suite...`);
       const success = await importTestCasesToSuite(testCaseIds, testPlanId, testSuiteId, underPath);
+
       console.log(success ? 'Import successful!' : 'Import failed.');
     }
 
     console.log(`\nIntegration complete!`);
-
   } catch (error: any) {
     console.error(`Integration failed:`, error?.message || error);
     throw error;
@@ -360,8 +361,9 @@ export async function integrateJiraWithAzureDevOpsFiltered(
   customInclusions: string[] = []
 ): Promise<void> {
   const underPath = [...customInclusions];
-  if (includeQcTeam) underPath.push("TMS\\QC Team\\JLWeb Test Cases");
-  
+
+  if (includeQcTeam) underPath.push('TMS\\QC Team\\JLWeb Test Cases');
+
   console.log(`Using filters: ${JSON.stringify(underPath)}\n`);
   return integrateJiraWithAzureDevOps(sprintVersion, testPlanId, testSuiteId, underPath);
 }
@@ -400,7 +402,7 @@ Commands:
 
   if (cmd === 'import-suite-filtered') {
     const [planId, suiteId, tagsStr, prioritiesStr, excludeAreaPathsStr, excludeAutoStatusStr] = args;
-    
+
     if (!planId || !suiteId || !tagsStr || !prioritiesStr || !excludeAreaPathsStr) {
       showHelp();
     }
@@ -427,7 +429,7 @@ Commands:
     const testPlanId = args[0] ? parseInt(args[0], 10) : undefined;
     const testSuiteId = args[1] ? parseInt(args[1], 10) : undefined;
     let underPath: string[] | undefined;
-    
+
     if (args[2]) {
       try {
         underPath = JSON.parse(args[2]);

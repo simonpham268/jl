@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Report item interface
@@ -191,6 +191,7 @@ export class DynamicReportsPage extends BasePage {
         'Favourite Reports': this.favouriteReportsTab,
         'Dynamic Dashboard': this.dynamicDashboardTab,
       }[tab];
+
       await tabLocator.click();
       await this.waitForDataLoad();
     });
@@ -208,6 +209,7 @@ export class DynamicReportsPage extends BasePage {
       }[tab];
       const text = await tabLocator.textContent() || '';
       const match = text.match(/\((\d+)\)/);
+
       return match ? parseInt(match[1], 10) : 0;
     });
   }
@@ -249,6 +251,7 @@ export class DynamicReportsPage extends BasePage {
   async toggleFavourite(reportName: string): Promise<void> {
     await test.step(`Toggle favourite for report: ${reportName}`, async () => {
       const reportRow = this.page.locator(`text=${reportName}`).locator('..');
+
       await reportRow.locator('[title*="favourite"], [class*="star"]').click();
     });
   }

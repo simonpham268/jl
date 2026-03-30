@@ -1,10 +1,10 @@
 #!/usr/bin/env npx tsx
 /**
  * Shortcut CLI for importing test cases to suite with filters
- * 
+ *
  * Usage with named parameters (recommended for manual testers):
  *   npm run import-suite -- planId=107558 suiteId=107559 tags=["auto","regression"] priorities=[1,2] excludePaths=["TMS\\QC Team\\Bin"]
- * 
+ *
  * Or with positional arguments:
  *   npx tsx src/utils/jira/import-suite-filtered.ts 107558 107559 '["auto"]' '[1,2]' '["TMS\\QC Team\\Bin"]'
  */
@@ -53,9 +53,7 @@ function mergeArgs(rawArgs: string[]): string[] {
   // Handle unclosed bracket
   if (currentArg) {
     merged.push(currentArg);
-  }
-
-  return merged;
+  }  return merged;
 }
 
 const mergedArgs = mergeArgs(args);
@@ -63,8 +61,10 @@ const mergedArgs = mergeArgs(args);
 // Parse named parameters (key=value format)
 function parseNamedArgs(args: string[]): Record<string, string> {
   const parsed: Record<string, string> = {};
+
   for (const arg of args) {
     const match = arg.match(/^(\w+)=(.*)$/);
+
     if (match) {
       parsed[match[1].toLowerCase()] = match[2];
     }
@@ -74,28 +74,30 @@ function parseNamedArgs(args: string[]): Record<string, string> {
 
 /**
  * Parse array value - handles both JSON format and simple format
- * Examples: 
+ * Examples:
  *   '["auto","regression"]' -> ["auto", "regression"]
- *   '[auto,regression]' -> ["auto", "regression"]  
+ *   '[auto,regression]' -> ["auto", "regression"]
  *   'auto,regression' -> ["auto", "regression"]
  */
 function parseArrayValue(value: string): string[] {
   if (!value || value === '[]') return [];
-  
+
   // Try JSON parse first
   try {
     const parsed = JSON.parse(value);
+
     if (Array.isArray(parsed)) return parsed.map(String);
   } catch {
     // Continue to fallback parsing
   }
-  
+
   // Remove brackets if present
   let cleaned = value.trim();
+
   if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
     cleaned = cleaned.slice(1, -1);
   }
-  
+
   // Split by comma and clean up each item
   if (!cleaned) return [];
   return cleaned.split(',').map(item => item.trim().replace(/^['"]|['"]$/g, ''));
@@ -106,6 +108,7 @@ function parseArrayValue(value: string): string[] {
  */
 function parseNumberArray(value: string): number[] {
   const strings = parseArrayValue(value);
+
   return strings.map(s => Number(s)).filter(n => !isNaN(n));
 }
 
@@ -165,7 +168,7 @@ try {
   if (hasNamedParams) {
     // Parse named parameters
     const params = parseNamedArgs(mergedArgs);
-    
+
     if (!params.planid || !params.suiteid || !params.tags) {
       console.error('Missing required parameters: planId, suiteId, tags');
       console.log('\nRun with --help for usage information.\n');
@@ -178,7 +181,6 @@ try {
     priorities = params.priorities ? parseNumberArray(params.priorities) : [];
     excludeAreaPaths = params.excludepaths ? parseArrayValue(params.excludepaths) : [];
     excludeAutoStatuses = params.excludeauto ? parseArrayValue(params.excludeauto) : [];
-
   } else {
     // Parse positional arguments (backward compatibility)
     if (mergedArgs.length < 5) {
@@ -212,7 +214,7 @@ try {
   console.log(`   Priorities:     ${JSON.stringify(priorities)}`);
   console.log(`   Exclude Paths:  ${JSON.stringify(excludeAreaPaths)}`);
   if (excludeAutoStatuses.length) console.log(`   Exclude Auto:   ${JSON.stringify(excludeAutoStatuses)}`);
-  
+
   // Debug: Show raw and merged args
   console.log(`\n   [DEBUG] Raw args count: ${args.length}`);
   console.log(`   [DEBUG] Merged args count: ${mergedArgs.length}`);
@@ -234,7 +236,6 @@ try {
       console.error('\nError:', err?.message || err);
       process.exit(1);
     });
-
 } catch (e: any) {
   console.error('Failed to parse parameters:', e?.message || e);
   console.log('\nMake sure arrays are properly formatted, e.g. [auto,regression]');

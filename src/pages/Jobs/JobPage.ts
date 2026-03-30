@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Log Job form field definitions
@@ -91,7 +91,7 @@ export interface JobData {
 /**
  * Section navigation items
  */
-export type JobSection = 
+export type JobSection =
   | 'Customer & Site'
   | 'Job Details'
   | 'Job KPIs'
@@ -324,6 +324,7 @@ export class JobPage extends BasePage {
         'Contacts': this.contactsLink,
         'Recent Jobs/Quotes': this.recentJobsQuotesLink,
       };
+
       await sectionLinks[section].click();
     });
   }
@@ -358,6 +359,7 @@ export class JobPage extends BasePage {
   async getSelectedCustomer(): Promise<string> {
     return await test.step('Get selected customer', async () => {
       const text = await this.customerCombobox.textContent();
+
       return text?.trim() || '';
     });
   }
@@ -518,6 +520,7 @@ export class JobPage extends BasePage {
   async getSelectedJobOwner(): Promise<string> {
     return await test.step('Get selected Job Owner', async () => {
       const text = await this.jobOwnerCombobox.textContent();
+
       return text?.trim() || '';
     });
   }
@@ -705,6 +708,7 @@ export class JobPage extends BasePage {
   async selectContactByName(contactName: string): Promise<void> {
     await test.step(`Select contact: ${contactName}`, async () => {
       const row = this.contactsTable.locator(`tr:has-text("${contactName}")`);
+
       await row.click();
     });
   }
@@ -715,6 +719,7 @@ export class JobPage extends BasePage {
   async selectFirstContact(): Promise<void> {
     await test.step('Select first contact', async () => {
       const firstRow = this.contactsTable.locator('tbody tr').first();
+
       await firstRow.click();
     });
   }
@@ -726,6 +731,7 @@ export class JobPage extends BasePage {
     return await test.step('Get selected contacts count', async () => {
       const text = await this.selectedContactsCounter.textContent();
       const match = text?.match(/(\d+) of/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -777,6 +783,7 @@ export class JobPage extends BasePage {
     return await test.step('Get recent jobs count', async () => {
       const text = await this.jobsTab.textContent();
       const match = text?.match(/Jobs \((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -811,6 +818,7 @@ export class JobPage extends BasePage {
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
       const url = this.page.url();
       const match = url.match(/\/Job\/Detail\/(\d+)/);
+
       return match ? match[1] : '';
     });
   }
@@ -877,20 +885,20 @@ export class JobPage extends BasePage {
   /**
    * Create a new job with complete data-driven approach
    * Navigates to Log Job, fills all provided fields, saves, and returns Job ID
-   * 
+   *
    * @param data - Job data object (use createJobData from job.data.ts for defaults)
    * @returns Job ID after successful creation
-   * 
+   *
    * @example
    * // Using data factory from job.data.ts
    * import { JOB_TEST_DATA, createJobData } from '../../data/testData/job.data';
-   * 
+   *
    * // Minimal job
    * const jobId = await jobPage.createNewJob(JOB_TEST_DATA.minimal('Customer A', 'Site A'));
-   * 
+   *
    * // Reactive job with defaults
    * const jobId = await jobPage.createNewJob(JOB_TEST_DATA.reactive('Customer A', 'Site A'));
-   * 
+   *
    * // Custom job with specific fields
    * const jobId = await jobPage.createNewJob(createJobData(
    *   { customerName: 'Customer A', siteName: 'Site A', description: 'Test Job' },
@@ -907,6 +915,7 @@ export class JobPage extends BasePage {
 
       // Wait for navigation and return Job ID
       const jobId = await this.waitForJobDetailsNavigation();
+
       return jobId;
     });
   }
@@ -914,7 +923,7 @@ export class JobPage extends BasePage {
   /**
    * Create a new job without navigation (assumes already on Log Job page)
    * Use this when you're already on the Log Job page
-   * 
+   *
    * @param data - Job data object
    * @returns Job ID after successful creation
    */
@@ -928,6 +937,7 @@ export class JobPage extends BasePage {
 
       // Wait for navigation and return Job ID
       const jobId = await this.waitForJobDetailsNavigation();
+
       return jobId;
     });
   }
@@ -935,12 +945,11 @@ export class JobPage extends BasePage {
   /**
    * Fill job form and verify before saving (for validation tests)
    * Does not save - allows for additional verification
-   * 
+   *
    * @param data - Job data object
    */
   async fillNewJobForm(data: JobData): Promise<void> {
     await test.step(`Fill job form for customer: ${data.customerName}`, async () => {
-
       // Fill all form fields
       await this.fillJobForm(data);
     });

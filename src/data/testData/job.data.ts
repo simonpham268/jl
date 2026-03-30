@@ -1,12 +1,12 @@
-import { JobData } from '../../pages/Jobs/JobPage';
+import type { JobData } from '../../pages/Jobs/JobPage';
 
 /**
  * Job Data Builder - Fluent API for creating job test data
- * 
+ *
  * @example
  * // Simple job
  * const job = JobBuilder.create('Customer A', 'Site A', 'Fix AC').build();
- * 
+ *
  * // With more fields
  * const job = JobBuilder.create('Customer A', 'Site A', 'Fix AC')
  *   .jobType('Maintenance')

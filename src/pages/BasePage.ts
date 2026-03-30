@@ -1,5 +1,5 @@
-import { Page, Locator } from "@playwright/test";
-import { requireEnv } from "../utils/require.env";
+import type { Page, Locator } from '@playwright/test';
+import { requireEnv } from '../utils/require.env';
 
 /**
  * BasePage - Base class for all page objects
@@ -81,6 +81,7 @@ export class BasePage {
   async getText(locator: Locator): Promise<string | null> {
     try {
       const text = await locator.innerText({ timeout: this.elementTimeout });
+
       return text?.trim() || null;
     } catch {
       return null;
@@ -90,6 +91,7 @@ export class BasePage {
   async getAttribute(locator: Locator, attributeName: string): Promise<string | null> {
     try {
       const value = await locator.getAttribute(attributeName, { timeout: this.elementTimeout });
+
       return value?.trim() || null;
     } catch {
       return null;

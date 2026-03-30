@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
-import { BasePage } from "./BasePage";
-import { requireEnv } from "../utils/require.env";
+import type { Locator, Page } from '@playwright/test';
+import { BasePage } from './BasePage';
+import { requireEnv } from '../utils/require.env';
 import { test } from '@playwright/test';
 
 /**
@@ -31,11 +31,11 @@ export class LoginPage extends BasePage {
   // ========================
 
   async login(username: string, password: string): Promise<void> {
-      await this.usernameInput.fill(username);
-      await this.passwordInput.fill(password);
-      await this.loginButton.click();
-      await this.page.waitForURL(requireEnv('BASE_URL'), { timeout: this.navigationTimeout });
-      await this.page.waitForLoadState('domcontentloaded');
+    await this.usernameInput.fill(username);
+    await this.passwordInput.fill(password);
+    await this.loginButton.click();
+    await this.page.waitForURL(requireEnv('BASE_URL'), { timeout: this.navigationTimeout });
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   // async fillUsername(username: string): Promise<void> {

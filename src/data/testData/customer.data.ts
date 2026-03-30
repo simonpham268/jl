@@ -1,12 +1,12 @@
-import { CustomerData } from '../../pages/Customers/CustomerPage';
+import type { CustomerData } from '../../pages/Customers/CustomerPage';
 
 /**
  * Customer Data Builder - Fluent API for creating customer test data
- * 
+ *
  * @example
  * // Simple customer
  * const customer = CustomerBuilder.create('ABC Company').build();
- * 
+ *
  * // With more fields
  * const customer = CustomerBuilder.create('ABC Company')
  *   .customerType('Commercial')

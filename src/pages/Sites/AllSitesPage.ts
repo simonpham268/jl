@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Site list item interface (row data)
@@ -19,9 +19,9 @@ export interface SiteListItem {
  * Search/filter options
  */
 export interface SiteSearchOptions {
-  query?: string;       // Free text search
-  tags?: string[];      // Filter by tags
-  area?: string;        // Filter by area
+  query?: string; // Free text search
+  tags?: string[]; // Filter by tags
+  area?: string; // Filter by area
 }
 
 /**
@@ -207,6 +207,7 @@ export class AllSitesPage extends BasePage {
   async showAdvancedFilters(): Promise<void> {
     await test.step('Show advanced filters', async () => {
       const isHidden = await this.showAdvancedButton.isVisible();
+
       if (isHidden) {
         await this.showAdvancedButton.click();
       }
@@ -219,6 +220,7 @@ export class AllSitesPage extends BasePage {
   async hideAdvancedFilters(): Promise<void> {
     await test.step('Hide advanced filters', async () => {
       const isShown = await this.hideAdvancedButton.isVisible();
+
       if (isShown) {
         await this.hideAdvancedButton.click();
       }
@@ -272,6 +274,7 @@ export class AllSitesPage extends BasePage {
   async resetFilter(): Promise<void> {
     await test.step('Reset filters', async () => {
       const isEnabled = await this.resetFilterButton.isEnabled();
+
       if (isEnabled) {
         await this.resetFilterButton.click();
         await this.waitForTableLoad();
@@ -311,15 +314,15 @@ export class AllSitesPage extends BasePage {
   async switchToTab(tab: SiteTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'Active':
-          await this.activeTab.click();
-          break;
-        case 'Suspended':
-          await this.suspendedTab.click();
-          break;
-        case 'All':
-          await this.allTab.click();
-          break;
+      case 'Active':
+        await this.activeTab.click();
+        break;
+      case 'Suspended':
+        await this.suspendedTab.click();
+        break;
+      case 'All':
+        await this.allTab.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -331,12 +334,13 @@ export class AllSitesPage extends BasePage {
    * @returns Number of items in tab
    */
   async getTabCount(tab: SiteTab): Promise<number> {
-    const tabElement = tab === 'Active' ? this.activeTab 
-      : tab === 'Suspended' ? this.suspendedTab 
-      : this.allTab;
-    
+    const tabElement = tab === 'Active' ? this.activeTab
+      : tab === 'Suspended' ? this.suspendedTab
+        : this.allTab;
+
     const text = await tabElement.textContent();
     const match = text?.match(/\((\d+)\)/);
+
     return match ? parseInt(match[1], 10) : 0;
   }
 
@@ -378,7 +382,7 @@ export class AllSitesPage extends BasePage {
   async getSiteFromRow(index: number): Promise<SiteListItem> {
     const row = this.tableRows.nth(index);
     const cells = row.locator('td, [role="cell"]');
-    
+
     return {
       name: await cells.nth(0).textContent() || '',
       accountManager: await cells.nth(1).textContent() || undefined,
@@ -396,6 +400,7 @@ export class AllSitesPage extends BasePage {
   async getAllVisibleSites(): Promise<SiteListItem[]> {
     const count = await this.getRowCount();
     const sites: SiteListItem[] = [];
+
     for (let i = 0; i < count; i++) {
       sites.push(await this.getSiteFromRow(i));
     }
@@ -409,15 +414,15 @@ export class AllSitesPage extends BasePage {
   async sortByColumn(column: SiteSortableColumn): Promise<void> {
     await test.step(`Sort by ${column}`, async () => {
       switch (column) {
-        case 'Name':
-          await this.nameColumnHeader.click();
-          break;
-        case 'Address':
-          await this.addressColumnHeader.click();
-          break;
-        case 'Postcode':
-          await this.postcodeColumnHeader.click();
-          break;
+      case 'Name':
+        await this.nameColumnHeader.click();
+        break;
+      case 'Address':
+        await this.addressColumnHeader.click();
+        break;
+      case 'Postcode':
+        await this.postcodeColumnHeader.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -429,6 +434,7 @@ export class AllSitesPage extends BasePage {
    */
   async siteExists(siteName: string): Promise<boolean> {
     const link = this.table.getByRole('link', { name: siteName });
+
     return await link.isVisible();
   }
 
@@ -572,6 +578,7 @@ export class AllSitesPage extends BasePage {
   async assertSearchResultsContain(siteName: string): Promise<void> {
     await test.step(`Assert results contain: ${siteName}`, async () => {
       const link = this.table.getByRole('link', { name: siteName });
+
       await expect(link).toBeVisible();
     });
   }
@@ -582,6 +589,7 @@ export class AllSitesPage extends BasePage {
   async assertNoResults(): Promise<void> {
     await test.step('Assert no results found', async () => {
       const rowCount = await this.getRowCount();
+
       expect(rowCount).toBe(0);
     });
   }

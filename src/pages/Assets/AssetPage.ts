@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Add Asset form field definitions
@@ -9,7 +9,7 @@ export const ADD_ASSET_FIELDS = {
   // Selection (required)
   'Customer': { type: 'combobox', required: true },
   'Site': { type: 'combobox', required: true },
-  
+
   // Asset Details
   'Equipment Class': { type: 'combobox', section: 'Asset Details' },
   'Equipment Library': { type: 'combobox', section: 'Asset Details' },
@@ -19,11 +19,11 @@ export const ADD_ASSET_FIELDS = {
   'Make': { type: 'textbox', section: 'Asset Details' },
   'Model': { type: 'textbox', section: 'Asset Details' },
   'Quantity': { type: 'spinbutton', required: true, section: 'Asset Details', default: 1 },
-  
+
   // Additional Information
   'Comments': { type: 'textbox', section: 'Additional Information' },
   'Does this asset contain refrigerant?': { type: 'checkbox', section: 'Additional Information' },
-  
+
   // Site Asset Details
   'Number': { type: 'textbox', section: 'Site Asset Details' },
   'Location': { type: 'textbox', section: 'Site Asset Details' },
@@ -46,7 +46,7 @@ export interface AssetData {
   // Required Selection
   customerName: string;
   siteName: string;
-  
+
   // Asset Details
   equipmentClass?: string;
   equipmentLibrary?: string;
@@ -56,11 +56,11 @@ export interface AssetData {
   make?: string;
   model?: string;
   quantity?: number;
-  
+
   // Additional Information
   comments?: string;
   containsRefrigerant?: boolean;
-  
+
   // Site Asset Details
   number?: string;
   location?: string;
@@ -146,6 +146,7 @@ export class AssetPage extends BasePage {
 
     // Asset Details
     const assetDetailsSection = page.locator('text=Asset Details').locator('..');
+
     this.equipmentClassDropdown = page.locator('text=Equipment Class').locator('..').locator('[role="combobox"]');
     this.equipmentClassSearchbox = page.locator('text=Equipment Class').locator('..').locator('input[role="searchbox"]');
     this.equipmentLibraryDropdown = page.locator('text=Equipment Library').locator('..').locator('[role="combobox"]');
@@ -510,7 +511,7 @@ export class AssetPage extends BasePage {
       // Required Selection
       await this.selectCustomer(data.customerName);
       await this.selectSite(data.siteName);
-      
+
       // Asset Details
       if (data.equipmentClass) await this.selectEquipmentClass(data.equipmentClass);
       if (data.equipmentLibrary) await this.selectEquipmentLibrary(data.equipmentLibrary);
@@ -520,11 +521,11 @@ export class AssetPage extends BasePage {
       if (data.make) await this.fillMake(data.make);
       if (data.model) await this.fillModel(data.model);
       if (data.quantity !== undefined) await this.fillQuantity(data.quantity);
-      
+
       // Additional Information
       if (data.comments) await this.fillComments(data.comments);
       if (data.containsRefrigerant !== undefined) await this.setContainsRefrigerant(data.containsRefrigerant);
-      
+
       // Site Asset Details
       if (data.number) await this.fillNumber(data.number);
       if (data.location) await this.fillLocation(data.location);
@@ -554,9 +555,10 @@ export class AssetPage extends BasePage {
     await this.selectSite(siteName);
     await this.fillDescription(description);
     await this.save();
-    
+
     const url = this.page.url();
     const match = url.match(/\/Asset\/Detail\/(\d+)/);
+
     return match ? match[1] : null;
   }
 
@@ -569,9 +571,10 @@ export class AssetPage extends BasePage {
     await this.navigateToAddAsset();
     await this.fillAssetForm(data);
     await this.save();
-    
+
     const url = this.page.url();
     const match = url.match(/\/Asset\/Detail\/(\d+)/);
+
     return match ? match[1] : null;
   }
 
@@ -582,21 +585,21 @@ export class AssetPage extends BasePage {
   /**
    * Create a new asset with data-driven approach
    * Fills all provided fields, saves, and returns Asset ID
-   * 
+   *
    * @param data - Asset data object (use AssetBuilder from asset.data.ts)
    * @returns Asset ID after successful creation
-   * 
+   *
    * @example
    * import { AssetBuilder } from '../../data/testData/asset.data';
-   * 
+   *
    * // Navigate first
    * await assetPage.navigateToAddAsset();
-   * 
+   *
    * // Simple asset
    * const assetId = await assetPage.createNewAsset(
    *   AssetBuilder.create('ABC Corp', 'Main Office', 'Air Conditioner').build()
    * );
-   * 
+   *
    * // Asset with more details
    * const assetId = await assetPage.createNewAsset(
    *   AssetBuilder.create('ABC Corp', 'Main Office', 'Air Conditioner')
@@ -620,13 +623,14 @@ export class AssetPage extends BasePage {
       // Extract and return Asset ID from URL
       const url = this.page.url();
       const match = url.match(/\/Asset\/Detail\/(\d+)/);
+
       return match ? match[1] : '';
     });
   }
 
   /**
    * Fill asset form without saving (for validation tests)
-   * 
+   *
    * @param data - Asset data object
    */
   async fillNewAssetForm(data: AssetData): Promise<void> {

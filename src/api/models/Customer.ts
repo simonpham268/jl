@@ -25,7 +25,7 @@ export interface Customer {
 export interface CreateCustomerRequest {
     // Required
     Name: string;
-    
+
     // Optional - Details
     CustomerTypeId?: string | number;
     CustomReference?: string;
@@ -33,7 +33,7 @@ export interface CreateCustomerRequest {
     SellingRateId?: string | number;
     AccountManagerId?: string | number;
     IsProspectCustomer?: boolean;
-    
+
     // Optional - Address (Address1-4 format)
     Address1?: string;
     Address2?: string;
@@ -43,7 +43,7 @@ export interface CreateCustomerRequest {
     FullTelephone?: string;
     Latitude?: string | number;
     Longitude?: string | number;
-    
+
     // Optional - Main Contact
     ContactFirstName?: string;
     ContactLastName?: string;

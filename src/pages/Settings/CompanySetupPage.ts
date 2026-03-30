@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 
 /**
@@ -198,6 +198,7 @@ export class CompanySetupPage {
   async uploadLogo(filePath: string): Promise<void> {
     await test.step('Upload company logo', async () => {
       const fileInput = this.page.locator('input[type="file"]');
+
       await fileInput.setInputFiles(filePath);
     });
   }
@@ -225,6 +226,7 @@ export class CompanySetupPage {
   async isEditMode(): Promise<boolean> {
     return await test.step('Check if in edit mode', async () => {
       const nameInputDisabled = await this.nameInput.isDisabled();
+
       return !nameInputDisabled;
     });
   }

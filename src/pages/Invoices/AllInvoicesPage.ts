@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Invoice tab types
@@ -180,18 +180,18 @@ export class AllInvoicesPage extends BasePage {
   async switchToTab(tab: InvoiceTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'Invoices':
-          await this.invoicesTab.click();
-          break;
-        case 'Draft Invoices':
-          await this.draftInvoicesTab.click();
-          break;
-        case 'Credits':
-          await this.creditsTab.click();
-          break;
-        case 'Draft Credits':
-          await this.draftCreditsTab.click();
-          break;
+      case 'Invoices':
+        await this.invoicesTab.click();
+        break;
+      case 'Draft Invoices':
+        await this.draftInvoicesTab.click();
+        break;
+      case 'Credits':
+        await this.creditsTab.click();
+        break;
+      case 'Draft Credits':
+        await this.draftCreditsTab.click();
+        break;
       }
     });
   }
@@ -203,6 +203,7 @@ export class AllInvoicesPage extends BasePage {
     return await test.step('Get invoices count', async () => {
       const text = await this.invoicesTab.textContent();
       const match = text?.match(/Invoices\((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -214,6 +215,7 @@ export class AllInvoicesPage extends BasePage {
     return await test.step('Get draft invoices count', async () => {
       const text = await this.draftInvoicesTab.textContent();
       const match = text?.match(/Draft Invoices\((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -225,6 +227,7 @@ export class AllInvoicesPage extends BasePage {
     return await test.step('Get credits count', async () => {
       const text = await this.creditsTab.textContent();
       const match = text?.match(/Credits\((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -236,6 +239,7 @@ export class AllInvoicesPage extends BasePage {
     return await test.step('Get draft credits count', async () => {
       const text = await this.draftCreditsTab.textContent();
       const match = text?.match(/Draft Credits\((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -371,6 +375,7 @@ export class AllInvoicesPage extends BasePage {
     await test.step(`Click invoice: ${invoiceNumber}`, async () => {
       await this.waitForDataLoad();
       const row = this.resultsTable.locator(`tr:has-text("${invoiceNumber}")`);
+
       await row.click();
     });
   }
@@ -382,6 +387,7 @@ export class AllInvoicesPage extends BasePage {
     await test.step(`Click invoice for customer: ${customerName}`, async () => {
       await this.waitForDataLoad();
       const row = this.resultsTable.locator(`tr:has-text("${customerName}")`).first();
+
       await row.click();
     });
   }
@@ -393,6 +399,7 @@ export class AllInvoicesPage extends BasePage {
     return await test.step('Get invoice records count', async () => {
       await this.waitForDataLoad();
       const rows = this.resultsTable.locator('tbody tr');
+
       return await rows.count();
     });
   }

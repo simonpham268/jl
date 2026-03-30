@@ -20,9 +20,21 @@
 9. **Return data from page methods for test verification when needed**
 10. **Declare ALL locators as readonly properties in constructor, never in methods**
 11. **Move arrays/selector strategies to class properties, never in methods**
-12. **Check for existing methods before creating duplicates**
+12. **Check existing pages in relevant folders before creating new files** - Before creating new page objects, always check existing pages in relevant folders:
+    - For Job-related features → Check `src/pages/Jobs/` folder first
+    - For Customer-related features → Check `src/pages/Customers/` folder first  
+    - For Asset-related features → Check `src/pages/Assets/` folder first
+    - Look for existing methods that can be reused or extended
+    - Only create new files if functionality doesn't exist
 13. **Always re-read source files when regenerating - ensure 100% compliance**
-14. **Auto-generate tests with ID and tags header in this format:**
+14. **When user attaches .md files with "generate test script" command - follow ALL attached files STRICTLY:**
+    - If user attaches test case .md files → Implement every step exactly as documented
+    - If user attaches framework guidelines → Follow every rule and pattern precisely  
+    - If user attaches intent-mapping → Use exact method mappings specified
+    - If user attaches multiple .md files → Combine and follow ALL requirements from ALL files
+    - NEVER deviate from attached documentation - it overrides default behavior
+    - Example: `generate test script` + test-case-45291.md + generate-prompt.md + intent-mapping.md = Follow ALL 3 files strictly
+15. **Auto-generate tests with ID and tags header in this format:**
     ```typescript
     /**
      * ID: {testCaseId}
@@ -30,8 +42,239 @@
      */
     test('[TC{testCaseId}] @{primaryTag} @Regression: {testDescription}', async ({ page }) => {
     ```
-15. **Use Data Builder pattern for test data creation** - Import from `data/testData/`
-16. **Use high-level creation methods** (`createNewEntity(data)`) instead of calling individual field methods
+16. **Use Data Builder pattern for test data creation** - Import from `data/testData/`
+17. **Use high-level creation methods** (`createNewEntity(data)`) instead of calling individual field methods
+18. **Use API services for preconditions** - If scenario has preconditions like "use API to create Job/Quote/Customer/Site/Asset", inject the corresponding service and call it:
+    ```typescript
+    // Add service to test parameters
+    test('[TC12345] @Regression: Test with precondition', async ({ page, jobService, customerService }) => {
+      // Case 1: No specific fields mentioned -> use REQUIRED fields only
+      const jobData = {
+        CustomerId: 123,
+        SiteId: 456,
+        Description: 'Auto Test Job'
+      };
+      const jobResponse = await jobService.createJob(jobData);
+      
+      // Case 2: Specific fields mentioned -> use REQUIRED + OPTIONAL fields
+      // User will modify values later
+      const customerData = {
+        // Required
+        Name: 'Auto Customer',
+        // Optional (mentioned in scenario)
+        Email: 'test@example.com',
+        Phone: '0123456789',
+        Address: '123 Test Street'
+      };
+      const customerResponse = await customerService.createCustomer(customerData);
+      
+      // Use response data for UI navigation/verification
+      // Suggest: response.body.redirectUrl - Navigate to created entity
+      // Suggest: response.body.AdditionalData - Get entity details
+      // Suggest: response.body.Id - Use ID for subsequent operations
+      const jobId = jobResponse.body.Id;
+      const redirectUrl = jobResponse.body.redirectUrl;
+      
+      // Navigate to created entity in UI
+      await page.goto(redirectUrl);
+    });
+    ```
+    **Available services:** `customerService`, `siteService`, `assetService`, `jobService`, `quoteService`, `ppmQuoteService`
+    
+    **Common response fields for UI:**
+    - `response.body.Id` - Entity ID for lookups
+    - `response.body.redirectUrl` - Direct URL to navigate to created entity
+    - `response.body.AdditionalData` - Extra data like reference numbers, codes
+
+19. **NEVER add test.step wrappers in spec files** - Page methods already have `test.step` internally. In spec files, call page methods directly without additional wrapping:
+    ```typescript
+    // **WRONG** - Redundant test.step wrapper
+    await test.step('Navigate to jobs', async () => {
+      await sidebar.navigateTo('Jobs', 'All Jobs'); // This method already has test.step inside
+    });
+    
+    // **CORRECT** - Call page method directly  
+    await sidebar.navigateTo('Jobs', 'All Jobs'); // Method handles test.step internally
+    
+    // **WRONG** - Double wrapping
+    await test.step('Complete job', async () => {
+      await jobDetailsPage.clickCompleteJob(); // Already wrapped internally
+      await jobDetailsPage.waitForCompleteJobPopup(); // Already wrapped internally
+    });
+    
+    // **CORRECT** - Direct method calls
+    await jobDetailsPage.clickCompleteJob();
+    await jobDetailsPage.waitForCompleteJobPopup();
+    ```
+
+20. **MANDATORY login setup in ALL spec files** - Every test spec must include LoginPage in beforeEach with goToBaseURL():
+    ```typescript
+    import { test, expect } from '@playwright/test'; // or '../fixtures/combined.fixture'
+    import { LoginPage } from '../pages/LoginPage';
+    
+    test.describe('Feature Tests', () => {
+      let loginPage: LoginPage;
+      
+      test.beforeEach(async ({ page }) => {
+        loginPage = new LoginPage(page);
+        await loginPage.goToBaseURL();
+      });
+      
+      test('TC_001: Test description', async ({ page }) => {
+        // Test implementation - user already authenticated
+      });
+    });
+    ```
+    
+    **Enforcement rules:**
+    - **MUST** declare `loginPage` variable in describe block
+    - **MUST** initialize LoginPage in beforeEach 
+    - **MUST** call `await loginPage.goToBaseURL()` in beforeEach
+    - **MUST** import LoginPage from correct path
+    - **NEVER** skip login setup - every spec needs authentication
+    - **NEVER** use different authentication patterns
+
+21. **MANDATORY live application access for accurate locators** - When no specific agent is selected OR when using "playwright-test-generator" agent, MUST access the live application to get accurate selectors:
+    ```typescript
+    // Agent must navigate to BASE_URL from .env.uat before suggesting locators
+    // BASE_URL=https://jluateventbasedjlweb.azurewebsites.net
+    
+    // Step 1: Access live application
+    await page.goto(process.env.BASE_URL || 'https://jluateventbasedjlweb.azurewebsites.net');
+    
+    // Step 4: Generate locators based on REAL DOM structure
+    const actualElements = await page.locator('role=button').all();
+    ```
+    
+    **Enforcement rules:**
+    - **MUST** access BASE_URL from .env.uat file before generating locators
+    - **MUST** inspect actual DOM elements on live application
+    - **MUST** suggest locators based on REAL element structure
+    - **MUST** verify element visibility and accessibility on live page
+    - **NEVER** guess or assume element selectors without live verification
+    - **NEVER** use generic locators without testing on actual application
+    ```
+
+22. **Page Object Model action encapsulation** - ALL user interactions must be encapsulated in page object methods, NEVER use direct page actions in test specs:
+    ```typescript
+    // WRONG: Direct page actions in test spec
+    test('Complete job', async ({ page }) => {
+      await page.getByRole('button', { name: 'Complete' }).click();
+    });
+  
+    ```
+    
+    **Enforcement rules:**
+    - **NEVER** use `page.getByRole()`, `page.locator()`, `page.click()` etc. directly in test specs
+    - **ALWAYS** create dedicated methods in appropriate page objects for all interactions
+    - **MUST** add missing methods to page objects when encountered
+    - **MUST** use descriptive method names that express user intent
+    ```
+
+23. **Page Object context ownership principle** - Methods should be placed in page objects with context ownership - methods should be located in the page where users interact and can see those elements:
+    ```typescript
+    // ✅ CORRECT: Method in page that contains the element
+    // JobDetailsPage.ts - Complete Job button is on Job Detail page  
+    async clickCompleteJob(): Promise<void> {
+      await this.completeJobButton.click();
+    }
+    
+    // ✅ CORRECT: Dialog method in page that initiates dialog
+    // JobDetailsPage.ts - Complete dialog appears from Job Detail page
+    async confirmCompleteJob(): Promise<void> {
+      await this.page.getByRole('button', { name: 'Complete' }).click();
+    }
+    ```
+    
+    **Context ownership rules:**
+    - **Element Location Rule**: Method should be in the page that contains the element
+    - **Workflow Ownership Rule**: Workflow belongs to the page that initiates it
+    - **Context Responsibility Rule**: The page that displays content is responsible for it  
+    - **Navigation Boundary Rule**: Whoever navigates is responsible for it
+    - **NEVER** place methods in pages without visual context with elements
+    - **NEVER** place business logic in BasePage (only for utilities)
+    ```
+
+24. **No comments in test specifications** - Test spec files should NOT contain step comments since page methods already have descriptive test.step names:
+    ```typescript
+    // ❌ WRONG: Comments in spec file
+    test('Complete job workflow', async ({ page }) => {
+      // Step 2: User navigate to all jobs
+      await sidebar.navigateTo('Jobs', 'All Jobs');
+      
+      // Step 3: User click 'Open' tab and then select jobNo = M0000264
+      await allJobsPage.switchToTab('Open');
+      await allJobsPage.clickJobByJobNo('M0000264');
+      
+      // Step 4: User select Complete Job
+      //         Expected: show complete job pop-up
+      await jobDetailsPage.clickCompleteJob();
+    });
+    
+    // ✅ CORRECT: Clean spec without comments
+    test('Complete job workflow', async ({ page }) => {
+      await sidebar.navigateTo('Jobs', 'All Jobs');
+      await allJobsPage.switchToTab('Open');
+      await allJobsPage.clickJobByJobNo('M0000264');
+      await jobDetailsPage.clickCompleteJob();
+    });
+    ```
+    
+    **Reasoning:**
+    - Page methods already contain descriptive `test.step()` names
+    - Test steps are documented in test case .md files
+    - Comments make specs verbose and harder to maintain
+    - Page object method names should be self-documenting
+    
+    **Enforcement rules:**
+    - **NEVER** add `// Step X:` comments in test specs
+    - **NEVER** add `// Expected:` comments in test specs
+    - **NEVER** add action description comments in test specs
+    - **ONLY** exception: Complex business logic explanations (rare)
+    ```
+
+---
+
+## Code Style Rules (ESLint)
+
+Follow these formatting rules strictly when generating code:
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| `semi` | Require semicolons at end of statements | `const x = 1;` |
+| `quotes` | Use single quotes | `'hello'` |
+| `indent` | 2 spaces indentation | |
+| `no-trailing-spaces` | No trailing spaces at end of lines | |
+| `no-multiple-empty-lines` | Maximum 1 empty line | |
+| `comma-spacing` | Space after comma | `foo(a, b)` |
+| `space-infix-ops` | Space around operators | `x = 1` |
+| `keyword-spacing` | Space after keywords | `if (x)` |
+| `object-curly-spacing` | Space inside `{}` | `{ a: 1 }` |
+| `arrow-spacing` | Space around `=>` | `(a) => a` |
+| `func-call-spacing` | No space before `()` | `test()` |
+| `no-multi-spaces` | No multiple consecutive spaces | `x = 1` |
+| `no-whitespace-before-property` | No space around `.` | `obj.method()` |
+
+**Quick Reference:**
+```typescript
+// Correct
+const name = 'John';
+const obj = { a: 1, b: 2 };
+if (condition) {
+  return true;
+}
+const fn = (a, b) => a + b;
+await page.click();
+
+// Wrong
+const name = "John"    // double quotes, no semicolon
+const obj = {a:1,b:2}  // no spaces
+if(condition){         // no space after if
+  return true
+}
+const fn = (a,b)=>a+b  // no spaces around arrow/comma
+await page .click()    // space before property
+```
 
 ---
 
@@ -305,15 +548,15 @@ export class SamplePage extends BasePage {
 5. Text-based (last resort)
 
 ```typescript
-// ✅ Multiple fallback selectors
+// Multiple fallback selectors
 readonly element = this.page.locator(
   '[data-testid="element"], #element, .element, button:has-text("Element")'
 ).first();
 
-// ✅ Role-based (preferred)
+// Role-based (preferred)
 readonly button = this.page.getByRole('button', { name: /submit/i });
 
-// ✅ Multiple strategies using class property
+// Multiple strategies using class property
 readonly itemSelectors = ['selector1', 'selector2', 'selector3'];
 
 async selectItem(): Promise<void> {
@@ -416,24 +659,21 @@ Step 3: Click on "Log Job" in the left menu
 ```typescript
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
-import { requireEnv } from '../utils/require.env';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.uat' });
+import { Sidebar } from '../pages/Sidebar';
 
 test.describe('Feature Tests', () => {
   let loginPage: LoginPage;
-  const baseUrl = requireEnv('BASE_URL');
-
+  let sidebar: Sidebar;
+  
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
-    await loginPage.goToBaseURL(baseUrl);
+    await loginPage.goToBaseURL();
+    sidebar = new Sidebar(page);
   });
 
   test('TC_001: Basic workflow', async ({ page }) => {
-    // Test implementation using page objects
-    await loginPage.navigateToFeature();
-    await expect(page).toHaveURL('**/feature');
+    // Test implementation using page objects - user already authenticated
+    await sidebar.navigateTo('Jobs','Log Job');
   });
 });
 ```
@@ -448,13 +688,18 @@ import { test, expect } from '../fixtures/combined.fixture';
 import { LoginPage } from '../pages/LoginPage';
 
 test.describe('API + UI Tests', () => {
+  let loginPage: LoginPage;
+  
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    await loginPage.goToBaseURL();
+  });
   
   /**
    * ID: 12345
    * Tags: Smoke, Regression
    */
   test('[TC12345] @Smoke @Regression: Create customer via API and verify in UI', async ({ 
-    page, 
     customerService, 
     siteService 
   }) => {
@@ -469,9 +714,7 @@ test.describe('API + UI Tests', () => {
       Name: 'Main Site'
     });
     
-    // Verify in UI
-    await page.goto('/customers');
-    await expect(page.locator('.customer-list')).toContainText('Auto Customer');
+    // Verify in UI - user already authenticated via beforeEach
     
     // Result auto-pushed to Azure DevOps on CI
   });

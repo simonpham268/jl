@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Stock Location item interface
@@ -148,6 +148,7 @@ export class StockLocationsPage extends BasePage {
     await test.step(`Set include inactive: ${include}`, async () => {
       const checkbox = this.includeInactiveCheckbox.locator('input');
       const isChecked = await checkbox.isChecked().catch(() => false);
+
       if (isChecked !== include) {
         await this.toggleIncludeInactive();
       }

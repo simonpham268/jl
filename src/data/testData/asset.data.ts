@@ -1,12 +1,12 @@
-import { AssetData } from '../../pages/Assets/AssetPage';
+import type { AssetData } from '../../pages/Assets/AssetPage';
 
 /**
  * Asset Data Builder - Fluent API for creating asset test data
- * 
+ *
  * @example
  * // Simple asset
  * const asset = AssetBuilder.create('ABC Corp', 'Main Office', 'Air Conditioner').build();
- * 
+ *
  * // With more fields
  * const asset = AssetBuilder.create('ABC Corp', 'Main Office', 'Air Conditioner')
  *   .equipmentClass('HVAC')

@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Job Details tabs
@@ -291,6 +291,7 @@ export class JobDetailsPage extends BasePage {
         'Refcom Audit': this.refcomAuditTab,
         'Job Forms': this.jobFormsTab,
       };
+
       await tabMap[tab].click();
     });
   }
@@ -301,6 +302,7 @@ export class JobDetailsPage extends BasePage {
   async getActiveTab(): Promise<string> {
     return await test.step('Get active tab', async () => {
       const activeTab = this.page.locator('[aria-selected="true"], [class*="active"]').first();
+
       return await activeTab.textContent() || '';
     });
   }
@@ -315,6 +317,19 @@ export class JobDetailsPage extends BasePage {
   async clickCompleteJob(): Promise<void> {
     await test.step('Click Complete Job', async () => {
       await this.completeJobButton.click();
+    });
+  }
+
+  /**
+   * Confirm complete job action in dialog
+   */
+  async confirmCompleteJob(): Promise<void> {
+    await test.step('Confirm Complete Job', async () => {
+      const confirmButton = this.page.getByRole('button', { name: 'Confirm' });
+      await confirmButton.click();
+
+      // Wait for success message or page to update
+      await this.page.waitForTimeout(2000);
     });
   }
 
@@ -356,6 +371,7 @@ export class JobDetailsPage extends BasePage {
     return await test.step('Get job number', async () => {
       const titleText = await this.pageTitle.textContent() || '';
       const match = titleText.match(/M\d+/);
+
       return match ? match[0] : '';
     });
   }
@@ -368,9 +384,11 @@ export class JobDetailsPage extends BasePage {
       const titleText = await this.pageTitle.textContent() || '';
       // Status is usually after the job number
       const parts = titleText.split('/');
+
       if (parts.length > 1) {
         const afterJobNumber = parts[1].trim();
         const statusMatch = afterJobNumber.match(/M\d+\s+(.+)/);
+
         return statusMatch ? statusMatch[1].trim() : '';
       }
       return '';
@@ -424,6 +442,7 @@ export class JobDetailsPage extends BasePage {
         this.getCustomerName(),
         this.getSiteName(),
       ]);
+
       return { jobNumber, status, customer, site };
     });
   }
@@ -488,6 +507,7 @@ export class JobDetailsPage extends BasePage {
     return await test.step('Get Job Number field', async () => {
       const text = await this.jobNumberField.textContent() || '';
       const match = text.match(/M\d+/);
+
       return match ? match[0] : '';
     });
   }
@@ -498,6 +518,7 @@ export class JobDetailsPage extends BasePage {
   async getLoggedBy(): Promise<string> {
     return await test.step('Get Logged By', async () => {
       const text = await this.loggedByField.textContent() || '';
+
       return text.replace('Logged By', '').trim();
     });
   }
@@ -526,6 +547,7 @@ export class JobDetailsPage extends BasePage {
   async getJobOwner(): Promise<string> {
     return await test.step('Get Job Owner', async () => {
       const text = await this.jobOwnerCombobox.textContent();
+
       return text?.trim() || '';
     });
   }
@@ -595,6 +617,7 @@ export class JobDetailsPage extends BasePage {
   async getPriorityLevel(): Promise<string> {
     return await test.step('Get Priority Level', async () => {
       const text = await this.priorityLevelCombobox.textContent();
+
       return text?.trim() || '';
     });
   }
@@ -648,6 +671,7 @@ export class JobDetailsPage extends BasePage {
     await test.step(`Click contact: ${contactName}`, async () => {
       await this.switchToTab('Contacts');
       const table = await this.getContactsTabTable();
+
       await table.locator(`tr:has-text("${contactName}")`).click();
     });
   }
@@ -670,6 +694,7 @@ export class JobDetailsPage extends BasePage {
     await test.step(`Click asset: ${description}`, async () => {
       await this.switchToTab('Assets');
       const table = await this.getAssetsTabTable();
+
       await table.locator(`tr:has-text("${description}")`).click();
     });
   }
@@ -692,6 +717,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Add task', async () => {
       await this.switchToTab('Tasks');
       const addButton = this.page.getByRole('button', { name: /Add Task/i });
+
       await addButton.click();
     });
   }
@@ -714,6 +740,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Add cost', async () => {
       await this.switchToTab('Costs');
       const addButton = this.page.getByRole('button', { name: /Add Cost/i });
+
       await addButton.click();
     });
   }
@@ -736,6 +763,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Add visit', async () => {
       await this.switchToTab('Visits');
       const addButton = this.page.getByRole('button', { name: /Add Visit/i });
+
       await addButton.click();
     });
   }
@@ -758,6 +786,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Add subcontractor visit', async () => {
       await this.switchToTab('Subcontractor');
       const addButton = this.page.getByRole('button', { name: /Add.*Visit/i });
+
       await addButton.click();
     });
   }
@@ -806,6 +835,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Add job form', async () => {
       await this.switchToTab('Job Forms');
       const addButton = this.page.getByRole('button', { name: /Add Form/i });
+
       await addButton.click();
     });
   }
@@ -832,9 +862,11 @@ export class JobDetailsPage extends BasePage {
     await test.step('Delete job', async () => {
       await this.moreOptionsButton.click();
       const deleteOption = this.page.getByText('Delete Job');
+
       await deleteOption.click();
       // Confirm deletion if modal appears
       const confirmButton = this.page.getByRole('button', { name: 'Confirm' });
+
       if (await confirmButton.isVisible()) {
         await confirmButton.click();
       }

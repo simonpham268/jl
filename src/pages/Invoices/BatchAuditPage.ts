@@ -1,11 +1,11 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Action types for batch audit filtering
  */
-export type AuditAction = 
+export type AuditAction =
   | 'Create'
   | 'Update'
   | 'Delete'
@@ -208,6 +208,7 @@ export class BatchAuditPage extends BasePage {
     return await test.step('Get audit records count', async () => {
       await this.waitForDataLoad();
       const rows = this.resultsTable.locator('tbody tr');
+
       return await rows.count();
     });
   }
@@ -219,6 +220,7 @@ export class BatchAuditPage extends BasePage {
     await test.step(`Click audit record at index ${index}`, async () => {
       await this.waitForDataLoad();
       const row = this.resultsTable.locator('tbody tr').nth(index);
+
       await row.click();
     });
   }

@@ -14,22 +14,33 @@
     "allure": "npm run allure:generate && npm run allure:open",
     "install:browsers": "npx playwright install --with-deps",
     "import-suite": "npx tsx src/utils/jira/import-suite-filtered.ts",
-    "generate": "npx tsx src/utils/azured-devops/get.azure.tc.ts"
+    "generate": "npx tsx src/utils/azured-devops/get.azure.tc.ts",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "lint:file": "eslint --ext .ts",
+    "lint:file:fix": "eslint --ext .ts --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^25.0.9",
     "@types/node-fetch": "^2.6.13",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
     "allure-playwright": "^3.4.5",
     "cross-env": "^10.1.0",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.10.1",
     "googleapis": "^170.1.0",
     "pkg": "^5.8.1",
     "prettier": "3.8.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.57.2"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

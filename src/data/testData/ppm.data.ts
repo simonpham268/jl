@@ -3,7 +3,7 @@
  * Builder pattern for creating test data for PPM (Planned Preventative Maintenance) page
  */
 
-import { PPMContractType } from '../../pages/PPM/PPMPage';
+import type { PPMContractType } from '../../pages/PPM/PPMPage';
 
 /**
  * Data interface for creating a PPM Quote or Contract
@@ -21,13 +21,13 @@ export interface PPMData {
 
 /**
  * PPMBuilder - Fluent builder for PPMData
- * 
+ *
  * @example
- * // Create PPM Quote with required fields only  
+ * // Create PPM Quote with required fields only
  * const ppmData = PPMBuilder
  *   .createQuote('ABC Corp', 'Main Office', 'Annual HVAC Maintenance')
  *   .build();
- * 
+ *
  * @example
  * // Create PPM Contract with additional fields
  * const ppmData = PPMBuilder

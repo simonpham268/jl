@@ -3,7 +3,7 @@
  * Builder pattern for creating test data for Customer Grouped Invoice page
  */
 
-import { InvoiceJobStatus, InvoiceOrderBy } from '../../pages/Invoices/CustomerGroupedInvoicePage';
+import type { InvoiceJobStatus, InvoiceOrderBy } from '../../pages/Invoices/CustomerGroupedInvoicePage';
 
 /**
  * Data interface for creating a Customer Grouped Invoice
@@ -20,13 +20,13 @@ export interface CustomerGroupedInvoiceData {
 
 /**
  * CustomerGroupedInvoiceBuilder - Fluent builder for CustomerGroupedInvoiceData
- * 
+ *
  * @example
- * // Create with required fields only  
+ * // Create with required fields only
  * const invoiceData = CustomerGroupedInvoiceBuilder
  *   .create('ACME Corp', ['JOB-001', 'JOB-002'])
  *   .build();
- * 
+ *
  * @example
  * // Create with additional filters
  * const invoiceData = CustomerGroupedInvoiceBuilder

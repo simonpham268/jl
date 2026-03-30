@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Customer list item interface (row data)
@@ -20,8 +20,8 @@ export interface CustomerListItem {
  * Search/filter options
  */
 export interface CustomerSearchOptions {
-  query?: string;       // Free text search
-  tags?: string[];      // Filter by tags
+  query?: string; // Free text search
+  tags?: string[]; // Filter by tags
 }
 
 /**
@@ -209,6 +209,7 @@ export class AllCustomersPage extends BasePage {
   async showAdvancedFilters(): Promise<void> {
     await test.step('Show advanced filters', async () => {
       const isHidden = await this.showAdvancedButton.isVisible();
+
       if (isHidden) {
         await this.showAdvancedButton.click();
       }
@@ -221,6 +222,7 @@ export class AllCustomersPage extends BasePage {
   async hideAdvancedFilters(): Promise<void> {
     await test.step('Hide advanced filters', async () => {
       const isShown = await this.hideAdvancedButton.isVisible();
+
       if (isShown) {
         await this.hideAdvancedButton.click();
       }
@@ -259,6 +261,7 @@ export class AllCustomersPage extends BasePage {
   async resetFilter(): Promise<void> {
     await test.step('Reset filters', async () => {
       const isEnabled = await this.resetFilterButton.isEnabled();
+
       if (isEnabled) {
         await this.resetFilterButton.click();
         await this.waitForTableLoad();
@@ -294,15 +297,15 @@ export class AllCustomersPage extends BasePage {
   async switchToTab(tab: CustomerTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'Active':
-          await this.activeTab.click();
-          break;
-        case 'Suspended':
-          await this.suspendedTab.click();
-          break;
-        case 'All':
-          await this.allTab.click();
-          break;
+      case 'Active':
+        await this.activeTab.click();
+        break;
+      case 'Suspended':
+        await this.suspendedTab.click();
+        break;
+      case 'All':
+        await this.allTab.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -314,12 +317,13 @@ export class AllCustomersPage extends BasePage {
    * @returns Number of items in tab
    */
   async getTabCount(tab: CustomerTab): Promise<number> {
-    const tabElement = tab === 'Active' ? this.activeTab 
-      : tab === 'Suspended' ? this.suspendedTab 
-      : this.allTab;
-    
+    const tabElement = tab === 'Active' ? this.activeTab
+      : tab === 'Suspended' ? this.suspendedTab
+        : this.allTab;
+
     const text = await tabElement.textContent();
     const match = text?.match(/\((\d+)\)/);
+
     return match ? parseInt(match[1], 10) : 0;
   }
 
@@ -361,7 +365,7 @@ export class AllCustomersPage extends BasePage {
   async getCustomerFromRow(index: number): Promise<CustomerListItem> {
     const row = this.tableRows.nth(index);
     const cells = row.locator('td, [role="cell"]');
-    
+
     return {
       name: await cells.nth(0).textContent() || '',
       accountManager: await cells.nth(1).textContent() || undefined,
@@ -380,6 +384,7 @@ export class AllCustomersPage extends BasePage {
   async getAllVisibleCustomers(): Promise<CustomerListItem[]> {
     const count = await this.getRowCount();
     const customers: CustomerListItem[] = [];
+
     for (let i = 0; i < count; i++) {
       customers.push(await this.getCustomerFromRow(i));
     }
@@ -393,18 +398,18 @@ export class AllCustomersPage extends BasePage {
   async sortByColumn(column: SortableColumn): Promise<void> {
     await test.step(`Sort by ${column}`, async () => {
       switch (column) {
-        case 'Name':
-          await this.nameColumnHeader.click();
-          break;
-        case 'Account Number':
-          await this.accountNumberColumnHeader.click();
-          break;
-        case 'Address':
-          await this.addressColumnHeader.click();
-          break;
-        case 'Postcode':
-          await this.postcodeColumnHeader.click();
-          break;
+      case 'Name':
+        await this.nameColumnHeader.click();
+        break;
+      case 'Account Number':
+        await this.accountNumberColumnHeader.click();
+        break;
+      case 'Address':
+        await this.addressColumnHeader.click();
+        break;
+      case 'Postcode':
+        await this.postcodeColumnHeader.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -416,6 +421,7 @@ export class AllCustomersPage extends BasePage {
    */
   async customerExists(customerName: string): Promise<boolean> {
     const link = this.table.getByRole('link', { name: customerName });
+
     return await link.isVisible();
   }
 
@@ -568,6 +574,7 @@ export class AllCustomersPage extends BasePage {
   async assertSearchResultsContain(customerName: string): Promise<void> {
     await test.step(`Assert results contain: ${customerName}`, async () => {
       const link = this.table.getByRole('link', { name: customerName });
+
       await expect(link).toBeVisible();
     });
   }
@@ -578,6 +585,7 @@ export class AllCustomersPage extends BasePage {
   async assertNoResults(): Promise<void> {
     await test.step('Assert no results found', async () => {
       const rowCount = await this.getRowCount();
+
       expect(rowCount).toBe(0);
     });
   }

@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Add Customer form field definitions
@@ -8,7 +8,7 @@ import { BasePage } from "../BasePage";
 export const ADD_CUSTOMER_FIELDS = {
   // Header Section
   'Find Address': { type: 'searchbox', selector: '[placeholder*="Start Typing Company Name"]' },
-  
+
   // Details Section
   'Tag(s)': { type: 'multiselect', section: 'Details' },
   'Customer Name': { type: 'textbox', required: true, section: 'Details' },
@@ -17,22 +17,22 @@ export const ADD_CUSTOMER_FIELDS = {
   'Account Number': { type: 'textbox', section: 'Details' },
   'Selling Rate': { type: 'combobox', section: 'Details' },
   'Account Manager': { type: 'combobox', section: 'Details' },
-  
+
   // Address Section
   'Company name, building, Street address': { type: 'textbox', section: 'Address', order: 1 },
   'Area': { type: 'textbox', section: 'Address', order: 2 },
   'City': { type: 'textbox', section: 'Address', order: 3 },
   'County': { type: 'textbox', section: 'Address', order: 4, aliases: ['County, State/Province/Region', 'State', 'Province', 'Region'] },
   'Postcode': { type: 'textbox', section: 'Address' },
-  'Telephone': { type: 'phone', section: 'Details' },  // country code + textbox
-  
+  'Telephone': { type: 'phone', section: 'Details' }, // country code + textbox
+
   // Main Contact Section
   'First Name': { type: 'textbox', section: 'Main Contact' },
   'Last Name': { type: 'textbox', section: 'Main Contact' },
   'Contact Telephone': { type: 'phone', section: 'Main Contact' },
   'Email': { type: 'textbox', section: 'Main Contact' },
   'Job Position': { type: 'textbox', section: 'Main Contact' },
-  
+
   // Options
   'Auto generate a Site for this customer': { type: 'checkbox', section: 'Options' },
 } as const;
@@ -49,7 +49,7 @@ export interface CustomerData {
   accountNumber?: string;
   sellingRate?: string;
   accountManager?: string;
-  
+
   // Address
   address?: string;
   area?: string;
@@ -57,8 +57,8 @@ export interface CustomerData {
   county?: string;
   postcode?: string;
   telephone?: string;
-  countryCode?: string;  // e.g., '+44'
-  
+  countryCode?: string; // e.g., '+44'
+
   // Main Contact
   firstName?: string;
   lastName?: string;
@@ -66,7 +66,7 @@ export interface CustomerData {
   contactCountryCode?: string;
   email?: string;
   jobPosition?: string;
-  
+
   // Options
   autoGenerateSite?: boolean;
 }
@@ -85,7 +85,7 @@ export class CustomerPage extends BasePage {
   readonly accountNumberInput: Locator;
   readonly sellingRateDropdown: Locator;
   readonly accountManagerDropdown: Locator;
-  
+
   // Locators - Address Section
   readonly addressInput: Locator;
   readonly areaInput: Locator;
@@ -94,7 +94,7 @@ export class CustomerPage extends BasePage {
   readonly postcodeInput: Locator;
   readonly telephoneCountryCode: Locator;
   readonly telephoneInput: Locator;
-  
+
   // Locators - Main Contact Section
   readonly mainContactSection: Locator;
   readonly firstNameInput: Locator;
@@ -103,7 +103,7 @@ export class CustomerPage extends BasePage {
   readonly contactTelephoneInput: Locator;
   readonly emailInput: Locator;
   readonly jobPositionInput: Locator;
-  
+
   // Locators - Options & Buttons
   readonly autoGenerateSiteCheckbox: Locator;
   readonly cancelButton: Locator;
@@ -111,28 +111,28 @@ export class CustomerPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    
+
     // Details Section
     this.findAddressInput = page.getByPlaceholder('Start Typing Company Name');
     this.customerNameInput = page.locator('text=Customer Name *').locator('..').locator('input');
-    this.tagsDropdown = page.locator('text=Tag(s)').locator('..').locator('..')
+    this.tagsDropdown = page.locator('text=Tag(s)').locator('..').locator('..');
     this.customerTypeDropdown = page.locator('text=Customer Type').locator('..').locator('input[role="searchbox"]');
     this.referenceNumberInput = page.locator('text=Reference Number').locator('..').locator('input');
     this.accountNumberInput = page.locator('text=Account Number').locator('..').locator('input');
     this.sellingRateDropdown = page.locator('text=Selling Rate').locator('..').locator('input[role="searchbox"]');
     this.accountManagerDropdown = page.locator('text=Account Manager').locator('..').locator('input[role="searchbox"]');
-    
+
     // Address Section - use placeholder text
     this.addressInput = page.getByPlaceholder('Company name, building, Street address');
     this.areaInput = page.getByPlaceholder('Area');
     this.cityInput = page.getByPlaceholder('City');
     this.countyInput = page.getByPlaceholder('County, State/Province/Region');
     this.postcodeInput = page.locator('text=Postcode').locator('..').locator('input');
-    
+
     // First telephone field (customer)
     this.telephoneCountryCode = page.locator('text=Telephone').first().locator('..').locator('select, [role="combobox"]').first();
     this.telephoneInput = page.locator('text=Telephone').first().locator('..').locator('input[type="text"], input[type="tel"]').first();
-    
+
     // Main Contact Section
     this.mainContactSection = page.locator('text=Main Contact').locator('..');
     this.firstNameInput = page.locator('text=First Name').locator('..').locator('input');
@@ -141,7 +141,7 @@ export class CustomerPage extends BasePage {
     this.contactTelephoneInput = this.mainContactSection.locator('input[type="text"], input[type="tel"]').first();
     this.emailInput = page.locator('text=Email').locator('..').locator('input');
     this.jobPositionInput = page.locator('text=Job Position').locator('..').locator('input');
-    
+
     // Options & Buttons
     this.autoGenerateSiteCheckbox = page.locator('text=Auto generate a Site for this customer');
     this.cancelButton = page.getByRole('button', { name: 'Cancel' });
@@ -386,7 +386,7 @@ export class CustomerPage extends BasePage {
     await test.step('Fill complete customer form', async () => {
       // Required field
       await this.fillCustomerName(data.customerName);
-      
+
       // Optional Details
       if (data.tags?.length) await this.selectTags(data.tags);
       if (data.customerType) await this.selectCustomerType(data.customerType);
@@ -394,7 +394,7 @@ export class CustomerPage extends BasePage {
       if (data.accountNumber) await this.fillAccountNumber(data.accountNumber);
       if (data.sellingRate) await this.selectSellingRate(data.sellingRate);
       if (data.accountManager) await this.selectAccountManager(data.accountManager);
-      
+
       // Address
       await this.fillAddress({
         street: data.address,
@@ -403,9 +403,9 @@ export class CustomerPage extends BasePage {
         county: data.county,
         postcode: data.postcode,
       });
-      
+
       if (data.telephone) await this.fillTelephone(data.telephone, data.countryCode);
-      
+
       // Main Contact
       await this.fillMainContact({
         firstName: data.firstName,
@@ -415,7 +415,7 @@ export class CustomerPage extends BasePage {
         email: data.email,
         jobPosition: data.jobPosition,
       });
-      
+
       // Options
       if (data.autoGenerateSite !== undefined) {
         await this.setAutoGenerateSite(data.autoGenerateSite);
@@ -432,10 +432,11 @@ export class CustomerPage extends BasePage {
     await this.navigateToAddCustomer();
     await this.fillCustomerName(customerName);
     await this.save();
-    
+
     // Extract customer ID from URL
     const url = this.page.url();
     const match = url.match(/\/Customer\/(\d+)/);
+
     return match ? match[1] : null;
   }
 
@@ -448,9 +449,10 @@ export class CustomerPage extends BasePage {
     await this.navigateToAddCustomer();
     await this.fillCustomerForm(data);
     await this.save();
-    
+
     const url = this.page.url();
     const match = url.match(/\/Customer\/(\d+)/);
+
     return match ? match[1] : null;
   }
 
@@ -461,18 +463,18 @@ export class CustomerPage extends BasePage {
   /**
    * Add a new customer with data-driven approach
    * Navigates to Add Customer, fills all provided fields, saves, and returns Customer ID
-   * 
+   *
    * @param data - Customer data object (use CustomerBuilder from customer.data.ts)
    * @returns Customer ID after successful creation
-   * 
+   *
    * @example
    * import { CustomerBuilder } from '../../data/testData/customer.data';
-   * 
+   *
    * // Simple customer
    * const customerId = await customerPage.createNewCustomer(
    *   CustomerBuilder.create('ABC Company').build()
    * );
-   * 
+   *
    * // Customer with more details
    * const customerId = await customerPage.createNewCustomer(
    *   CustomerBuilder.create('ABC Company')
@@ -496,13 +498,14 @@ export class CustomerPage extends BasePage {
       // Extract and return Customer ID from URL
       const url = this.page.url();
       const match = url.match(/\/Customer\/(\d+)/);
+
       return match ? match[1] : '';
     });
   }
 
   /**
    * Add customer without navigation (assumes already on Add Customer page)
-   * 
+   *
    * @param data - Customer data object
    * @returns Customer ID after successful creation
    */
@@ -517,13 +520,14 @@ export class CustomerPage extends BasePage {
       // Extract and return Customer ID
       const url = this.page.url();
       const match = url.match(/\/Customer\/(\d+)/);
+
       return match ? match[1] : '';
     });
   }
 
   /**
    * Fill customer form without saving (for validation tests)
-   * 
+   *
    * @param data - Customer data object
    */
   async fillNewCustomerForm(data: CustomerData): Promise<void> {

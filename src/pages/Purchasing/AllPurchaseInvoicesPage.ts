@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Purchase Invoice list item interface
@@ -181,6 +181,7 @@ export class AllPurchaseInvoicesPage extends BasePage {
         'Job Purchase Invoices': this.jobPurchaseInvoicesTab,
         'Subcontractor Purchase Invoices': this.subcontractorPurchaseInvoicesTab,
       }[tab];
+
       await tabLocator.click();
       await this.waitForDataLoad();
     });

@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 
 /**
@@ -152,30 +152,30 @@ export class DocumentTemplatesPage {
   async switchToTab(tabName: 'Jobsheet' | 'Quotes' | 'Invoice & Credit' | 'PPMs' | 'Purchase Orders' | 'Service Letters' | 'Goods Received Notes' | 'Asset & Task Compliance'): Promise<void> {
     await test.step(`Switch to ${tabName} tab`, async () => {
       switch (tabName) {
-        case 'Jobsheet':
-          await this.switchToJobsheet();
-          break;
-        case 'Quotes':
-          await this.switchToQuotes();
-          break;
-        case 'Invoice & Credit':
-          await this.switchToInvoiceCredit();
-          break;
-        case 'PPMs':
-          await this.switchToPPMs();
-          break;
-        case 'Purchase Orders':
-          await this.switchToPurchaseOrders();
-          break;
-        case 'Service Letters':
-          await this.switchToServiceLetters();
-          break;
-        case 'Goods Received Notes':
-          await this.switchToGoodsReceivedNotes();
-          break;
-        case 'Asset & Task Compliance':
-          await this.switchToAssetTaskCompliance();
-          break;
+      case 'Jobsheet':
+        await this.switchToJobsheet();
+        break;
+      case 'Quotes':
+        await this.switchToQuotes();
+        break;
+      case 'Invoice & Credit':
+        await this.switchToInvoiceCredit();
+        break;
+      case 'PPMs':
+        await this.switchToPPMs();
+        break;
+      case 'Purchase Orders':
+        await this.switchToPurchaseOrders();
+        break;
+      case 'Service Letters':
+        await this.switchToServiceLetters();
+        break;
+      case 'Goods Received Notes':
+        await this.switchToGoodsReceivedNotes();
+        break;
+      case 'Asset & Task Compliance':
+        await this.switchToAssetTaskCompliance();
+        break;
       }
     });
   }
@@ -231,6 +231,7 @@ export class DocumentTemplatesPage {
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
       const noResults = this.page.locator('text=No matching results found');
+
       return await noResults.isVisible();
     });
   }
@@ -238,6 +239,7 @@ export class DocumentTemplatesPage {
   async getRowCount(): Promise<number> {
     return await test.step('Get row count', async () => {
       const rows = this.dataTable.locator('tbody tr');
+
       return await rows.count();
     });
   }
@@ -245,6 +247,7 @@ export class DocumentTemplatesPage {
   async clickRowByIndex(index: number): Promise<void> {
     await test.step(`Click row at index ${index}`, async () => {
       const row = this.dataTable.locator('tbody tr').nth(index);
+
       await row.click();
     });
   }
@@ -252,6 +255,7 @@ export class DocumentTemplatesPage {
   async clickTemplateByName(name: string): Promise<void> {
     await test.step(`Click template "${name}"`, async () => {
       const row = this.page.locator(`tr:has-text("${name}")`);
+
       await row.click();
     });
   }

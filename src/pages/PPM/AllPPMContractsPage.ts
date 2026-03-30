@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * PPM Contract list item interface
@@ -282,6 +282,7 @@ export class AllPPMContractsPage extends BasePage {
         'Suspended': this.suspendedTab,
         'All': this.allTab,
       };
+
       await tabMap[tab].click();
       await this.waitForDataLoad();
     });
@@ -292,8 +293,10 @@ export class AllPPMContractsPage extends BasePage {
    */
   async getActiveTab(): Promise<string> {
     const tabs = [this.inProgressTab, this.completedTab, this.suspendedTab, this.allTab];
+
     for (const tab of tabs) {
       const isSelected = await tab.getAttribute('aria-selected');
+
       if (isSelected === 'true') {
         return await tab.textContent() || '';
       }
@@ -418,15 +421,13 @@ export class AllPPMContractsPage extends BasePage {
     for (let i = 0; i < count; i++) {
       const row = this.tableRows.nth(i);
       const cells = row.locator('td');
-      
+
       items.push({
         contractNo: await cells.nth(0).textContent() || '',
         customerName: await cells.nth(1).textContent() || '',
         siteName: await cells.nth(2).textContent() || '',
         description: await cells.nth(3).textContent() || '',
       });
-    }
-
-    return items;
+    }    return items;
   }
 }

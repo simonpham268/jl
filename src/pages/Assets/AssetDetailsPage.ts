@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Asset detail tabs
@@ -25,11 +25,11 @@ export interface AssetDetailData {
   make?: string;
   model?: string;
   quantity?: number;
-  
+
   // Additional Information
   comments?: string;
   containsRefrigerant?: boolean;
-  
+
   // Site Asset Details
   number?: string;
   location?: string;
@@ -286,33 +286,33 @@ export class AssetDetailsPage extends BasePage {
   async switchToTab(tab: AssetDetailTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'Details':
-          await this.detailsTab.click();
-          break;
-        case 'Quotes':
-          await this.quotesTab.click();
-          break;
-        case 'Jobs':
-          await this.jobsTab.click();
-          break;
-        case 'Refcom Log Book':
-          await this.refcomLogBookTab.click();
-          break;
-        case 'Notes':
-          await this.notesTab.click();
-          break;
-        case 'Related Assets':
-          await this.relatedAssetsTab.click();
-          break;
-        case 'Forms Logbook':
-          await this.formsLogbookTab.click();
-          break;
-        case 'Asset & Task Compliance':
-          await this.assetTaskComplianceTab.click();
-          break;
-        case 'History':
-          await this.historyTab.click();
-          break;
+      case 'Details':
+        await this.detailsTab.click();
+        break;
+      case 'Quotes':
+        await this.quotesTab.click();
+        break;
+      case 'Jobs':
+        await this.jobsTab.click();
+        break;
+      case 'Refcom Log Book':
+        await this.refcomLogBookTab.click();
+        break;
+      case 'Notes':
+        await this.notesTab.click();
+        break;
+      case 'Related Assets':
+        await this.relatedAssetsTab.click();
+        break;
+      case 'Forms Logbook':
+        await this.formsLogbookTab.click();
+        break;
+      case 'Asset & Task Compliance':
+        await this.assetTaskComplianceTab.click();
+        break;
+      case 'History':
+        await this.historyTab.click();
+        break;
       }
       await this.page.waitForLoadState('networkidle');
     });
@@ -335,6 +335,7 @@ export class AssetDetailsPage extends BasePage {
 
     for (const tab of tabs) {
       const isExpanded = await tab.locator.getAttribute('aria-expanded');
+
       if (isExpanded === 'true') {
         return tab.name;
       }
@@ -477,6 +478,7 @@ export class AssetDetailsPage extends BasePage {
   async setContainsRefrigerant(checked: boolean): Promise<void> {
     await test.step(`${checked ? 'Check' : 'Uncheck'} contains refrigerant`, async () => {
       const checkbox = this.containsRefrigerantCheckbox.getByRole('checkbox');
+
       if (checked) {
         await checkbox.check();
       } else {
@@ -532,6 +534,7 @@ export class AssetDetailsPage extends BasePage {
     return await test.step('Create random QR code', async () => {
       await this.createQrCodeButton.click();
       const qrCode = await this.qrCodeInput.inputValue();
+
       return qrCode;
     });
   }

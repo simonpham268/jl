@@ -1,5 +1,5 @@
-import { Locator, Page } from "@playwright/test";
-import { BasePage } from "./BasePage";
+import type { Locator, Page } from '@playwright/test';
+import { BasePage } from './BasePage';
 import { test } from '@playwright/test';
 
 /**
@@ -84,6 +84,7 @@ export class Sidebar extends BasePage {
   async expandJobs(): Promise<void> {
     await test.step('Expand Jobs menu', async () => {
       const isExpanded = await this.jobsSubmenu.isVisible().catch(() => false);
+
       if (!isExpanded) {
         await this.jobsMenuLink.click();
         await this.jobsSubmenu.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
@@ -126,6 +127,7 @@ export class Sidebar extends BasePage {
   async expandCustomers(): Promise<void> {
     await test.step('Expand Customers menu', async () => {
       const isExpanded = await this.customersSubmenu.isVisible().catch(() => false);
+
       if (!isExpanded) {
         await this.customersMenuLink.click();
         await this.customersSubmenu.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
@@ -156,7 +158,7 @@ export class Sidebar extends BasePage {
    * Navigate to any menu > subItem in the sidebar
    * @param menu - Main menu name (e.g., 'Jobs', 'Customers', 'Dashboard')
    * @param subItem - Submenu item name (e.g., 'Log Job', 'All Jobs')
-   * 
+   *
    * @example
    * await sidebar.navigateTo('Jobs', 'Log Job');
    * await sidebar.navigateTo('Customers', 'List');
@@ -167,7 +169,7 @@ export class Sidebar extends BasePage {
       const menuLocator = this.page.locator(
         `a:has-text("${menu}"), li:has-text("${menu}") > a, [data-toggle="collapse"]:has-text("${menu}"), .nav-link:has-text("${menu}")`
       ).first();
-      
+
       await menuLocator.click();
       await this.page.waitForLoadState('domcontentloaded');
 
@@ -177,12 +179,14 @@ export class Sidebar extends BasePage {
         const submenuLocator = this.page.locator(
           `.collapse:has(a:has-text("${subItem}")), .submenu:has(a:has-text("${subItem}")), ul:has(a:has-text("${subItem}"))`
         ).first();
+
         await submenuLocator.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
 
         // Click on submenu item
         const subItemLocator = this.page.locator(
           `a:has-text("${subItem}"), .submenu a:has-text("${subItem}")`
         ).first();
+
         await subItemLocator.click();
         await this.page.waitForLoadState('domcontentloaded');
       }
@@ -196,6 +200,7 @@ export class Sidebar extends BasePage {
   async getActiveMenuItem(): Promise<string | null> {
     return await test.step('Get active menu item text', async () => {
       const activeItem = this.page.locator('.nav-link.active, .active > a, [aria-current="page"]').first();
+
       return await this.getText(activeItem);
     });
   }

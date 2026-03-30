@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Log Quote form field definitions
@@ -251,6 +251,7 @@ export class QuotePage extends BasePage {
   async getSelectedCustomer(): Promise<string> {
     return await test.step('Get selected customer', async () => {
       const text = await this.customerCombobox.textContent();
+
       return text?.trim() || '';
     });
   }
@@ -452,6 +453,7 @@ export class QuotePage extends BasePage {
   async getSelectedQuoteOwner(): Promise<string> {
     return await test.step('Get selected Quote Owner', async () => {
       const text = await this.quoteOwnerCombobox.textContent();
+
       return text?.trim() || '';
     });
   }
@@ -482,9 +484,11 @@ export class QuotePage extends BasePage {
     await test.step(`Set Chance of Sale: ${percentage}%`, async () => {
       // The slider has 5 positions: 0%, 25%, 50%, 75%, 100%
       const slider = this.chanceOfSaleSlider;
+
       await slider.click();
       // Use keyboard to navigate to desired position
       const steps = percentage / 25;
+
       for (let i = 0; i < steps; i++) {
         await slider.press('ArrowRight');
       }
@@ -510,6 +514,7 @@ export class QuotePage extends BasePage {
   async selectContactByName(contactName: string): Promise<void> {
     await test.step(`Select contact: ${contactName}`, async () => {
       const row = this.contactsTable.locator(`tr:has-text("${contactName}")`);
+
       await row.click();
     });
   }
@@ -593,6 +598,7 @@ export class QuotePage extends BasePage {
       await this.page.waitForURL(/\/Quote\/Detail\/\d+/);
       const url = this.page.url();
       const match = url.match(/\/Quote\/Detail\/(\d+)/);
+
       return match ? match[1] : '';
     });
   }
@@ -653,21 +659,21 @@ export class QuotePage extends BasePage {
   /**
    * Create a new quote with data-driven approach
    * Fills all provided fields, saves, and returns Quote ID
-   * 
+   *
    * @param data - Quote data object (use QuoteBuilder from quote.data.ts)
    * @returns Quote ID after successful creation
-   * 
+   *
    * @example
    * import { QuoteBuilder } from '../../data/testData/quote.data';
-   * 
+   *
    * // Navigate first
    * await quotePage.navigateToLogQuote();
-   * 
+   *
    * // Simple quote
    * const quoteId = await quotePage.createNewQuote(
    *   QuoteBuilder.create('ABC Corp', 'Main Office', 'HVAC Maintenance Quote').build()
    * );
-   * 
+   *
    * // Quote with more details
    * const quoteId = await quotePage.createNewQuote(
    *   QuoteBuilder.create('ABC Corp', 'Main Office', 'Annual Maintenance Quote')
@@ -689,13 +695,14 @@ export class QuotePage extends BasePage {
 
       // Wait for navigation and return Quote ID
       const quoteId = await this.waitForQuoteDetailsNavigation();
+
       return quoteId;
     });
   }
 
   /**
    * Fill quote form without saving (for validation tests)
-   * 
+   *
    * @param data - Quote data object
    */
   async fillNewQuoteForm(data: QuoteData): Promise<void> {

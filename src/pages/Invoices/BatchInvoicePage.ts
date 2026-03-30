@@ -1,12 +1,12 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
-import { BatchInvoiceData } from '../../data/testData/batchInvoice.data';
+import { BasePage } from '../BasePage';
+import type { BatchInvoiceData } from '../../data/testData/batchInvoice.data';
 
 /**
  * Job status options for filtering
  */
-export type BatchJobStatus = 
+export type BatchJobStatus =
   | 'Open'
   | 'Complete'
   | 'Cancelled'
@@ -273,6 +273,7 @@ export class BatchInvoicePage extends BasePage {
     return await test.step('Get all items count', async () => {
       const text = await this.allTab.textContent();
       const match = text?.match(/All \((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -284,6 +285,7 @@ export class BatchInvoicePage extends BasePage {
     return await test.step('Get selected items count', async () => {
       const text = await this.selectedTab.textContent();
       const match = text?.match(/Selected \((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -303,6 +305,7 @@ export class BatchInvoicePage extends BasePage {
   async selectJobByNumber(jobNumber: string): Promise<void> {
     await test.step(`Select job: ${jobNumber}`, async () => {
       const row = this.resultsTable.locator(`tr:has-text("${jobNumber}")`);
+
       await row.locator('input[type="checkbox"]').check();
     });
   }
@@ -313,6 +316,7 @@ export class BatchInvoicePage extends BasePage {
   async selectAllJobs(): Promise<void> {
     await test.step('Select all jobs', async () => {
       const selectAllCheckbox = this.resultsTable.locator('thead input[type="checkbox"]');
+
       await selectAllCheckbox.check();
     });
   }
@@ -327,6 +331,7 @@ export class BatchInvoicePage extends BasePage {
   async getTotalOutstandingCost(): Promise<string> {
     return await test.step('Get total outstanding cost', async () => {
       const text = await this.totalOutstandingCost.textContent();
+
       return text?.trim() || '0.00';
     });
   }
@@ -365,11 +370,11 @@ export class BatchInvoicePage extends BasePage {
     await test.step('Create batch of invoices', async () => {
       await this.clickSearch();
       await this.page.waitForTimeout(1000);
-      
+
       for (const jobNumber of jobNumbers) {
         await this.selectJobByNumber(jobNumber);
       }
-      
+
       await this.clickSave();
     });
   }
@@ -386,12 +391,12 @@ export class BatchInvoicePage extends BasePage {
   async fillBatchInvoiceForm(data: BatchInvoiceData): Promise<void> {
     await test.step('Fill Batch Invoice form', async () => {
       await this.setDateLoggedRange(data.startDate, data.endDate);
-      
+
       if (data.searchText) await this.searchJobs(data.searchText);
-      
+
       await this.clickSearch();
       await this.page.waitForTimeout(1000);
-      
+
       for (const jobNumber of data.jobNumbers) {
         await this.selectJobByNumber(jobNumber);
       }

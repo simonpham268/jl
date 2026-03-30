@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 
 /**
@@ -387,6 +387,7 @@ export class LibraryPage {
         'User References': this.userReferencesTile,
       };
       const tile = tileMap[tileName];
+
       if (!tile) {
         throw new Error(`Unknown tile: ${tileName}`);
       }

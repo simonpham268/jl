@@ -3,7 +3,7 @@
  * Builder pattern for creating test data for Batch Invoice page
  */
 
-import { BatchJobStatus } from '../../pages/Invoices/BatchInvoicePage';
+import type { BatchJobStatus } from '../../pages/Invoices/BatchInvoicePage';
 
 /**
  * Data interface for creating a Batch of Invoices
@@ -20,13 +20,13 @@ export interface BatchInvoiceData {
 
 /**
  * BatchInvoiceBuilder - Fluent builder for BatchInvoiceData
- * 
+ *
  * @example
- * // Create with required fields only  
+ * // Create with required fields only
  * const invoiceData = BatchInvoiceBuilder
  *   .create('01/01/2024', '31/12/2024', ['JOB-001', 'JOB-002'])
  *   .build();
- * 
+ *
  * @example
  * // Create with additional filters
  * const invoiceData = BatchInvoiceBuilder

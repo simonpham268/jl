@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Letter stage options
@@ -217,6 +217,7 @@ export class ServiceJobLettersPage extends BasePage {
   async resetFilter(): Promise<void> {
     await test.step('Reset filters', async () => {
       const isEnabled = await this.resetFilterButton.isEnabled();
+
       if (isEnabled) {
         await this.resetFilterButton.click();
         await this.waitForTableLoad();
@@ -289,6 +290,7 @@ export class ServiceJobLettersPage extends BasePage {
     await test.step(`Click row ${index + 1}`, async () => {
       const row = this.tableRows.nth(index);
       const jobNoLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await jobNoLink.click();
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
     });
@@ -302,6 +304,7 @@ export class ServiceJobLettersPage extends BasePage {
     await test.step(`Select row ${index + 1}`, async () => {
       const row = this.tableRows.nth(index);
       const checkbox = row.locator('input[type="checkbox"]');
+
       await checkbox.check();
     });
   }
@@ -314,6 +317,7 @@ export class ServiceJobLettersPage extends BasePage {
     await test.step(`Unselect row ${index + 1}`, async () => {
       const row = this.tableRows.nth(index);
       const checkbox = row.locator('input[type="checkbox"]');
+
       await checkbox.uncheck();
     });
   }
@@ -343,7 +347,7 @@ export class ServiceJobLettersPage extends BasePage {
   async getLetterFromRow(index: number): Promise<ServiceJobLetterItem> {
     const row = this.tableRows.nth(index);
     const cells = row.locator('td, [role="cell"]');
-    
+
     return {
       jobNo: await cells.nth(1).textContent() || '',
       customerName: await cells.nth(2).textContent() || undefined,
@@ -362,6 +366,7 @@ export class ServiceJobLettersPage extends BasePage {
   async getAllVisibleLetters(): Promise<ServiceJobLetterItem[]> {
     const count = await this.getRowCount();
     const letters: ServiceJobLetterItem[] = [];
+
     for (let i = 0; i < count; i++) {
       letters.push(await this.getLetterFromRow(i));
     }
@@ -424,6 +429,7 @@ export class ServiceJobLettersPage extends BasePage {
   async assertSearchResultsContain(jobNo: string): Promise<void> {
     await test.step(`Assert results contain: ${jobNo}`, async () => {
       const link = this.table.getByRole('link', { name: jobNo });
+
       await expect(link).toBeVisible();
     });
   }
@@ -434,6 +440,7 @@ export class ServiceJobLettersPage extends BasePage {
   async assertNoResults(): Promise<void> {
     await test.step('Assert no results found', async () => {
       const rowCount = await this.getRowCount();
+
       expect(rowCount).toBe(0);
     });
   }

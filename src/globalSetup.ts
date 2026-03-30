@@ -10,71 +10,76 @@ const envFile = `.env.${environment}`;
 const envPath = path.resolve(__dirname, `../${envFile}`);
 
 export default async function globalSetup() {
-    // Clean up test result directories
-    const folders = ['allure-results', 'allure-report'];
-    for (const folder of folders) {
-        if (fs.existsSync(folder)) {
-            fs.rmSync(folder, { recursive: true, force: true });
-        }
+  // Clean up test result directories
+  const folders = ['allure-results', 'allure-report'];
+
+  for (const folder of folders) {
+    if (fs.existsSync(folder)) {
+      fs.rmSync(folder, { recursive: true, force: true });
+    }
+  }
+
+  // Create .auth directory
+  const authDir = path.join(__dirname, '../.auth');
+
+  if (!fs.existsSync(authDir)) {
+    fs.mkdirSync(authDir, { recursive: true });
+  }
+
+  // Setup authentication
+  console.log('Setting up authentication...');
+  const baseUrl = requireEnv('BASE_URL');
+  const username = requireEnv('USR');
+  const password = requireEnv('PWD');
+
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  const loginPage = new LoginPage(page);
+
+  try {
+    await loginPage.goToBaseURL(baseUrl);
+    await loginPage.login(username, password);
+
+    await page.waitForURL('**/Dashboard**', { timeout: 60000 }).catch(() => {
+      return page.waitForURL('**/', { timeout: 60000 });
+    });
+
+    console.log('Login successful, saving authentication state...');
+
+    const storageStatePath = path.join(authDir, 'storageState.json');
+
+    await page.context().storageState({ path: storageStatePath });
+
+    console.log('Authentication state saved successfully');
+
+    const storageState = JSON.parse(
+      fs.readFileSync('.auth/storageState.json', 'utf-8')
+    );
+
+    // Get cookies only
+    const cookies = storageState.cookies;
+
+    // Get CSRF token
+    const __requestverificationtoken = await page.locator('input[name="__RequestVerificationToken"]').getAttribute('value');
+
+    if (!__requestverificationtoken) {
+      throw new Error(`Missing __RequestVerificationToken`);
     }
 
-    // Create .auth directory
-    const authDir = path.join(__dirname, '../.auth');
-    if (!fs.existsSync(authDir)) {
-        fs.mkdirSync(authDir, { recursive: true });
-    }
+    const authData = {
+      cookies,
+      __requestverificationtoken
+    };
 
-    // Setup authentication
-    console.log('Setting up authentication...');
-    const baseUrl = requireEnv('BASE_URL');
-    const username = requireEnv('USR');
-    const password = requireEnv('PWD');
+    // Save authData to file for API testing
+    const authDataPath = path.join(authDir, 'authData.json');
 
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    const loginPage = new LoginPage(page);
-
-    try {
-        await loginPage.goToBaseURL(baseUrl);
-        await loginPage.login(username, password);
-
-        await page.waitForURL('**/Dashboard**', { timeout: 60000 }).catch(() => {
-            return page.waitForURL('**/', { timeout: 60000 });
-        });
-
-        console.log('Login successful, saving authentication state...');
-
-        const storageStatePath = path.join(authDir, 'storageState.json');
-        await page.context().storageState({ path: storageStatePath });
-
-        console.log('Authentication state saved successfully');
-
-        const storageState = JSON.parse(
-            fs.readFileSync('.auth/storageState.json', 'utf-8')
-        );
-
-        // Get cookies only
-        const cookies = storageState.cookies;
-
-        // Get CSRF token
-        const __requestverificationtoken = await page.locator('input[name="__RequestVerificationToken"]').getAttribute('value');
-        if (!__requestverificationtoken) {
-            throw new Error(`Missing __RequestVerificationToken`);
-        }
-
-        const authData = {
-            cookies,
-            __requestverificationtoken
-        };
-
-        // Save authData to file for API testing
-        const authDataPath = path.join(authDir, 'authData.json');
-        fs.writeFileSync(authDataPath, JSON.stringify(authData, null, 2));
-        console.log('Auth data saved to:', authDataPath);
-    } catch (error) {
-        console.error('Failed to setup authentication:', error);
-        throw error;
-    } finally {
-        await browser.close();
-    }
+    fs.writeFileSync(authDataPath, JSON.stringify(authData, null, 2));
+    console.log('Auth data saved to:', authDataPath);
+  } catch (error) {
+    console.error('Failed to setup authentication:', error);
+    throw error;
+  } finally {
+    await browser.close();
+  }
 }

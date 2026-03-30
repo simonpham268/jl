@@ -10,9 +10,8 @@ const CONFIG = {
   cookie: 'VstsSession=%7B%22PersistentSessionId%22%3A%223634b936-a054-44c1-9b87-c76562d0cbcb%22%2C%22PendingAuthenticationSessionId%22%3A%2200000000-0000-0000-0000-000000000000%22%2C%22CurrentAuthenticationSessionId%22%3A%2200000000-0000-0000-0000-000000000000%22%2C%22SignInState%22%3A%7B%7D%7D',
   // Try both URL formats
   baseUrl: 'https://dev.azure.com/joblogicltd', // Alternative format from UI
-  devAzureUrl: 'https://dev.azure.com/joblogicltd'  // Standard format
+  devAzureUrl: 'https://dev.azure.com/joblogicltd' // Standard format
 };
-
 
 interface TestStep {
   id: string;
@@ -69,9 +68,7 @@ function extractPlainText(htmlEncodedContent: string): string {
   const plainText = stripHtmlTags(decodedText);
 
   // Final decode pass in case there were nested entities
-  decodedText = decodeHtmlEntities(plainText);
-
-  return decodedText
+  decodedText = decodeHtmlEntities(plainText);  return decodedText
     .replace(/\s+/g, ' ')
     .replace(/\n\s*\n/g, '\n')
     .trim();
@@ -85,6 +82,7 @@ function parseStepsXml(xmlContent: string) {
   const paramRegex = /<parameterizedString[^>]*>(.*?)<\/parameterizedString>/g;
 
   let stepMatch;
+
   while ((stepMatch = stepRegex.exec(xmlContent)) !== null) {
     const [, id, type, stepContent] = stepMatch;
 
@@ -106,9 +104,7 @@ function parseStepsXml(xmlContent: string) {
         expectedResult: expectedResult.trim()
       });
     }
-  }
-
-  return steps;
+  }  return steps;
 }
 
 function parseWorkItem(workItem: any): TestCase {
@@ -127,18 +123,22 @@ function parseWorkItem(workItem: any): TestCase {
   }
 
   const steps = parseStepsXml(stepsXml);
+
   return { title, steps, tags };
 }
 
 function generateMarkdownContent(testCase: TestCase, testCaseId: number): string {
   let simpleSteps = '';
+
   testCase.steps.forEach((step, index) => {
     const stepLine = `Step ${index + 1}: ${step.action}`;
+
     console.log(stepLine);
     simpleSteps += stepLine;
 
     if (step.expectedResult && step.expectedResult.trim()) {
       const expectedLine = `\n   Expected: ${step.expectedResult}`;
+
       console.log(expectedLine);
       simpleSteps += expectedLine;
     }
@@ -147,11 +147,10 @@ function generateMarkdownContent(testCase: TestCase, testCaseId: number): string
   });
 
   let tagsSection = '';
+
   if (testCase.tags.length > 0) {
     tagsSection = `\n## Tags\n${testCase.tags.map(tag => `- ${tag}`).join('\n')}\n`;
-  }
-
-  return `# ${testCase.title}
+  }  return `# ${testCase.title}
 
 ## ID: ${testCaseId}${tagsSection}
 
@@ -162,11 +161,13 @@ ${simpleSteps}`;
 
 function saveMarkdownFile(content: string, testCaseId: number): string {
   const outputDir = path.join(__dirname, '../../../output');
+
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
   const outputFile = path.join(outputDir, `test-case-${testCaseId}.md`);
+
   fs.writeFileSync(outputFile, content, 'utf8');
 
   console.log(`\nTest case saved to: ${outputFile}`);
@@ -186,16 +187,14 @@ function parseTestCaseId(testId: string | number): number {
   // Remove brackets and extract numeric part
   const cleanId = testId
     .replace(/[\[\]]/g, '') // Remove square brackets
-    .replace(/^TC/i, '')     // Remove TC prefix (case insensitive)
+    .replace(/^TC/i, '') // Remove TC prefix (case insensitive)
     .trim();
 
   const numericId = parseInt(cleanId, 10);
 
   if (isNaN(numericId)) {
     throw new Error(`Invalid test case ID format: "${testId}". Expected formats: 7884, "TC7884", "[TC7884]", etc.`);
-  }
-
-  return numericId;
+  }  return numericId;
 }
 
 /**
@@ -215,6 +214,7 @@ export async function updateTestCaseStatus(
   executionNotes?: string,
 ): Promise<boolean> {
   const numericId = parseTestCaseId(testCaseId);
+
   console.log(`=== Updating Test Case ${numericId} Status: ${status.toUpperCase()} ===`);
   if (planId) {
     console.log(`Target Test Plan ID: ${planId}`);
@@ -229,10 +229,7 @@ export async function updateTestCaseStatus(
     await updateWorkItem(numericId, status, executionNotes);
 
     // Then, update the test plan outcome
-    await updateTestPlanOutcome(numericId, status, executionNotes, planId, suiteId);
-
-    return true;
-
+    await updateTestPlanOutcome(numericId, status, executionNotes, planId, suiteId);    return true;
   } catch (error: any) {
     console.error(`Failed to update Test Case ${numericId} status:`, error?.message || error);
     return false;
@@ -245,26 +242,26 @@ export async function updateTestCaseStatus(
 async function updateWorkItem(numericId: number, status: 'passed' | 'failed', executionNotes?: string): Promise<void> {
   const updatePayload = [
     {
-      "op": "add",
-      "path": "/fields/Microsoft.VSTS.TCM.AutomatedTestName",
-      "value": `TC${numericId}_AutomatedTest`
+      'op': 'add',
+      'path': '/fields/Microsoft.VSTS.TCM.AutomatedTestName',
+      'value': `TC${numericId}_AutomatedTest`
     }
   ];
 
   // Add execution notes if provided
   if (executionNotes) {
     updatePayload.push({
-      "op": "add",
-      "path": "/fields/System.History",
-      "value": `Test execution result: ${status.toUpperCase()}\n${executionNotes}`
+      'op': 'add',
+      'path': '/fields/System.History',
+      'value': `Test execution result: ${status.toUpperCase()}\n${executionNotes}`
     });
   }
 
   // Add custom field for test result tracking (if available)
   updatePayload.push({
-    "op": "add",
-    "path": "/fields/System.Description",
-    "value": `Last automated test result: ${status.toUpperCase()} at ${new Date().toISOString()}\n\n${executionNotes || 'No additional details'}`
+    'op': 'add',
+    'path': '/fields/System.Description',
+    'value': `Last automated test result: ${status.toUpperCase()} at ${new Date().toISOString()}\n\n${executionNotes || 'No additional details'}`
   });
 
   // API endpoint for updating work item
@@ -288,6 +285,7 @@ async function updateWorkItem(numericId: number, status: 'passed' | 'failed', ex
 
   if (!response.ok) {
     const errorText = await response.text();
+
     throw new Error(`Work item update failed: ${response.status} ${response.statusText}\nResponse: ${errorText}`);
   }
 
@@ -346,6 +344,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         }
       } else {
         const errorText = await testPlanResponse.text();
+
         console.log(`TestPlan API error: ${errorText}`);
 
         // Fallback to original test API with visualstudio.com
@@ -361,6 +360,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
         if (suitePointsResponse.ok) {
           const suitePointsData = await suitePointsResponse.json();
+
           console.log(`Raw suite points data:`, JSON.stringify(suitePointsData, null, 2));
 
           // Filter for our specific test case
@@ -379,6 +379,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
           }
         } else {
           const errorText = await suitePointsResponse.text();
+
           console.log(`Suite points API error: ${errorText}`);
         }
       }
@@ -399,6 +400,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
       if (planPointsResponse.ok) {
         const planPointsData = await planPointsResponse.json();
+
         console.log(`Raw plan points data:`, JSON.stringify(planPointsData, null, 2));
 
         testPoints = planPointsData.value || [];
@@ -406,6 +408,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         // Additional filtering by suiteId if specified
         if (suiteId) {
           const beforeFilter = testPoints.length;
+
           testPoints = testPoints.filter((point: any) =>
             point.suite?.id === suiteId || point.suite?.id === suiteId.toString()
           );
@@ -415,6 +418,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         console.log(`Found ${testPoints.length} test point(s) in Plan ${planId} for TC${numericId}`);
       } else {
         const errorText = await planPointsResponse.text();
+
         console.log(`Plan points API error: ${errorText}`);
       }
     }
@@ -434,6 +438,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
       if (allPointsResponse.ok) {
         const allPointsData = await allPointsResponse.json();
+
         console.log(`Raw all points data:`, JSON.stringify(allPointsData, null, 2));
 
         testPoints = allPointsData.value || [];
@@ -448,6 +453,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         // Filter by planId and suiteId if specified
         if (planId) {
           const beforePlanFilter = testPoints.length;
+
           testPoints = testPoints.filter((point: any) =>
             point.testPlan?.id === planId || point.testPlan?.id === planId.toString()
           );
@@ -456,6 +462,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
         if (suiteId) {
           const beforeSuiteFilter = testPoints.length;
+
           testPoints = testPoints.filter((point: any) =>
             point.suite?.id === suiteId || point.suite?.id === suiteId.toString()
           );
@@ -465,6 +472,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         console.log(`Found ${testPoints.length} matching test point(s) after filtering`);
       } else {
         const errorText = await allPointsResponse.text();
+
         console.log(`All points API error: ${errorText}`);
       }
     }
@@ -484,6 +492,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
       if (suiteTestCasesResponse.ok) {
         const suiteTestCasesData = await suiteTestCasesResponse.json();
+
         console.log(`Suite test cases data:`, JSON.stringify(suiteTestCasesData, null, 2));
 
         // Find our test case and get potential test point information
@@ -521,6 +530,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
               if (configResponse.ok) {
                 const configData = await configResponse.json();
+
                 console.log(`  Config API data:`, JSON.stringify(configData, null, 2));
 
                 if (configData.value && configData.value.length > 0) {
@@ -530,6 +540,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
                 }
               } else {
                 const errorText = await configResponse.text();
+
                 console.log(`  Config API error: ${errorText}`);
               }
             }
@@ -541,6 +552,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         }
       } else {
         const errorText = await suiteTestCasesResponse.text();
+
         console.log(`Suite test cases API error: ${errorText}`);
       }
     }
@@ -550,6 +562,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
       // Try to create a test run and test points programmatically
       if (planId && suiteId) {
         const created = await createTestRunAndPoints(numericId, planId, suiteId, status, headers, executionNotes);
+
         if (created) {
           console.log(`\nSuccessfully created and updated test run for TC${numericId}`);
           return;
@@ -557,6 +570,7 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
       }
 
       let message = `No test points found for TC${numericId}`;
+
       if (planId) message += ` in Plan ID ${planId}`;
       if (suiteId) message += ` Suite ID ${suiteId}`;
 
@@ -565,29 +579,29 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
       console.log(`   1. Test case exists but test points haven't been created yet`);
       console.log(`   2. Test case might be in 'Design' state (not ready for execution)`);
       console.log(`   3. Need to run a test execution to create test points`);
-      console.log(`   4. Test case was recently added and Azure DevOps hasn't synced yet\n`);
-
-      return;
+      console.log(`   4. Test case was recently added and Azure DevOps hasn't synced yet\n`);      return;
     }
 
     // Update each found test point with delays to prevent conflicts
     let successCount = 0;
+
     console.log(`Found ${testPoints.length} test points to update for TC${numericId}:`);
-    
+
     for (let i = 0; i < testPoints.length; i++) {
       const testPoint = testPoints[i];
+
       console.log(`  ${i + 1}. Point ID: ${testPoint.id}, Plan: ${testPoint.testPlan?.id}, Suite: ${testPoint.testSuite?.id || testPoint.suite?.id}, Current Outcome: ${testPoint.outcome || 'None'}`);
     }
-    
+
     for (let i = 0; i < testPoints.length; i++) {
       const testPoint = testPoints[i];
-      
+
       // Add delay between updates to prevent race conditions
       if (i > 0) {
         console.log(`Waiting 2 seconds before next update to prevent race conditions...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      
+
       console.log(`\nUpdating test point ${testPoint.id} (${i + 1}/${testPoints.length}) - Plan: ${testPoint.testPlan?.id}, Suite: ${testPoint.testSuite?.id || testPoint.suite?.id}`);
 
       const updatePayload = {
@@ -613,11 +627,13 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
 
       if (updateResponse.ok) {
         const responseData = await updateResponse.json();
+
         successCount++;
         console.log(`SUCCESS: Test point ${testPoint.id} updated successfully`);
         console.log(`  New outcome: ${responseData.outcome}, New state: ${responseData.state}`);
-        
+
         let successMsg = `Test point ${testPoint.id} updated: TC${numericId} -> ${status.toUpperCase()}`;
+
         successMsg += ` (Plan: ${testPoint.testPlan?.id || 'Unknown'}`;
         if (testPoint.testSuite?.id || testPoint.suite?.id) {
           successMsg += `, Suite: ${testPoint.testSuite?.id || testPoint.suite?.id}`;
@@ -626,11 +642,13 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
         console.log(successMsg);
       } else {
         const errorText = await updateResponse.text();
+
         console.log(`FAILED: Update failed for test point ${testPoint.id}: ${updateResponse.status} - ${errorText}`);
-        
+
         // Log detailed error information
         try {
           const errorJson = JSON.parse(errorText);
+
           console.log(`Error details:`, JSON.stringify(errorJson, null, 2));
         } catch {
           console.log(`Raw error text: ${errorText}`);
@@ -645,9 +663,9 @@ async function updateTestPlanOutcome(numericId: number, status: 'passed' | 'fail
     if (successCount > 0) {
       console.log(`\nSuccessfully updated ${successCount} out of ${testPoints.length} test points for TC${numericId}`);
     }
-
   } catch (error: any) {
     let message = `Test plan outcome update failed for TC${numericId}`;
+
     if (planId) message += ` in Plan ID ${planId}`;
     if (suiteId) message += ` Suite ID ${suiteId}`;
     message += `: ${error?.message || error}`;
@@ -690,11 +708,13 @@ async function createTestRunAndPoints(
 
     if (!createRunResponse.ok) {
       const errorText = await createRunResponse.text();
+
       console.log(`Failed to create test run: ${createRunResponse.status} - ${errorText}`);
       return false;
     }
 
     const testRun = await createRunResponse.json();
+
     console.log(`Created truly unplanned test run ID: ${testRun.id}`);
 
     // Add unplanned test result with minimal required fields
@@ -727,6 +747,7 @@ async function createTestRunAndPoints(
 
     if (!addResultResponse.ok) {
       const errorText = await addResultResponse.text();
+
       console.log(`Failed to add test result: ${addResultResponse.status} - ${errorText}`);
 
       // Try even simpler payload with all required fields
@@ -753,6 +774,7 @@ async function createTestRunAndPoints(
 
       if (!minimalResponse.ok) {
         const minimalError = await minimalResponse.text();
+
         console.log(`Minimal payload also failed: ${minimalResponse.status} - ${minimalError}`);
         return false;
       } else {
@@ -781,6 +803,7 @@ async function createTestRunAndPoints(
 
     if (!completeRunResponse.ok) {
       const errorText = await completeRunResponse.text();
+
       console.log(`Test run created but failed to complete: ${completeRunResponse.status} - ${errorText}`);
     } else {
       console.log(`Completed test run ID: ${testRun.id}`);
@@ -791,10 +814,7 @@ async function createTestRunAndPoints(
     console.log(`   - Outcome: ${status.toUpperCase()}`);
     console.log(`   - Associated with Plan ID: ${planId} (via comment only)`);
     console.log(`   - Associated with Suite ID: ${suiteId} (via comment only)`);
-    console.log(`   - Type: Truly Unplanned (no plan reference)`);
-
-    return true;
-
+    console.log(`   - Type: Truly Unplanned (no plan reference)`);    return true;
   } catch (error: any) {
     console.log(`Failed to create test run for TC${numericId}:`, error?.message || error);
     return false;
@@ -873,7 +893,6 @@ async function updateViaTestResults(testPoint: any, numericId: number, status: '
     }
 
     console.log(`Test outcome updated via results API: TC${numericId} -> ${status.toUpperCase()}`);
-
   } catch (error: any) {
     console.log(`Alt method failed for TC${numericId}:`, error?.message || error);
   }
@@ -887,6 +906,7 @@ async function updateViaTestResults(testPoint: any, numericId: number, status: '
 function extractTestCaseIdFromAllureName(testName: string): number | null {
   // Match pattern like [TC7884] at the beginning of test name
   const match = testName.match(/^\[TC(\d+)\]/i);
+
   if (match && match[1]) {
     return parseInt(match[1], 10);
   }
@@ -937,6 +957,7 @@ export async function updateStatusFromAllureResults(
 
         // Map Allure status to our status format
         let status: 'passed' | 'failed';
+
         if (testResult.status === 'passed') {
           status = 'passed';
         } else if (testResult.status === 'failed' || testResult.status === 'broken') {
@@ -971,7 +992,6 @@ export async function updateStatusFromAllureResults(
 
         // Add delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
-
       } catch (fileError: any) {
         console.error(`Error processing file ${path.basename(filePath)}:`, fileError?.message || fileError);
         failedCount++;
@@ -981,10 +1001,7 @@ export async function updateStatusFromAllureResults(
     console.log(`\n=== Allure Results Processing Complete ===`);
     console.log(`Successfully updated: ${successCount}`);
     console.log(`Failed to update: ${failedCount}`);
-    console.log(`Skipped: ${skippedCount}`);
-
-    return { success: successCount, failed: failedCount, skipped: skippedCount };
-
+    console.log(`Skipped: ${skippedCount}`);    return { success: successCount, failed: failedCount, skipped: skippedCount };
   } catch (error: any) {
     console.error('Error reading Allure results:', error?.message || error);
     throw error;
@@ -1027,9 +1044,7 @@ export async function updateMultipleTestCaseStatuses(
 
   console.log(`\n=== Batch Update Complete ===`);
   console.log(`Success: ${successCount}`);
-  console.log(`Failed: ${failedCount}`);
-
-  return { success: successCount, failed: failedCount };
+  console.log(`Failed: ${failedCount}`);  return { success: successCount, failed: failedCount };
 }
 
 /**
@@ -1039,6 +1054,7 @@ export async function updateMultipleTestCaseStatuses(
  */
 export async function readTestCaseFromTestID(testCaseId: string | number): Promise<string> {
   const numericId = parseTestCaseId(testCaseId);
+
   console.log(`=== Fetching Test Case ${numericId} from Azure DevOps ===\n`);
 
   try {
@@ -1065,10 +1081,12 @@ export async function readTestCaseFromTestID(testCaseId: string | number): Promi
     }
 
     const workItem = await response.json();
+
     console.log(`Successfully fetched work item: ${workItem.fields['System.Title']}`);
 
     // Parse and generate markdown
     const testCase = parseWorkItem(workItem);
+
     console.log(`Test Case: ${testCase.title}`);
     console.log(`Number of steps: ${testCase.steps.length}`);
     console.log(`Tags: ${testCase.tags.length > 0 ? testCase.tags.join(', ') : 'None'}\n`);
@@ -1077,7 +1095,6 @@ export async function readTestCaseFromTestID(testCaseId: string | number): Promi
     const outputFile = saveMarkdownFile(markdownContent, numericId);
 
     return outputFile;
-
   } catch (error) {
     console.error('Failed to fetch or parse work item:', error);
     throw error;
@@ -1144,6 +1161,7 @@ export async function getTestCaseIdsByTags(customFieldValues: string[]): Promise
 
     if (!response.ok) {
       const errorText = await response.text();
+
       throw new Error(`WIQL query failed: ${response.status} ${response.statusText}\nResponse: ${errorText}`);
     }
 
@@ -1151,6 +1169,7 @@ export async function getTestCaseIdsByTags(customFieldValues: string[]): Promise
 
     // Extract work item IDs from the result
     const testCaseIds: number[] = [];
+
     if (queryResult.workItems && Array.isArray(queryResult.workItems)) {
       for (const workItem of queryResult.workItems) {
         if (workItem.id) {
@@ -1163,10 +1182,7 @@ export async function getTestCaseIdsByTags(customFieldValues: string[]): Promise
     testCaseIds.forEach((id, index) => {
       console.log(`${index + 1}. Test Case ID: ${id}`);
     });
-    console.log(`\nTest Case IDs Array: ${JSON.stringify(testCaseIds)}`);
-
-    return testCaseIds;
-
+    console.log(`\nTest Case IDs Array: ${JSON.stringify(testCaseIds)}`);    return testCaseIds;
   } catch (error: any) {
     console.error(`Failed to query test cases by tags:`, error?.message || error);
     throw error;
@@ -1222,7 +1238,7 @@ export async function getTestCaseDetailsByTags(
         }
 
         const workItem = await response.json();
-        
+
         const title = workItem.fields['System.Title'] || 'Unknown';
         const tagsString = workItem.fields['System.Tags'] || '';
         const tags = tagsString
@@ -1244,17 +1260,13 @@ export async function getTestCaseDetailsByTags(
 
         // Add small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 100));
-
       } catch (error: any) {
         console.error(`Error fetching details for Test Case ${id}:`, error?.message || error);
       }
     }
 
     console.log(`\n=== Summary ===`);
-    console.log(`Total test cases found: ${testCaseDetails.length}`);
-
-    return testCaseDetails;
-
+    console.log(`Total test cases found: ${testCaseDetails.length}`);    return testCaseDetails;
   } catch (error: any) {
     console.error(`Failed to get test case details by tags:`, error?.message || error);
     throw error;
@@ -1283,9 +1295,9 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
 
     // Step 1: Get all suites in the test plan
     const suitesUrl = `${CONFIG.baseUrl}/${CONFIG.project}/_apis/testplan/Plans/${planId}/suites?api-version=7.1`;
-    
+
     console.log(`Fetching suites from plan ${planId}...`);
-    
+
     const suitesResponse = await fetch(suitesUrl, {
       method: 'GET',
       headers: headers
@@ -1293,12 +1305,13 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
 
     if (!suitesResponse.ok) {
       const errorText = await suitesResponse.text();
+
       throw new Error(`Failed to fetch suites: ${suitesResponse.status} ${suitesResponse.statusText}\nResponse: ${errorText}`);
     }
 
     const suitesData = await suitesResponse.json();
     const suites = suitesData.value || [];
-    
+
     console.log(`Found ${suites.length} suites in plan ${planId}`);
 
     if (suites.length === 0) {
@@ -1309,12 +1322,13 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
     // Step 2: Check each suite for the test case
     for (const suite of suites) {
       const suiteId = suite.id;
+
       console.log(`Checking suite ${suiteId} (${suite.name || 'Unnamed'})...`);
 
       try {
         // Get test cases in this suite
         const suiteTestCasesUrl = `${CONFIG.baseUrl}/${CONFIG.project}/_apis/testplan/Plans/${planId}/Suites/${suiteId}/TestCase?api-version=7.1`;
-        
+
         const testCasesResponse = await fetch(suiteTestCasesUrl, {
           method: 'GET',
           headers: headers
@@ -1327,12 +1341,13 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
 
         const testCasesData = await testCasesResponse.json();
         const testCases = testCasesData.value || [];
-        
+
         console.log(`  Suite ${suiteId} contains ${testCases.length} test cases`);
 
         // Check if our test case is in this suite
         const foundTestCase = testCases.find((tc: any) => {
           const tcId = tc.testCase?.id || tc.workItem?.id;
+
           return tcId == testCaseId || tcId == testCaseId.toString();
         });
 
@@ -1343,7 +1358,6 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
 
         // Add small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 200));
-
       } catch (suiteError: any) {
         console.log(`  Error checking suite ${suiteId}: ${suiteError?.message}`);
         continue;
@@ -1352,7 +1366,6 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
 
     console.log(`Test case ${testCaseId} not found in any suite of plan ${planId}`);
     return null;
-
   } catch (error: any) {
     console.error(`Error searching for test case ${testCaseId} in plan ${planId}:`, error?.message || error);
     throw error;
@@ -1368,40 +1381,40 @@ if (require.main === module) {
 
   if (args.length >= 2) {
     const command = args[0].toLowerCase();
-    
+
     if (command === 'query-by-tags') {
       // Command: npx tsx azure.ts query-by-tags "Service Jobs - SVJB" "Regression"
       const tags = args.slice(1);
-      
+
       console.log(`Querying test cases by tags: ${JSON.stringify(tags)}\n`);
-      
+
       getTestCaseDetailsByTags(tags)
         .then(testCases => {
           console.log(`\n=== FINAL RESULT ===`);
           console.log(`Found ${testCases.length} test cases`);
           const ids = testCases.map(tc => tc.id);
+
           console.log(`Test Case IDs: ${JSON.stringify(ids)}`);
         })
         .catch(error => {
           console.error('Query failed:', error?.message || error);
           process.exit(1);
         });
-        
     } else if (command === 'find-suite') {
       // Command: npx tsx azure.ts find-suite <planId> <testCaseId>
       // Example: npx tsx azure.ts find-suite 107558 107370
       const planId = parseInt(args[1], 10);
       const testCaseId = parseInt(args[2], 10);
-      
+
       if (isNaN(planId) || isNaN(testCaseId)) {
         console.error('Error: Both planId and testCaseId must be valid numbers');
         console.error('Usage: npx tsx azure.ts find-suite <planId> <testCaseId>');
         console.error('Example: npx tsx azure.ts find-suite 107558 107370');
         process.exit(1);
       }
-      
+
       console.log(`Finding suite for Test Case ${testCaseId} in Plan ${planId}...\n`);
-      
+
       findSuiteIdByTestCase(planId, testCaseId)
         .then(suiteId => {
           if (suiteId) {
@@ -1425,7 +1438,6 @@ if (require.main === module) {
           console.error('\nSearch failed:', error?.message || error);
           process.exit(1);
         });
-        
     } else if (args[1] && (args[1].toLowerCase() === 'passed' || args[1].toLowerCase() === 'failed')) {
       // Command line: npx tsx azure.ts 107364 PASSED [planId] [suiteId]
       const testCaseId = args[0];
@@ -1437,6 +1449,7 @@ if (require.main === module) {
         .then(success => {
           if (success) {
             let message = `\nTest case ${testCaseId} status updated to ${status.toUpperCase()}`;
+
             if (planId) message += ` in Plan ID ${planId}`;
             if (suiteId) message += ` Suite ID ${suiteId}`;
             console.log(message);

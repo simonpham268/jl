@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Batch Deploy search options
@@ -320,6 +320,7 @@ export class BatchDeployPage extends BasePage {
   async selectAllVisits(): Promise<void> {
     await test.step('Select all visits', async () => {
       const header = this.page.locator('table thead input[type="checkbox"]');
+
       await header.check();
     });
   }
@@ -330,6 +331,7 @@ export class BatchDeployPage extends BasePage {
   async deselectAllVisits(): Promise<void> {
     await test.step('Deselect all visits', async () => {
       const header = this.page.locator('table thead input[type="checkbox"]');
+
       await header.uncheck();
     });
   }
@@ -345,6 +347,7 @@ export class BatchDeployPage extends BasePage {
     return await test.step('Get selected visits count', async () => {
       const text = await this.selectedCountText.locator('..').textContent();
       const match = text?.match(/(\d+)/);
+
       return match ? parseInt(match[1], 10) : 0;
     });
   }

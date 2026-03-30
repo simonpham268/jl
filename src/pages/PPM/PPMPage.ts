@@ -1,7 +1,7 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
-import { PPMData } from '../../data/testData/ppm.data';
+import { BasePage } from '../BasePage';
+import type { PPMData } from '../../data/testData/ppm.data';
 
 /**
  * PPM Contract Type
@@ -168,6 +168,7 @@ export class PPMPage extends BasePage {
   async isPPMQuoteSelected(): Promise<boolean> {
     const parent = this.ppmQuoteRadio.locator('..');
     const isActive = await parent.getAttribute('class');
+
     return isActive?.includes('active') ?? false;
   }
 
@@ -177,6 +178,7 @@ export class PPMPage extends BasePage {
   async isPPMContractSelected(): Promise<boolean> {
     const parent = this.ppmContractRadio.locator('..');
     const isActive = await parent.getAttribute('class');
+
     return isActive?.includes('active') ?? false;
   }
 
@@ -422,7 +424,7 @@ export class PPMPage extends BasePage {
       await this.selectCustomer(data.customer);
       await this.selectSite(data.site);
       await this.fillDescription(data.description);
-      
+
       if (data.planReference) await this.fillPlanReference(data.planReference);
       if (data.jobCategory) await this.selectJobCategory(data.jobCategory);
       if (data.accountManager) await this.selectAccountManager(data.accountManager);

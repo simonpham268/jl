@@ -1,7 +1,7 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
-import { StockReorderData } from '../../data/testData/stockReorder.data';
+import { BasePage } from '../BasePage';
+import type { StockReorderData } from '../../data/testData/stockReorder.data';
 
 /**
  * Stock item for reorder
@@ -319,12 +319,12 @@ export class CreateStockReorderPage extends BasePage {
     await test.step('Fill new Stock Reorder form', async () => {
       if (data.searchQuery) await this.searchStock(data.searchQuery);
       if (data.locations && data.locations.length > 0) await this.selectLocations(data.locations);
-      
+
       if (data.searchQuery || data.locations) {
         await this.clickSearch();
         await this.waitForDataLoad();
       }
-      
+
       for (const index of data.stockIndices) {
         await this.selectStockByIndex(index);
       }
@@ -333,7 +333,7 @@ export class CreateStockReorderPage extends BasePage {
 
   /**
    * Create a new Stock Reorder with the provided data
-   * Searches, selects stocks, proceeds to next step 
+   * Searches, selects stocks, proceeds to next step
    * @param data - StockReorderData object from builder
    */
   async createNewStockReorder(data: StockReorderData): Promise<void> {

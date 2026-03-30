@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Job list item interface (row data)
@@ -311,6 +311,7 @@ export class AllJobsPage extends BasePage {
   async showAdvancedFilters(): Promise<void> {
     await test.step('Show advanced filters', async () => {
       const isHidden = await this.showAdvancedButton.isVisible();
+
       if (isHidden) {
         await this.showAdvancedButton.click();
       }
@@ -323,6 +324,7 @@ export class AllJobsPage extends BasePage {
   async hideAdvancedFilters(): Promise<void> {
     await test.step('Hide advanced filters', async () => {
       const isShown = await this.hideAdvancedButton.isVisible();
+
       if (isShown) {
         await this.hideAdvancedButton.click();
       }
@@ -344,6 +346,7 @@ export class AllJobsPage extends BasePage {
   async resetFilter(): Promise<void> {
     await test.step('Reset filters', async () => {
       const isEnabled = await this.resetFilterButton.isEnabled();
+
       if (isEnabled) {
         await this.resetFilterButton.click();
         await this.waitForTableLoad();
@@ -395,36 +398,36 @@ export class AllJobsPage extends BasePage {
   async switchToTab(tab: JobTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'All':
-          await this.allTab.click();
-          break;
-        case 'Open':
-          await this.openTab.click();
-          break;
-        case 'In Jeopardy':
-          await this.inJeopardyTab.click();
-          break;
-        case 'Requires Allocation':
-          await this.requiresAllocationTab.click();
-          break;
-        case 'Completed Today':
-          await this.completedTodayTab.click();
-          break;
-        case 'Requires Invoicing':
-          await this.requiresInvoicingTab.click();
-          break;
-        case 'Requires Revisit':
-          await this.requiresRevisitTab.click();
-          break;
-        case 'Suspended':
-          await this.suspendedTab.click();
-          break;
-        case 'Requires Approval':
-          await this.requiresApprovalTab.click();
-          break;
-        case 'Approved':
-          await this.approvedTab.click();
-          break;
+      case 'All':
+        await this.allTab.click();
+        break;
+      case 'Open':
+        await this.openTab.click();
+        break;
+      case 'In Jeopardy':
+        await this.inJeopardyTab.click();
+        break;
+      case 'Requires Allocation':
+        await this.requiresAllocationTab.click();
+        break;
+      case 'Completed Today':
+        await this.completedTodayTab.click();
+        break;
+      case 'Requires Invoicing':
+        await this.requiresInvoicingTab.click();
+        break;
+      case 'Requires Revisit':
+        await this.requiresRevisitTab.click();
+        break;
+      case 'Suspended':
+        await this.suspendedTab.click();
+        break;
+      case 'Requires Approval':
+        await this.requiresApprovalTab.click();
+        break;
+      case 'Approved':
+        await this.approvedTab.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -436,19 +439,20 @@ export class AllJobsPage extends BasePage {
    * @returns Number of items in tab
    */
   async getTabCount(tab: JobTab): Promise<number> {
-    const tabElement = tab === 'All' ? this.allTab 
-      : tab === 'Open' ? this.openTab 
-      : tab === 'In Jeopardy' ? this.inJeopardyTab
-      : tab === 'Requires Allocation' ? this.requiresAllocationTab
-      : tab === 'Completed Today' ? this.completedTodayTab
-      : tab === 'Requires Invoicing' ? this.requiresInvoicingTab
-      : tab === 'Requires Revisit' ? this.requiresRevisitTab
-      : tab === 'Suspended' ? this.suspendedTab
-      : tab === 'Requires Approval' ? this.requiresApprovalTab
-      : this.approvedTab;
-    
+    const tabElement = tab === 'All' ? this.allTab
+      : tab === 'Open' ? this.openTab
+        : tab === 'In Jeopardy' ? this.inJeopardyTab
+          : tab === 'Requires Allocation' ? this.requiresAllocationTab
+            : tab === 'Completed Today' ? this.completedTodayTab
+              : tab === 'Requires Invoicing' ? this.requiresInvoicingTab
+                : tab === 'Requires Revisit' ? this.requiresRevisitTab
+                  : tab === 'Suspended' ? this.suspendedTab
+                    : tab === 'Requires Approval' ? this.requiresApprovalTab
+                      : this.approvedTab;
+
     const text = await tabElement.textContent();
     const match = text?.match(/\((\d+)\)/);
+
     return match ? parseInt(match[1], 10) : 0;
   }
 
@@ -482,6 +486,7 @@ export class AllJobsPage extends BasePage {
     await test.step(`Click job by customer: ${customerName}`, async () => {
       const row = this.tableBody.locator('tr, [role="row"]').filter({ has: this.page.getByRole('link', { name: customerName }) });
       const jobNoLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await jobNoLink.click();
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
     });
@@ -493,10 +498,11 @@ export class AllJobsPage extends BasePage {
    */
   async clickJobBySiteName(siteName: string): Promise<void> {
     await test.step(`Click job by site: ${siteName}`, async () => {
-      const row = this.tableBody.locator('tr, [role="row"]').filter({ 
-        has: this.page.locator('td, [role="cell"]').nth(2).getByRole('link', { name: siteName }) 
+      const row = this.tableBody.locator('tr, [role="row"]').filter({
+        has: this.page.locator('td, [role="cell"]').nth(2).getByRole('link', { name: siteName })
       });
       const jobNoLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await jobNoLink.click();
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
     });
@@ -510,6 +516,7 @@ export class AllJobsPage extends BasePage {
     await test.step(`Click job by description: ${description}`, async () => {
       const row = this.tableBody.locator('tr, [role="row"]').filter({ hasText: description });
       const jobNoLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await jobNoLink.click();
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
     });
@@ -523,6 +530,7 @@ export class AllJobsPage extends BasePage {
     await test.step(`Click job by status: ${status}`, async () => {
       const row = this.tableBody.locator('tr, [role="row"]').filter({ hasText: status }).first();
       const jobNoLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await jobNoLink.click();
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
     });
@@ -536,6 +544,7 @@ export class AllJobsPage extends BasePage {
     await test.step(`Click row ${index + 1}`, async () => {
       const row = this.tableRows.nth(index);
       const jobNoLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await jobNoLink.click();
       await this.page.waitForURL(/\/Job\/Detail\/\d+/);
     });
@@ -548,7 +557,7 @@ export class AllJobsPage extends BasePage {
   async getJobFromRow(index: number): Promise<JobListItem> {
     const row = this.tableRows.nth(index);
     const cells = row.locator('td, [role="cell"]');
-    
+
     return {
       jobNo: await cells.nth(0).textContent() || '',
       customerName: await cells.nth(1).textContent() || undefined,
@@ -574,6 +583,7 @@ export class AllJobsPage extends BasePage {
   async getAllVisibleJobs(): Promise<JobListItem[]> {
     const count = await this.getRowCount();
     const jobs: JobListItem[] = [];
+
     for (let i = 0; i < count; i++) {
       jobs.push(await this.getJobFromRow(i));
     }
@@ -587,39 +597,39 @@ export class AllJobsPage extends BasePage {
   async sortByColumn(column: JobSortableColumn): Promise<void> {
     await test.step(`Sort by ${column}`, async () => {
       switch (column) {
-        case 'Job No.':
-          await this.jobNoColumnHeader.click();
-          break;
-        case 'Customer Name':
-          await this.customerNameColumnHeader.click();
-          break;
-        case 'Site Name':
-          await this.siteNameColumnHeader.click();
-          break;
-        case 'Priority':
-          await this.priorityColumnHeader.click();
-          break;
-        case 'Customer Order Number':
-          await this.customerOrderNumberColumnHeader.click();
-          break;
-        case 'Date Logged':
-          await this.dateLoggedColumnHeader.click();
-          break;
-        case 'Date Completed':
-          await this.dateCompletedColumnHeader.click();
-          break;
-        case 'Appointment Date':
-          await this.appointmentDateColumnHeader.click();
-          break;
-        case 'Postcode':
-          await this.postcodeColumnHeader.click();
-          break;
-        case 'Target Completion Date':
-          await this.targetCompletionDateColumnHeader.click();
-          break;
-        case 'Job Owner':
-          await this.jobOwnerColumnHeader.click();
-          break;
+      case 'Job No.':
+        await this.jobNoColumnHeader.click();
+        break;
+      case 'Customer Name':
+        await this.customerNameColumnHeader.click();
+        break;
+      case 'Site Name':
+        await this.siteNameColumnHeader.click();
+        break;
+      case 'Priority':
+        await this.priorityColumnHeader.click();
+        break;
+      case 'Customer Order Number':
+        await this.customerOrderNumberColumnHeader.click();
+        break;
+      case 'Date Logged':
+        await this.dateLoggedColumnHeader.click();
+        break;
+      case 'Date Completed':
+        await this.dateCompletedColumnHeader.click();
+        break;
+      case 'Appointment Date':
+        await this.appointmentDateColumnHeader.click();
+        break;
+      case 'Postcode':
+        await this.postcodeColumnHeader.click();
+        break;
+      case 'Target Completion Date':
+        await this.targetCompletionDateColumnHeader.click();
+        break;
+      case 'Job Owner':
+        await this.jobOwnerColumnHeader.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -631,6 +641,7 @@ export class AllJobsPage extends BasePage {
    */
   async jobExists(jobNo: string): Promise<boolean> {
     const link = this.table.getByRole('link', { name: jobNo });
+
     return await link.isVisible();
   }
 
@@ -782,6 +793,7 @@ export class AllJobsPage extends BasePage {
   async assertSearchResultsContain(jobNo: string): Promise<void> {
     await test.step(`Assert results contain: ${jobNo}`, async () => {
       const link = this.table.getByRole('link', { name: jobNo });
+
       await expect(link).toBeVisible();
     });
   }
@@ -792,6 +804,7 @@ export class AllJobsPage extends BasePage {
   async assertNoResults(): Promise<void> {
     await test.step('Assert no results found', async () => {
       const rowCount = await this.getRowCount();
+
       expect(rowCount).toBe(0);
     });
   }

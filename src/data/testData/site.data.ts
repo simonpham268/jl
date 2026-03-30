@@ -1,12 +1,12 @@
-import { SiteData } from '../../pages/Sites/SitePage';
+import type { SiteData } from '../../pages/Sites/SitePage';
 
 /**
  * Site Data Builder - Fluent API for creating site test data
- * 
+ *
  * @example
  * // Simple site
  * const site = SiteBuilder.create('ABC Corp', 'Main Office').build();
- * 
+ *
  * // With more fields
  * const site = SiteBuilder.create('ABC Corp', 'Main Office')
  *   .address('123 Main Street')

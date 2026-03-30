@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Asset list item interface (row data)
@@ -30,9 +30,9 @@ export interface AssetListItem {
  * Search/filter options
  */
 export interface AssetSearchOptions {
-  query?: string;       // Free text search
-  gasType?: string[];   // Filter by gas type
-  tags?: string[];      // Filter by tags
+  query?: string; // Free text search
+  gasType?: string[]; // Filter by gas type
+  tags?: string[]; // Filter by tags
   assetConditions?: string[]; // Filter by asset conditions
 }
 
@@ -274,6 +274,7 @@ export class AllAssetsPage extends BasePage {
   async showAdvancedFilters(): Promise<void> {
     await test.step('Show advanced filters', async () => {
       const isHidden = await this.showAdvancedButton.isVisible();
+
       if (isHidden) {
         await this.showAdvancedButton.click();
       }
@@ -286,6 +287,7 @@ export class AllAssetsPage extends BasePage {
   async hideAdvancedFilters(): Promise<void> {
     await test.step('Hide advanced filters', async () => {
       const isShown = await this.hideAdvancedButton.isVisible();
+
       if (isShown) {
         await this.hideAdvancedButton.click();
       }
@@ -358,6 +360,7 @@ export class AllAssetsPage extends BasePage {
   async resetFilter(): Promise<void> {
     await test.step('Reset filters', async () => {
       const isEnabled = await this.resetFilterButton.isEnabled();
+
       if (isEnabled) {
         await this.resetFilterButton.click();
         await this.waitForTableLoad();
@@ -401,21 +404,21 @@ export class AllAssetsPage extends BasePage {
   async switchToTab(tab: AssetTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'Active':
-          await this.activeTab.click();
-          break;
-        case 'Suspended':
-          await this.suspendedTab.click();
-          break;
-        case 'All':
-          await this.allTab.click();
-          break;
-        case 'Hire Asset':
-          await this.hireAssetTab.click();
-          break;
-        case 'Cross Asset':
-          await this.crossAssetTab.click();
-          break;
+      case 'Active':
+        await this.activeTab.click();
+        break;
+      case 'Suspended':
+        await this.suspendedTab.click();
+        break;
+      case 'All':
+        await this.allTab.click();
+        break;
+      case 'Hire Asset':
+        await this.hireAssetTab.click();
+        break;
+      case 'Cross Asset':
+        await this.crossAssetTab.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -427,14 +430,15 @@ export class AllAssetsPage extends BasePage {
    * @returns Number of items in tab
    */
   async getTabCount(tab: AssetTab): Promise<number> {
-    const tabElement = tab === 'Active' ? this.activeTab 
-      : tab === 'Suspended' ? this.suspendedTab 
-      : tab === 'All' ? this.allTab
-      : tab === 'Hire Asset' ? this.hireAssetTab
-      : this.crossAssetTab;
-    
+    const tabElement = tab === 'Active' ? this.activeTab
+      : tab === 'Suspended' ? this.suspendedTab
+        : tab === 'All' ? this.allTab
+          : tab === 'Hire Asset' ? this.hireAssetTab
+            : this.crossAssetTab;
+
     const text = await tabElement.textContent();
     const match = text?.match(/\((\d+)\)/);
+
     return match ? parseInt(match[1], 10) : 0;
   }
 
@@ -469,6 +473,7 @@ export class AllAssetsPage extends BasePage {
       // Find the row containing the customer name, then click its description link
       const row = this.tableBody.locator('tr, [role="row"]').filter({ has: this.page.getByRole('link', { name: customerName }) });
       const descriptionLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await descriptionLink.click();
       await this.page.waitForURL(/\/Asset\/Detail\/\d+/);
     });
@@ -481,10 +486,11 @@ export class AllAssetsPage extends BasePage {
   async clickAssetBySiteName(siteName: string): Promise<void> {
     await test.step(`Click asset by site: ${siteName}`, async () => {
       // Find the row containing the site name (3rd cell), then click its description link
-      const row = this.tableBody.locator('tr, [role="row"]').filter({ 
-        has: this.page.locator('td, [role="cell"]').nth(2).getByRole('link', { name: siteName }) 
+      const row = this.tableBody.locator('tr, [role="row"]').filter({
+        has: this.page.locator('td, [role="cell"]').nth(2).getByRole('link', { name: siteName })
       });
       const descriptionLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await descriptionLink.click();
       await this.page.waitForURL(/\/Asset\/Detail\/\d+/);
     });
@@ -499,6 +505,7 @@ export class AllAssetsPage extends BasePage {
       // Find the row containing the asset number (6th cell), then click its description link
       const row = this.tableBody.locator('tr, [role="row"]').filter({ hasText: number });
       const descriptionLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await descriptionLink.click();
       await this.page.waitForURL(/\/Asset\/Detail\/\d+/);
     });
@@ -512,6 +519,7 @@ export class AllAssetsPage extends BasePage {
     await test.step(`Click asset by serial number: ${serialNumber}`, async () => {
       const row = this.tableBody.locator('tr, [role="row"]').filter({ hasText: serialNumber });
       const descriptionLink = row.locator('td, [role="cell"]').first().getByRole('link');
+
       await descriptionLink.click();
       await this.page.waitForURL(/\/Asset\/Detail\/\d+/);
     });
@@ -534,7 +542,7 @@ export class AllAssetsPage extends BasePage {
   async getAssetFromRow(index: number): Promise<AssetListItem> {
     const row = this.tableRows.nth(index);
     const cells = row.locator('td, [role="cell"]');
-    
+
     return {
       description: await cells.nth(0).textContent() || '',
       customerName: await cells.nth(1).textContent() || undefined,
@@ -563,6 +571,7 @@ export class AllAssetsPage extends BasePage {
   async getAllVisibleAssets(): Promise<AssetListItem[]> {
     const count = await this.getRowCount();
     const assets: AssetListItem[] = [];
+
     for (let i = 0; i < count; i++) {
       assets.push(await this.getAssetFromRow(i));
     }
@@ -576,39 +585,39 @@ export class AllAssetsPage extends BasePage {
   async sortByColumn(column: AssetSortableColumn): Promise<void> {
     await test.step(`Sort by ${column}`, async () => {
       switch (column) {
-        case 'Description':
-          await this.descriptionColumnHeader.click();
-          break;
-        case 'Customer Name':
-          await this.customerNameColumnHeader.click();
-          break;
-        case 'Site Name':
-          await this.siteNameColumnHeader.click();
-          break;
-        case 'Class':
-          await this.classColumnHeader.click();
-          break;
-        case 'Location':
-          await this.locationColumnHeader.click();
-          break;
-        case 'Serial No':
-          await this.serialNoColumnHeader.click();
-          break;
-        case 'System ID':
-          await this.systemIdColumnHeader.click();
-          break;
-        case 'Installation Date':
-          await this.installationDateColumnHeader.click();
-          break;
-        case 'Warranty Expiry Date':
-          await this.warrantyExpiryColumnHeader.click();
-          break;
-        case 'Labour Warranty Expiry Date':
-          await this.labourWarrantyColumnHeader.click();
-          break;
-        case 'Total Charge (kg)':
-          await this.totalChargeColumnHeader.click();
-          break;
+      case 'Description':
+        await this.descriptionColumnHeader.click();
+        break;
+      case 'Customer Name':
+        await this.customerNameColumnHeader.click();
+        break;
+      case 'Site Name':
+        await this.siteNameColumnHeader.click();
+        break;
+      case 'Class':
+        await this.classColumnHeader.click();
+        break;
+      case 'Location':
+        await this.locationColumnHeader.click();
+        break;
+      case 'Serial No':
+        await this.serialNoColumnHeader.click();
+        break;
+      case 'System ID':
+        await this.systemIdColumnHeader.click();
+        break;
+      case 'Installation Date':
+        await this.installationDateColumnHeader.click();
+        break;
+      case 'Warranty Expiry Date':
+        await this.warrantyExpiryColumnHeader.click();
+        break;
+      case 'Labour Warranty Expiry Date':
+        await this.labourWarrantyColumnHeader.click();
+        break;
+      case 'Total Charge (kg)':
+        await this.totalChargeColumnHeader.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -620,6 +629,7 @@ export class AllAssetsPage extends BasePage {
    */
   async assetExists(description: string): Promise<boolean> {
     const link = this.table.getByRole('link', { name: description });
+
     return await link.isVisible();
   }
 
@@ -763,6 +773,7 @@ export class AllAssetsPage extends BasePage {
   async assertSearchResultsContain(description: string): Promise<void> {
     await test.step(`Assert results contain: ${description}`, async () => {
       const link = this.table.getByRole('link', { name: description });
+
       await expect(link).toBeVisible();
     });
   }
@@ -773,6 +784,7 @@ export class AllAssetsPage extends BasePage {
   async assertNoResults(): Promise<void> {
     await test.step('Assert no results found', async () => {
       const rowCount = await this.getRowCount();
+
       expect(rowCount).toBe(0);
     });
   }

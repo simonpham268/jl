@@ -17,13 +17,13 @@ export interface StockPOData {
 
 /**
  * StockPOBuilder - Fluent builder for StockPOData
- * 
+ *
  * @example
- * // Create with required fields only  
+ * // Create with required fields only
  * const stockPOData = StockPOBuilder
  *   .create('Main Warehouse', 'ABC Supplier')
  *   .build();
- * 
+ *
  * @example
  * // Create with additional fields
  * const stockPOData = StockPOBuilder

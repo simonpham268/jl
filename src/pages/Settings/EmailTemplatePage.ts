@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 
 /**
@@ -145,27 +145,27 @@ export class EmailTemplatePage {
   async switchToTab(tabName: 'Job' | 'Quotes' | 'Invoices' | 'PPMs' | 'Purchase Orders' | 'Service Letters' | 'Documents'): Promise<void> {
     await test.step(`Switch to ${tabName} tab`, async () => {
       switch (tabName) {
-        case 'Job':
-          await this.switchToJobTab();
-          break;
-        case 'Quotes':
-          await this.switchToQuotesTab();
-          break;
-        case 'Invoices':
-          await this.switchToInvoicesTab();
-          break;
-        case 'PPMs':
-          await this.switchToPPMsTab();
-          break;
-        case 'Purchase Orders':
-          await this.switchToPurchaseOrdersTab();
-          break;
-        case 'Service Letters':
-          await this.switchToServiceLettersTab();
-          break;
-        case 'Documents':
-          await this.switchToDocumentsTab();
-          break;
+      case 'Job':
+        await this.switchToJobTab();
+        break;
+      case 'Quotes':
+        await this.switchToQuotesTab();
+        break;
+      case 'Invoices':
+        await this.switchToInvoicesTab();
+        break;
+      case 'PPMs':
+        await this.switchToPPMsTab();
+        break;
+      case 'Purchase Orders':
+        await this.switchToPurchaseOrdersTab();
+        break;
+      case 'Service Letters':
+        await this.switchToServiceLettersTab();
+        break;
+      case 'Documents':
+        await this.switchToDocumentsTab();
+        break;
       }
     });
   }
@@ -217,6 +217,7 @@ export class EmailTemplatePage {
   async goToPage(pageNumber: number): Promise<void> {
     await test.step(`Go to page ${pageNumber}`, async () => {
       const pageLink = this.pagination.locator(`text="${pageNumber}"`);
+
       await pageLink.click();
       await this.page.waitForLoadState('networkidle');
     });
@@ -225,6 +226,7 @@ export class EmailTemplatePage {
   async goToNextPage(): Promise<void> {
     await test.step('Go to next page', async () => {
       const nextButton = this.pagination.locator('text=»').first();
+
       await nextButton.click();
       await this.page.waitForLoadState('networkidle');
     });
@@ -233,6 +235,7 @@ export class EmailTemplatePage {
   async goToPreviousPage(): Promise<void> {
     await test.step('Go to previous page', async () => {
       const prevButton = this.pagination.locator('text=«').first();
+
       await prevButton.click();
       await this.page.waitForLoadState('networkidle');
     });
@@ -248,6 +251,7 @@ export class EmailTemplatePage {
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
       const noResults = this.page.locator('text=No matching results found');
+
       return await noResults.isVisible();
     });
   }
@@ -255,6 +259,7 @@ export class EmailTemplatePage {
   async getRowCount(): Promise<number> {
     return await test.step('Get row count', async () => {
       const rows = this.dataTable.locator('tbody tr');
+
       return await rows.count();
     });
   }
@@ -262,6 +267,7 @@ export class EmailTemplatePage {
   async clickRowByIndex(index: number): Promise<void> {
     await test.step(`Click row at index ${index}`, async () => {
       const row = this.dataTable.locator('tbody tr').nth(index);
+
       await row.click();
     });
   }
@@ -269,6 +275,7 @@ export class EmailTemplatePage {
   async clickTemplateByName(name: string): Promise<void> {
     await test.step(`Click template "${name}"`, async () => {
       const row = this.page.locator(`tr:has-text("${name}")`);
+
       await row.click();
     });
   }

@@ -14,13 +14,13 @@ export interface StockReorderData {
 
 /**
  * StockReorderBuilder - Fluent builder for StockReorderData
- * 
+ *
  * @example
  * // Create with stock indices only (select first 3 items)
  * const reorderData = StockReorderBuilder
  *   .create([0, 1, 2])
  *   .build();
- * 
+ *
  * @example
  * // Create with search filter and then select
  * const reorderData = StockReorderBuilder

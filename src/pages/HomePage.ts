@@ -1,5 +1,5 @@
-import { Locator, Page } from "@playwright/test";
-import { BasePage } from "./BasePage";
+import type { Locator, Page } from '@playwright/test';
+import { BasePage } from './BasePage';
 import { test } from '@playwright/test';
 
 /**
@@ -62,4 +62,3 @@ export class HomePage extends BasePage {
     });
   }
 }
-

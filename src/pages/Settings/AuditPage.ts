@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 
 /**
@@ -133,6 +133,7 @@ export class AuditPage {
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
       const noResults = this.page.locator('text=No matching results found');
+
       return await noResults.isVisible();
     });
   }
@@ -140,6 +141,7 @@ export class AuditPage {
   async getRowCount(): Promise<number> {
     return await test.step('Get row count', async () => {
       const rows = this.dataTable.locator('tbody tr');
+
       return await rows.count();
     });
   }
@@ -147,6 +149,7 @@ export class AuditPage {
   async clickRowByIndex(index: number): Promise<void> {
     await test.step(`Click row at index ${index}`, async () => {
       const row = this.dataTable.locator('tbody tr').nth(index);
+
       await row.click();
     });
   }

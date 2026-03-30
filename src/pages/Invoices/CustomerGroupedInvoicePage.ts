@@ -1,12 +1,12 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
-import { CustomerGroupedInvoiceData } from '../../data/testData/customerGroupedInvoice.data';
+import { BasePage } from '../BasePage';
+import type { CustomerGroupedInvoiceData } from '../../data/testData/customerGroupedInvoice.data';
 
 /**
  * Job status options for filtering
  */
-export type InvoiceJobStatus = 
+export type InvoiceJobStatus =
   | 'Open'
   | 'Complete'
   | 'Cancelled'
@@ -15,7 +15,7 @@ export type InvoiceJobStatus =
 /**
  * Order by options
  */
-export type InvoiceOrderBy = 
+export type InvoiceOrderBy =
   | 'Job Number (A-Z)'
   | 'Job Number (Z-A)'
   | 'Date Logged (Newest)'
@@ -299,6 +299,7 @@ export class CustomerGroupedInvoicePage extends BasePage {
     return await test.step('Get all jobs count', async () => {
       const text = await this.allTab.textContent();
       const match = text?.match(/All \((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -310,6 +311,7 @@ export class CustomerGroupedInvoicePage extends BasePage {
     return await test.step('Get selected jobs count', async () => {
       const text = await this.selectedTab.textContent();
       const match = text?.match(/Selected \((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -329,6 +331,7 @@ export class CustomerGroupedInvoicePage extends BasePage {
   async selectJobByNumber(jobNumber: string): Promise<void> {
     await test.step(`Select job: ${jobNumber}`, async () => {
       const row = this.resultsTable.locator(`tr:has-text("${jobNumber}")`);
+
       await row.locator('input[type="checkbox"]').check();
     });
   }
@@ -339,6 +342,7 @@ export class CustomerGroupedInvoicePage extends BasePage {
   async selectAllJobs(): Promise<void> {
     await test.step('Select all jobs', async () => {
       const selectAllCheckbox = this.resultsTable.locator('thead input[type="checkbox"]');
+
       await selectAllCheckbox.check();
     });
   }
@@ -353,6 +357,7 @@ export class CustomerGroupedInvoicePage extends BasePage {
   async getTotalOutstandingCost(): Promise<string> {
     return await test.step('Get total outstanding cost', async () => {
       const text = await this.totalOutstandingCost.textContent();
+
       return text?.trim() || '£0.00';
     });
   }
@@ -392,11 +397,11 @@ export class CustomerGroupedInvoicePage extends BasePage {
       await this.selectCustomer(customerName);
       await this.clickSearch();
       await this.page.waitForTimeout(1000);
-      
+
       for (const jobNumber of jobNumbers) {
         await this.selectJobByNumber(jobNumber);
       }
-      
+
       await this.clickSave();
     });
   }
@@ -413,15 +418,15 @@ export class CustomerGroupedInvoicePage extends BasePage {
   async fillCustomerGroupedInvoiceForm(data: CustomerGroupedInvoiceData): Promise<void> {
     await test.step('Fill Customer Grouped Invoice form', async () => {
       await this.selectCustomer(data.customer);
-      
+
       if (data.searchText) await this.searchJobs(data.searchText);
       if (data.startDate) await this.setStartDate(data.startDate);
       if (data.endDate) await this.setEndDate(data.endDate);
       if (data.orderBy) await this.selectOrderBy(data.orderBy);
-      
+
       await this.clickSearch();
       await this.page.waitForTimeout(1000);
-      
+
       for (const jobNumber of data.jobNumbers) {
         await this.selectJobByNumber(jobNumber);
       }

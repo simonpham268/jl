@@ -1,12 +1,12 @@
-import { QuoteData } from '../../pages/Quotes/QuotePage';
+import type { QuoteData } from '../../pages/Quotes/QuotePage';
 
 /**
  * Quote Data Builder - Fluent API for creating quote test data
- * 
+ *
  * @example
  * // Simple quote
  * const quote = QuoteBuilder.create('ABC Corp', 'Main Office', 'HVAC Maintenance Quote').build();
- * 
+ *
  * // With more fields
  * const quote = QuoteBuilder.create('ABC Corp', 'Main Office', 'HVAC Maintenance Quote')
  *   .jobType('Maintenance')

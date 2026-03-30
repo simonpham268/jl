@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Add Site form field definitions
@@ -8,25 +8,25 @@ import { BasePage } from "../BasePage";
 export const ADD_SITE_FIELDS = {
   // Customer Selection
   'Customer': { type: 'combobox', required: true },
-  
+
   // Header Section
   'Find Address': { type: 'searchbox', selector: '[placeholder*="Start Typing Company Name, Address, Postcode"]' },
-  
+
   // Details Section
   'Site Name': { type: 'textbox', required: true, section: 'Details' },
   'Tag(s)': { type: 'multiselect', section: 'Details' },
   'Account Manager': { type: 'combobox', section: 'Details' },
   'Postcode': { type: 'textbox', section: 'Details' },
   'Telephone': { type: 'phone', section: 'Details' },
-  'Area': { type: 'combobox', section: 'Details' },  // For filtering/categorization
+  'Area': { type: 'combobox', section: 'Details' }, // For filtering/categorization
   'Site Reference Number': { type: 'textbox', section: 'Details' },
-  
+
   // Address Section
   'Company name, building, Street address': { type: 'textbox', section: 'Address', order: 1 },
   'Address Area': { type: 'textbox', section: 'Address', order: 2, aliases: ['Area'] },
   'City': { type: 'textbox', section: 'Address', order: 3 },
   'County': { type: 'textbox', section: 'Address', order: 4, aliases: ['County, State/Province/Region', 'State', 'Province', 'Region'] },
-  
+
   // Main Contact Section
   'First Name': { type: 'textbox', section: 'Main Contact' },
   'Last Name': { type: 'textbox', section: 'Main Contact' },
@@ -42,7 +42,7 @@ export interface SiteData {
   // Customer (required)
   customerId?: string;
   customerName?: string;
-  
+
   // Details
   siteName: string;
   tags?: string[];
@@ -50,15 +50,15 @@ export interface SiteData {
   postcode?: string;
   telephone?: string;
   countryCode?: string;
-  area?: string;  // Area dropdown
+  area?: string; // Area dropdown
   siteReferenceNumber?: string;
-  
+
   // Address
   address?: string;
   addressArea?: string;
   city?: string;
   county?: string;
-  
+
   // Main Contact
   firstName?: string;
   lastName?: string;
@@ -138,12 +138,13 @@ export class SitePage extends BasePage {
     this.tagsDropdown = page.locator('text=Tag(s)').locator('..').locator('[class*="multiselect"], [role="listbox"]');
     this.accountManagerDropdown = page.locator('text=Account Manager').locator('..').locator('input[role="searchbox"]');
     this.postcodeInput = page.locator('text=Postcode').locator('..').locator('input');
-    
+
     // Telephone (Site)
     const telephoneSection = page.locator('text=Telephone').first().locator('..');
+
     this.telephoneCountryCode = telephoneSection.locator('[role="combobox"]').first();
     this.telephoneInput = telephoneSection.locator('input[type="text"], input[type="tel"]').first();
-    
+
     // Area (dropdown)
     this.areaDropdown = page.locator('text=Area').first().locator('..').locator('input[role="searchbox"]');
     this.siteReferenceInput = page.locator('text=Site Reference Number').locator('..').locator('input');
@@ -158,12 +159,13 @@ export class SitePage extends BasePage {
     this.mainContactSection = page.locator('text=Main Contact Person').locator('..');
     this.firstNameInput = page.locator('text=First Name').locator('..').locator('input');
     this.lastNameInput = page.locator('text=Last Name').locator('..').locator('input');
-    
+
     // Contact Telephone (in Main Contact section)
     const contactTelSection = this.mainContactSection.locator('text=Telephone').locator('..');
+
     this.contactTelephoneCountryCode = contactTelSection.locator('[role="combobox"]').first();
     this.contactTelephoneInput = contactTelSection.locator('input[type="text"], input[type="tel"]').first();
-    
+
     this.emailInput = page.locator('text=Email').locator('..').locator('input');
     this.jobPositionInput = page.locator('text=Job Position').locator('..').locator('input');
 
@@ -391,10 +393,10 @@ export class SitePage extends BasePage {
     await test.step('Fill complete site form', async () => {
       // Customer (required)
       if (data.customerName) await this.selectCustomer(data.customerName);
-      
+
       // Site Name (required)
       await this.fillSiteName(data.siteName);
-      
+
       // Optional Details
       if (data.tags?.length) await this.selectTags(data.tags);
       if (data.accountManager) await this.selectAccountManager(data.accountManager);
@@ -402,7 +404,7 @@ export class SitePage extends BasePage {
       if (data.telephone) await this.fillTelephone(data.telephone, data.countryCode);
       if (data.area) await this.selectArea(data.area);
       if (data.siteReferenceNumber) await this.fillSiteReference(data.siteReferenceNumber);
-      
+
       // Address
       await this.fillAddress({
         street: data.address,
@@ -410,7 +412,7 @@ export class SitePage extends BasePage {
         city: data.city,
         county: data.county,
       });
-      
+
       // Main Contact
       await this.fillMainContact({
         firstName: data.firstName,
@@ -434,9 +436,10 @@ export class SitePage extends BasePage {
     await this.selectCustomer(customerName);
     await this.fillSiteName(siteName);
     await this.save();
-    
+
     const url = this.page.url();
     const match = url.match(/\/Site\/Detail\/(\d+)/);
+
     return match ? match[1] : null;
   }
 
@@ -449,9 +452,10 @@ export class SitePage extends BasePage {
     await this.navigateToAddSite();
     await this.fillSiteForm(data);
     await this.save();
-    
+
     const url = this.page.url();
     const match = url.match(/\/Site\/Detail\/(\d+)/);
+
     return match ? match[1] : null;
   }
 
@@ -462,21 +466,21 @@ export class SitePage extends BasePage {
   /**
    * Create a new site with data-driven approach
    * Fills all provided fields, saves, and returns Site ID
-   * 
+   *
    * @param data - Site data object (use SiteBuilder from site.data.ts)
    * @returns Site ID after successful creation
-   * 
+   *
    * @example
    * import { SiteBuilder } from '../../data/testData/site.data';
-   * 
+   *
    * // Navigate first
    * await sitePage.navigateToAddSite();
-   * 
+   *
    * // Simple site
    * const siteId = await sitePage.createNewSite(
    *   SiteBuilder.create('ABC Corp', 'Main Office').build()
    * );
-   * 
+   *
    * // Site with more details
    * const siteId = await sitePage.createNewSite(
    *   SiteBuilder.create('ABC Corp', 'Branch Office')
@@ -498,13 +502,14 @@ export class SitePage extends BasePage {
       // Extract and return Site ID from URL
       const url = this.page.url();
       const match = url.match(/\/Site\/Detail\/(\d+)/);
+
       return match ? match[1] : '';
     });
   }
 
   /**
    * Fill site form without saving (for validation tests)
-   * 
+   *
    * @param data - Site data object
    */
   async fillNewSiteForm(data: SiteData): Promise<void> {

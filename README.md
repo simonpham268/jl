@@ -258,3 +258,47 @@ npm run import-suite -- planId=109583 suiteId=109584 tags=[vienpham,vientesttest
 - `Automated` - Test case is automated
 - `Not Automated` - Test case is not automated
 - `Planned` - Automation is planned
+
+---
+
+## ESLint - Code Formatting
+
+Lint and auto-fix code to ensure consistent code style across the project.
+
+### Usage
+
+```bash
+# Lint all files in src/
+npm run lint
+
+# Fix all files in src/
+npm run lint:fix
+
+# Lint specific file
+npm run lint:file -- src/tests/api.spec.ts
+
+# Fix specific file
+npm run lint:file:fix -- src/tests/api.spec.ts
+
+# Lint multiple files (using glob pattern)
+npm run lint:file -- "src/tests/*.spec.ts"
+npm run lint:file:fix -- "src/pages/**/*.ts"
+```
+
+### Rules Applied
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| `semi` | Require semicolons at end of statements | `const x = 1;` |
+| `quotes` | Use single quotes | `'hello'` |
+| `indent` | 2 spaces indentation | ` ` |
+| `no-trailing-spaces` | No trailing spaces at end of lines | |
+| `no-multiple-empty-lines` | Maximum 1 empty line | |
+| `comma-spacing` | Space after comma | `foo(a, b)` |
+| `space-infix-ops` | Space around operators | `x = 1` |
+| `keyword-spacing` | Space after keywords | `if (x)` |
+| `object-curly-spacing` | Space inside `{}` | `{ a: 1 }` |
+| `arrow-spacing` | Space around `=>` | `(a) => a` |
+| `func-call-spacing` | No space before `()` | `test()` |
+| `no-multi-spaces` | No multiple consecutive spaces | `x = 1` |
+| `no-whitespace-before-property` | No space around `.` | `obj.method()` |

@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Contract Purchase Order list item interface
@@ -225,6 +225,7 @@ export class ContractPurchaseOrdersPage extends BasePage {
         'Fully Completed': this.fullyCompletedTab,
         'Not Completed': this.notCompletedTab,
       }[tab];
+
       await tabLocator.click();
       await this.waitForDataLoad();
     });

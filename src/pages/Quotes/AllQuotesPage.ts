@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Quote list item interface (row data)
@@ -227,6 +227,7 @@ export class AllQuotesPage extends BasePage {
       // Check for either the quotes list or empty state
       const hasEmptyState = await this.emptyStateHeading.isVisible().catch(() => false);
       const hasTable = await this.table.isVisible().catch(() => false);
+
       expect(hasEmptyState || hasTable).toBe(true);
     });
   }
@@ -247,6 +248,7 @@ export class AllQuotesPage extends BasePage {
     await test.step('Click Log Quote', async () => {
       // Handle both empty state and normal state
       const emptyStateVisible = await this.emptyStateHeading.isVisible().catch(() => false);
+
       if (emptyStateVisible) {
         await this.createFirstQuoteLink.click();
       } else {
@@ -286,6 +288,7 @@ export class AllQuotesPage extends BasePage {
   async showAdvancedFilters(): Promise<void> {
     await test.step('Show advanced filters', async () => {
       const isVisible = await this.showAdvancedButton.isVisible();
+
       if (isVisible) {
         await this.showAdvancedButton.click();
       }
@@ -298,6 +301,7 @@ export class AllQuotesPage extends BasePage {
   async hideAdvancedFilters(): Promise<void> {
     await test.step('Hide advanced filters', async () => {
       const isVisible = await this.hideAdvancedButton.isVisible();
+
       if (isVisible) {
         await this.hideAdvancedButton.click();
       }
@@ -358,6 +362,7 @@ export class AllQuotesPage extends BasePage {
         'Lost': this.lostTab,
         'Expired': this.expiredTab,
       };
+
       await tabMap[tab].click();
       await this.waitForTableLoad();
     });
@@ -377,6 +382,7 @@ export class AllQuotesPage extends BasePage {
       };
       const text = await tabMap[tab].textContent() || '';
       const match = text.match(/\((\d+)\)/);
+
       return match ? parseInt(match[1]) : 0;
     });
   }
@@ -410,6 +416,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteByQuoteNo(quoteNo: string): Promise<void> {
     await test.step(`Click quote: ${quoteNo}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${quoteNo}")`);
+
       await row.click();
     });
   }
@@ -420,6 +427,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteByCustomerName(customerName: string): Promise<void> {
     await test.step(`Click quote by customer: ${customerName}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${customerName}")`);
+
       await row.click();
     });
   }
@@ -430,6 +438,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteBySiteName(siteName: string): Promise<void> {
     await test.step(`Click quote by site: ${siteName}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${siteName}")`);
+
       await row.click();
     });
   }
@@ -440,6 +449,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteByDescription(description: string): Promise<void> {
     await test.step(`Click quote by description: ${description}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${description}")`);
+
       await row.click();
     });
   }
@@ -450,6 +460,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteByStatus(status: string): Promise<void> {
     await test.step(`Click quote by status: ${status}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${status}")`).first();
+
       await row.click();
     });
   }
@@ -470,15 +481,14 @@ export class AllQuotesPage extends BasePage {
     return await test.step('Get all visible items', async () => {
       const items: QuoteListItem[] = [];
       const count = await this.tableRows.count();
-      
+
       for (let i = 0; i < count; i++) {
         const row = this.tableRows.nth(i);
         const cells = row.locator('td');
         const quoteNo = await cells.nth(0).textContent() || '';
+
         items.push({ quoteNo: quoteNo.trim() });
-      }
-      
-      return items;
+      }      return items;
     });
   }
 
@@ -502,6 +512,7 @@ export class AllQuotesPage extends BasePage {
         'Quote Value': this.quoteValueColumnHeader,
         'Chance of Sale': this.page.getByRole('button', { name: 'Chance of Sale' }),
       };
+
       await columnMap[column].click();
       await this.waitForTableLoad();
     });

@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * External link item interface
@@ -235,6 +235,7 @@ export class ExternalLinksPage extends BasePage {
         'All Links': this.allLinksTab,
         'Favourite': this.favouriteTab,
       }[tab];
+
       await tabLocator.click();
       await this.waitForDataLoad();
     });
@@ -251,6 +252,7 @@ export class ExternalLinksPage extends BasePage {
       }[tab];
       const text = await tabLocator.textContent() || '';
       const match = text.match(/\((\d+)\)/);
+
       return match ? parseInt(match[1], 10) : 0;
     });
   }
@@ -292,6 +294,7 @@ export class ExternalLinksPage extends BasePage {
   async toggleFavourite(title: string): Promise<void> {
     await test.step(`Toggle favourite for link: ${title}`, async () => {
       const linkRow = this.page.locator(`text=${title}`).locator('..');
+
       await linkRow.locator('[title*="favourite"], [class*="star"]').click();
     });
   }

@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Compliance list item interface (row data)
@@ -21,15 +21,15 @@ export interface ComplianceListItem {
  * Search/filter options
  */
 export interface ComplianceSearchOptions {
-  query?: string;           // Free text search
-  listBy?: string;          // List By filter
+  query?: string; // Free text search
+  listBy?: string; // List By filter
   dateLoggedStart?: string; // Date Logged start
-  dateLoggedEnd?: string;   // Date Logged end
-  preferredDateStart?: string;  // Preferred Appointment Date start
-  preferredDateEnd?: string;    // Preferred Appointment Date end
-  jobCategory?: string[];   // Job Category filter
-  jobType?: string[];       // Job Type filter
-  showMandatory?: boolean;  // Show Mandatory checkbox
+  dateLoggedEnd?: string; // Date Logged end
+  preferredDateStart?: string; // Preferred Appointment Date start
+  preferredDateEnd?: string; // Preferred Appointment Date end
+  jobCategory?: string[]; // Job Category filter
+  jobType?: string[]; // Job Type filter
+  showMandatory?: boolean; // Show Mandatory checkbox
 }
 
 /**
@@ -253,6 +253,7 @@ export class AssetsCompliancePage extends BasePage {
   async resetFilter(): Promise<void> {
     await test.step('Reset filters', async () => {
       const isEnabled = await this.resetFilterButton.isEnabled();
+
       if (isEnabled) {
         await this.resetFilterButton.click();
         await this.waitForTableLoad();
@@ -311,15 +312,15 @@ export class AssetsCompliancePage extends BasePage {
   async switchToTab(tab: ComplianceTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       switch (tab) {
-        case 'All':
-          await this.allTab.click();
-          break;
-        case 'Open':
-          await this.openTab.click();
-          break;
-        case 'Completed':
-          await this.completedTab.click();
-          break;
+      case 'All':
+        await this.allTab.click();
+        break;
+      case 'Open':
+        await this.openTab.click();
+        break;
+      case 'Completed':
+        await this.completedTab.click();
+        break;
       }
       await this.waitForTableLoad();
     });
@@ -331,12 +332,13 @@ export class AssetsCompliancePage extends BasePage {
    * @returns Number of items in tab
    */
   async getTabCount(tab: ComplianceTab): Promise<number> {
-    const tabElement = tab === 'All' ? this.allTab 
-      : tab === 'Open' ? this.openTab 
-      : this.completedTab;
-    
+    const tabElement = tab === 'All' ? this.allTab
+      : tab === 'Open' ? this.openTab
+        : this.completedTab;
+
     const text = await tabElement.textContent();
     const match = text?.match(/\((\d+)\)/);
+
     return match ? parseInt(match[1], 10) : 0;
   }
 
@@ -367,9 +369,11 @@ export class AssetsCompliancePage extends BasePage {
   async getAllVisibleItems(): Promise<ComplianceListItem[]> {
     const count = await this.getRowCount();
     const items: ComplianceListItem[] = [];
+
     for (let i = 0; i < count; i++) {
       const row = this.tableRows.nth(i);
       const cells = row.locator('td, [role="cell"]');
+
       items.push({
         customer: await cells.nth(0).textContent() || undefined,
         site: await cells.nth(1).textContent() || undefined,
@@ -426,6 +430,7 @@ export class AssetsCompliancePage extends BasePage {
   async assertNoResults(): Promise<void> {
     await test.step('Assert no results found', async () => {
       const rowCount = await this.getRowCount();
+
       expect(rowCount).toBe(0);
     });
   }

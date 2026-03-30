@@ -1,7 +1,7 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
-import { StockPOData } from '../../data/testData/stockPO.data';
+import { BasePage } from '../BasePage';
+import type { StockPOData } from '../../data/testData/stockPO.data';
 
 /**
  * Stock PO form data interface
@@ -227,7 +227,7 @@ export class CreateStockPOPage extends BasePage {
     await test.step('Fill stock PO form', async () => {
       await this.selectStockDeliveryLocation(data.stockDeliveryLocation);
       await this.selectSupplier(data.supplier);
-      
+
       if (data.contact) {
         await this.selectContact(data.contact);
       }
@@ -266,7 +266,7 @@ export class CreateStockPOPage extends BasePage {
     await test.step('Fill new Stock PO form', async () => {
       await this.selectStockDeliveryLocation(data.stockDeliveryLocation);
       await this.selectSupplier(data.supplier);
-      
+
       if (data.contact) await this.selectContact(data.contact);
       if (data.accountNumber) await this.fillAccountNumber(data.accountNumber);
       if (data.estimatedDeliveryDate) await this.fillEstimatedDeliveryDate(data.estimatedDeliveryDate);

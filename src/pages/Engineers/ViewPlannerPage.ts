@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { BasePage } from "../BasePage";
+import { BasePage } from '../BasePage';
 
 /**
  * Planner view type
@@ -234,6 +234,7 @@ export class ViewPlannerPage extends BasePage {
         'Agenda': () => this.switchToAgendaView(),
         'Timeline': () => this.switchToTimelineView(),
       };
+
       await viewMethods[viewType]();
     });
   }
