@@ -69,7 +69,8 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1920, height: 1200 },
+        viewport: null,
+        deviceScaleFactor: undefined,
         launchOptions: {
           args: [
             '--start-maximized',
@@ -90,6 +91,7 @@ export default defineConfig({
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
+        deviceScaleFactor: undefined,
         launchOptions: {
           args: [
             '--start-maximized',

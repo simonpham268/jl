@@ -185,7 +185,7 @@ export class JobDetailsPage extends BasePage {
 
     // Job Summary Section
     this.jobSummaryHeading = page.locator('h4:has-text("Job Summary")');
-    this.customerLink = page.locator('text=Customer').locator('..').getByRole('link');
+    this.customerLink = page.locator('#customerNameLink');
     this.siteLink = page.locator('text=Site').locator('..').getByRole('link');
     this.profitabilitySection = page.locator('h3:has-text("Profitability")');
     this.actualProfitToDate = page.locator('text*=Actual Profit to Date');

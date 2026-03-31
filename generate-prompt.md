@@ -44,44 +44,91 @@
     ```
 16. **Use Data Builder pattern for test data creation** - Import from `data/uiData/`
 17. **Use high-level creation methods** (`createNewEntity(data)`) instead of calling individual field methods
-18. **Use API services for preconditions** - If scenario has preconditions like "use API to create Job/Quote/Customer/Site/Asset", inject the corresponding service and call it:
+18. **Use API services for preconditions** - If scenario has preconditions like "use API to create Job/Quote/Customer/Site/Asset", inject the corresponding service and call it using one of three methods:
     ```typescript
-    // Add service to test parameters
     test('[TC12345] @Regression: Test with precondition', async ({ page, jobService, customerService }) => {
-      // Case 1: No specific fields mentioned -> use REQUIRED fields only
-      const jobData = {
-        CustomerId: 123,
-        SiteId: 456,
-        Description: 'Auto Test Job'
-      };
-      const jobResponse = await jobService.createJob(jobData);
       
-      // Case 2: Specific fields mentioned -> use REQUIRED + OPTIONAL fields
-      // User will modify values later
-      const customerData = {
-        // Required
-        Name: 'Auto Customer',
-        // Optional (mentioned in scenario)
-        Email: 'test@example.com',
-        Phone: '0123456789',
-        Address: '123 Test Street'
-      };
-      const customerResponse = await customerService.createCustomer(customerData);
+      // ========================
+      // Method 1: Basic API Data (Environment-based, Required fields only)
+      // ========================
+      // Use when: No specific fields mentioned in test case
+      // Uses .env.uat variables for customer/site IDs automatically
+      const basicJob = await jobService.createJob(createBasicApiJobData());
+      const basicCustomer = await customerService.createCustomer(createBasicApiCustomerData());
       
-      // Use response data for UI navigation/verification
-      // Suggest: response.body.redirectUrl - Navigate to created entity
-      // Suggest: response.body.AdditionalData - Get entity details
-      // Suggest: response.body.Id - Use ID for subsequent operations
-      const jobId = jobResponse.body.Id;
-      const redirectUrl = jobResponse.body.redirectUrl;
+      // ========================  
+      // Method 2: Custom Fields with Builder (Specific field values)
+      // ========================
+      // Use when: Test case mentions specific field values
+      // Combines basic data + custom fields using builder pattern
+      const customJob = ApiJobDataBuilder.create()
+        .description('Priority Maintenance')
+        .priority('High')
+        .customerOrderNumber('PO-2026-001')
+        .referenceNumber('REF-12345')
+        .tags(['urgent', 'maintenance'])
+        .build();
       
-      // Navigate to created entity in UI
-      await page.goto(redirectUrl);
+      const response = await jobService.createJob(customJob);
+      
+      // ========================
+      // Method 3: Complex Builder (Multiple custom fields)
+      // ========================  
+      // Use when: Many custom fields or complex test data needed
+      // Fluent API for readable, maintainable test data
+      const complexJob = ApiJobDataBuilder.create()
+        .description('Emergency HVAC Repair')
+        .priority('Critical')
+        .customerOrderNumber('EMERGENCY-789')
+        .referenceNumber('REF-2026-EMERG')
+        .tags(['urgent', 'hvac', 'emergency'])
+        .custom('SpecialInstructions', 'Call customer before arrival')
+        .custom('EstimatedDuration', '2-4 hours')
+        .build();
+      
+      const complexResponse = await jobService.createJob(complexJob);
+      
+      const premiumCustomer = ApiCustomerDataBuilder.create()
+        .name('Premium Enterprise Ltd')
+        .email('admin@premium-enterprise.com')
+        .phone('+44 20 7123 4567')
+        .address('123 Premium Street, London SW1A 1AA')
+        .customerType('Corporate')
+        .custom('CreditLimit', 100000)
+        .custom('AccountManager', 'John Smith')
+        .build();
+      
+      const customerResponse = await customerService.createCustomer(premiumCustomer);
+      
+      // ========================
+      // Use Response Data for UI Navigation/Verification
+      // ========================
+      const jobId = complexResponse.body.Id;
+      const redirectUrl = complexResponse.body.redirectUrl;
+      
+      // Navigate to created entity in UI using page object
+      await jobDetailsPage.navigateTo(redirectUrl);
+      // or for other entities:
+      // await customerDetailsPage.navigateTo(redirectUrl);
+      // await assetDetailsPage.navigateTo(redirectUrl);
     });
     ```
+    
+    **Method Selection Guide:**
+    | Scenario | Method | Pattern | Example |
+    |----------|---------|---------|---------|
+    | "Create basic job" | Method 1 | `createBasicApiJobData()` | Default env data |
+    | "Create job with priority High" | Method 2 | `ApiJobDataBuilder.create().priority('High').build()` | Basic builder with specific fields |
+    | "Create complex job with multiple custom fields" | Method 3 | `ApiJobDataBuilder.create().field1().field2().custom().build()` | Full builder pattern |
+    
     **Available services:** `customerService`, `siteService`, `assetService`, `jobService`, `quoteService`, `ppmQuoteService`
     
-    **Common response fields for UI:**
+    **Available data helpers:**
+    - **Basic:** `createBasicApi*Data()` - Uses environment variables 
+    - **Custom:** `createApi*Data(description, customFields)` - Basic + overrides
+    - **Builder:** `Api*DataBuilder.create()` - Fluent API pattern
+    
+    **Response fields for UI navigation:**
     - `response.body.Id` - Entity ID for lookups
     - `response.body.redirectUrl` - Direct URL to navigate to created entity
     - `response.body.AdditionalData` - Extra data like reference numbers, codes
@@ -314,8 +361,16 @@ src/
 │       ├── SiteService.ts
 │       └── index.ts
 ├── constants/              # Application constants (errorMessages, httpStatus)
-├── data/                   # Test data layer
-│   └── testData/           # Data builders (Builder pattern)
+├── data/                   # Test data layer  
+│   ├── apiData/            # API request helpers for preconditions
+│   │   ├── asset.api.data.ts
+│   │   ├── customer.api.data.ts
+│   │   ├── job.api.data.ts
+│   │   ├── ppm.api.data.ts
+│   │   ├── quote.api.data.ts
+│   │   ├── site.api.data.ts
+│   │   └── index.ts        # Barrel exports
+│   └── uiData/             # UI form builders (Builder pattern)
 │       ├── asset.data.ts
 │       ├── batchInvoice.data.ts
 │       ├── customer.data.ts

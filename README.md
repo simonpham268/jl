@@ -48,7 +48,15 @@ playwright-auto/
 │  │  ├─ errorMessages.ts       # Error message constants
 │  │  └─ httpStatus.ts          # HTTP status codes
 │  ├─ data/                     # Test data layer
-│  │  └─ testData/              # Data builders (Builder pattern)
+  │  ├─ apiData/               # API request helpers for preconditions
+  │  │  ├─ asset.api.data.ts
+  │  │  ├─ customer.api.data.ts
+  │  │  ├─ job.api.data.ts
+  │  │  ├─ ppm.api.data.ts
+  │  │  ├─ quote.api.data.ts
+  │  │  ├─ site.api.data.ts
+  │  │  └─ index.ts
+  │  └─ uiData/                # UI form builders (Builder pattern)
 │  │     ├─ asset.data.ts
 │  │     ├─ batchInvoice.data.ts
 │  │     ├─ customer.data.ts
@@ -133,8 +141,8 @@ playwright-auto/
 │    (CustomerService, JobService, SiteService, QuoteService...)  │
 ├─────────────────────────────────────────────────────────────────┤
 │                       Data Layer                                │
-│                   src/data/testData/                            │
-│         (Builder pattern: JobBuilder, CustomerBuilder...)       │
+│          src/data/apiData/  |  src/data/uiData/                │
+│    (API request helpers)   | (Builder pattern: JobBuilder...) │
 ├─────────────────────────────────────────────────────────────────┤
 │                      Shared Layer                               │
 │              src/utils/  |  src/constants/                      │
