@@ -42,7 +42,7 @@
      */
     test('[TC{testCaseId}] @{primaryTag} @Regression: {testDescription}', async ({ page }) => {
     ```
-16. **Use Data Builder pattern for test data creation** - Import from `data/testData/`
+16. **Use Data Builder pattern for test data creation** - Import from `data/uiData/`
 17. **Use high-level creation methods** (`createNewEntity(data)`) instead of calling individual field methods
 18. **Use API services for preconditions** - If scenario has preconditions like "use API to create Job/Quote/Customer/Site/Asset", inject the corresponding service and call it:
     ```typescript
@@ -421,7 +421,7 @@ export function generateUniqueName(prefix: string = 'Auto'): string {
 ### Using Data Builders in Tests
 
 ```typescript
-import { JobBuilder, generateDescription } from '../data/testData/job.data';
+import { JobBuilder, generateDescription } from '../data/uiData/job.data';
 
 // Simple creation with required fields only
 const jobData = JobBuilder.create('Customer A', 'Site A', 'Fix AC').build();

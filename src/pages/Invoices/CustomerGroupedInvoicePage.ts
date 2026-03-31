@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { BasePage } from '../BasePage';
-import type { CustomerGroupedInvoiceData } from '../../data/testData/customerGroupedInvoice.data';
+import type { CustomerGroupedInvoiceData } from '../../data/uiData/customerGroupedInvoice.data';
 
 /**
  * Job status options for filtering

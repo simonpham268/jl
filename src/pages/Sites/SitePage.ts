@@ -471,7 +471,7 @@ export class SitePage extends BasePage {
    * @returns Site ID after successful creation
    *
    * @example
-   * import { SiteBuilder } from '../../data/testData/site.data';
+   * import { SiteBuilder } from '../../data/uiData/site.data';
    *
    * // Navigate first
    * await sitePage.navigateToAddSite();

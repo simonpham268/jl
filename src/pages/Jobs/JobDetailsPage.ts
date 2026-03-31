@@ -161,7 +161,7 @@ export class JobDetailsPage extends BasePage {
     this.jobsBackLink = page.getByRole('link', { name: 'Jobs' });
 
     // Header Actions
-    this.completeJobButton = page.getByText('Complete Job');
+    this.completeJobButton = page.locator('#completeJob');
     this.logRelatedWorkButton = page.getByRole('button', { name: 'Log Related Work' });
     this.logRelatedWorkDropdown = page.locator('button:has-text("Log Related Work")').locator('..').locator('button').last();
     this.addInvoiceButton = page.getByText('Add Invoice');
@@ -241,9 +241,9 @@ export class JobDetailsPage extends BasePage {
   /**
    * Navigate to Job Details page by ID
    */
-  async navigateToJob(jobId: string | number): Promise<void> {
-    await test.step(`Navigate to Job ${jobId}`, async () => {
-      await this.page.goto(`/Job/Detail/${jobId}`);
+  async navigateToJob(redirectUrl: string): Promise<void> {
+    await test.step(`Navigate to Job ${redirectUrl}`, async () => {
+      await this.page.goto(redirectUrl);
       await this.page.waitForLoadState('domcontentloaded');
     });
   }
@@ -325,11 +325,7 @@ export class JobDetailsPage extends BasePage {
    */
   async confirmCompleteJob(): Promise<void> {
     await test.step('Confirm Complete Job', async () => {
-      const confirmButton = this.page.getByRole('button', { name: 'Confirm' });
-      await confirmButton.click();
-
-      // Wait for success message or page to update
-      await this.page.waitForTimeout(2000);
+      await this.page.getByRole('button', { name: 'Complete' }).click();
     });
   }
 

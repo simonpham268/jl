@@ -1,53 +1,103 @@
-import { expect, test } from '../fixtures/combined.fixture';
+import {
+  createBasicApiAssetData
+} from '../data/apiData/asset.api.data';
+import {
+  ApiCustomerDataBuilder,
+  createBasicApiCustomerData
+} from '../data/apiData/customer.api.data';
+import {
+  ApiJobDataBuilder,
+  createApiJobData,
+  createBasicApiJobData
+} from '../data/apiData/job.api.data';
+import {
+  createBasicApiPPMQuoteData
+} from '../data/apiData/ppm.api.data';
+import {
+  createBasicApiQuoteData
+} from '../data/apiData/quote.api.data';
+import {
+  createBasicApiSiteData
+} from '../data/apiData/site.api.data';
+import { test } from '../fixtures/combined.fixture';
 
 test.describe('try with api call', () => {
-    test('[TC107370] create customer', async ({ customerService }) => {
-        const response = await customerService.createCustomer({
-            Name: 'Testv2',
-        });
-        console.log('Response:', JSON.stringify(response, null, 2));
+  test('[TC107379] create job', async ({ jobService }) => {
+    const response = await jobService.createJob(createBasicApiJobData());
+    console.log('Response:', JSON.stringify(response, null, 2));
+  });
+
+  test('[TC107370] create customer', async ({ customerService }) => {
+    const response = await customerService.createCustomer(createBasicApiCustomerData());
+    console.log('Response:', JSON.stringify(response, null, 2));
+  });
+
+  test('[TC107371] add site', async ({ siteService }) => {
+    const response = await siteService.createSite(createBasicApiSiteData());
+    console.log('Response:', JSON.stringify(response, null, 2));
+  });
+
+  test('[TC107371] add asset', async ({ assetService }) => {
+    const response = await assetService.createAsset(createBasicApiAssetData());
+    console.log('Response:', JSON.stringify(response, null, 2));
+  });
+
+  test('[TC107371] add quote', async ({ quoteService }) => {
+    const response = await quoteService.createQuote(createBasicApiQuoteData());
+    console.log('Response:', JSON.stringify(response, null, 2));
+  });
+
+  test('[TC107371] add ppm quote', async ({ ppmQuoteService }) => {
+    const response = await ppmQuoteService.createPPMQuote(createBasicApiPPMQuoteData());
+    console.log('Response:', JSON.stringify(response, null, 2));
+  });
+
+  // ========================
+  // Advanced API Data Examples
+  // ========================
+
+  test('[TC107380] create job with custom fields', async ({ jobService }) => {
+    // Method 1: Using customFields parameter
+    const jobWithFields = createApiJobData('Priority Maintenance', {
+      Priority: 'High',
+      CustomerOrderNumber: 'PO-2026-001',
+      ReferenceNumber: 'REF-12345'
     });
 
-    test('[TC107371] add site', async ({ siteService }) => {
-        const response = await siteService.createSite({
-            CustomerId: 3829952,
-            CustomerName: 'Sauer - ThielEino5zpbp',
-            Name: 'Site 1',
-        });
-        console.log('Response:', JSON.stringify(response, null, 2));
-    });
+    const response = await jobService.createJob(jobWithFields);
+    console.log('Job with custom fields:', JSON.stringify(response, null, 2));
+  });
 
-    test('[TC107371] add asset', async ({ assetService }) => {
-        const response = await assetService.createAsset({
-            CustomerId: 3829952,
-            SiteId: 18914656,
-            Description: 'Air Conditioning Unit2',
-            Number: '1002',
-            AssetConditionId: "53278",
-            Quantity: 1,
-        });
-        console.log('Response:', JSON.stringify(response, null, 2));
-    });
+  test('[TC107381] create complex job with builder', async ({ jobService }) => {
+    // Method 2: Using Fluent API Builder
+    const complexJob = ApiJobDataBuilder.create()
+      .description('Emergency HVAC Repair')
+      .priority('Critical')
+      .customerOrderNumber('EMERGENCY-789')
+      .referenceNumber('REF-2026-EMERG')
+      .tags(['urgent', 'hvac', 'emergency'])
+      .custom('SpecialInstructions', 'Call customer before arrival')
+      .custom('EstimatedDuration', '2-4 hours')
+      .build();
 
-    test('[TC107371] add quote', async ({ quoteService }) => {
-        const response = await quoteService.createQuote({
-            QuoteCustomerId: 3829952,
-            QuoteSiteId: 6158191,
-            Description: 'Quote22222',
-            JobTypeId: '52394',
-            AssignedToUserId: 2
-        });
-        console.log('Response:', JSON.stringify(response, null, 2));
-    });
+    const response = await jobService.createJob(complexJob);
+    console.log('Complex job:', JSON.stringify(response, null, 2));
+  });
 
-    test('[TC107371] add ppm quote', async ({ ppmQuoteService }) => {
-        const response = await ppmQuoteService.createPPMQuote({
-            PPMCustomerId: 3829952,
-            PPMSiteId: 6158191,
-            PPMSellingRateId: 67287,
-            StartDate: '24/03/2026',
-            EndDate: '24/04/2026',
-        });
-        console.log('Response:', JSON.stringify(response, null, 2));
-    });
+  test('[TC107382] create premium customer with builder', async ({ customerService }) => {
+    // Method 3: Customer Builder with multiple fields
+    const premiumCustomer = ApiCustomerDataBuilder.create()
+      .name('Premium Enterprise Ltd')
+      .email('admin@premium-enterprise.com')
+      .phone('+44 20 7123 4567')
+      .address('123 Premium Street, London SW1A 1AA')
+      .customerType('Corporate')
+      .custom('CreditLimit', 100000)
+      .custom('AccountManager', 'John Smith')
+      .custom('PreferredPaymentTerms', '30 days')
+      .build();
+
+    const response = await customerService.createCustomer(premiumCustomer);
+    console.log('Premium customer:', JSON.stringify(response, null, 2));
+  });
 });

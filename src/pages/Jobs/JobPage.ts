@@ -891,7 +891,7 @@ export class JobPage extends BasePage {
    *
    * @example
    * // Using data factory from job.data.ts
-   * import { JOB_TEST_DATA, createJobData } from '../../data/testData/job.data';
+   * import { JOB_TEST_DATA, createJobData } from '../../data/uiData/job.data';
    *
    * // Minimal job
    * const jobId = await jobPage.createNewJob(JOB_TEST_DATA.minimal('Customer A', 'Site A'));

@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { BasePage } from '../BasePage';
-import type { StockReorderData } from '../../data/testData/stockReorder.data';
+import type { StockReorderData } from '../../data/uiData/stockReorder.data';
 
 /**
  * Stock item for reorder

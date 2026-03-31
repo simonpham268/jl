@@ -664,7 +664,7 @@ export class QuotePage extends BasePage {
    * @returns Quote ID after successful creation
    *
    * @example
-   * import { QuoteBuilder } from '../../data/testData/quote.data';
+   * import { QuoteBuilder } from '../../data/uiData/quote.data';
    *
    * // Navigate first
    * await quotePage.navigateToLogQuote();

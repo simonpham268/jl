@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { BasePage } from '../BasePage';
-import type { StockPOData } from '../../data/testData/stockPO.data';
+import type { StockPOData } from '../../data/uiData/stockPO.data';
 
 /**
  * Stock PO form data interface

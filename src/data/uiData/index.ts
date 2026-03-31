@@ -1,4 +1,4 @@
-// Test Data - Barrel Exports
+// UI Data - Barrel Exports (UI Builders Only)
 export * from './asset.data';
 export * from './batchInvoice.data';
 export * from './customer.data';

@@ -88,6 +88,7 @@ export interface CreateJobResponse {
     errors: string[];
     Message: string | null;
     WarningMessage: string | null;
+    redirectUrl: string | null;
 }
 
 export interface UpdateJobRequest {

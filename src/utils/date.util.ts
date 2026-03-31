@@ -45,3 +45,22 @@ export function formatTime(date: Date = new Date()): string {
   hours = hours % 12 || 12;
   return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
 }
+
+/**
+ * Get today's date in DD/MM/YYYY format
+ * @returns Today's date string
+ */
+export function getTodayDate(): string {
+  return formatDate();
+}
+
+/**
+ * Get next month's date in DD/MM/YYYY format
+ * @param fromDate - Base date (defaults to today)
+ * @returns Next month date string
+ */
+export function getNextMonthDate(fromDate: Date = new Date()): string {
+  const nextMonth = new Date(fromDate);
+  nextMonth.setMonth(fromDate.getMonth() + 1);
+  return formatDate(nextMonth);
+}

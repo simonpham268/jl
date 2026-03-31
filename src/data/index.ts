@@ -1,2 +1,3 @@
 // Data - Barrel Exports
-export * from './testData';
+export * from './apiData';
+export * from './uiData';

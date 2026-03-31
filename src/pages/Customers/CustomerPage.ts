@@ -468,7 +468,7 @@ export class CustomerPage extends BasePage {
    * @returns Customer ID after successful creation
    *
    * @example
-   * import { CustomerBuilder } from '../../data/testData/customer.data';
+   * import { CustomerBuilder } from '../../data/uiData/customer.data';
    *
    * // Simple customer
    * const customerId = await customerPage.createNewCustomer(

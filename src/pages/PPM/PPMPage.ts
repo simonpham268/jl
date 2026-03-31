@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { BasePage } from '../BasePage';
-import type { PPMData } from '../../data/testData/ppm.data';
+import type { PPMData } from '../../data/uiData/ppm.data';
 
 /**
  * PPM Contract Type

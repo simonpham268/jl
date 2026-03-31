@@ -590,7 +590,7 @@ export class AssetPage extends BasePage {
    * @returns Asset ID after successful creation
    *
    * @example
-   * import { AssetBuilder } from '../../data/testData/asset.data';
+   * import { AssetBuilder } from '../../data/uiData/asset.data';
    *
    * // Navigate first
    * await assetPage.navigateToAddAsset();

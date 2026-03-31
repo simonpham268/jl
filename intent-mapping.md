@@ -482,7 +482,7 @@ const customerId = await customerPage.createCustomerWithData({
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { CustomerBuilder, generateCustomerName } from '../../data/testData/customer.data';
+import { CustomerBuilder, generateCustomerName } from '../../data/uiData/customer.data';
 
 // Navigate first, then create
 await customerPage.navigateToAddCustomer();
@@ -878,7 +878,7 @@ const siteId = await sitePage.createSiteWithData({
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { SiteBuilder, generateSiteName } from '../../data/testData/site.data';
+import { SiteBuilder, generateSiteName } from '../../data/uiData/site.data';
 
 // Navigate first, then create
 await sitePage.navigateToAddSite();
@@ -1283,7 +1283,7 @@ const assetId = await assetPage.createAssetWithData({
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { AssetBuilder, generateAssetDescription, generateSerialNumber } from '../../data/testData/asset.data';
+import { AssetBuilder, generateAssetDescription, generateSerialNumber } from '../../data/uiData/asset.data';
 
 // Navigate first, then create
 await assetPage.navigateToAddAsset();
@@ -2185,7 +2185,7 @@ await jobPage.clickSave();
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { JobBuilder, generateDescription, generateRefNumber } from '../../data/testData/job.data';
+import { JobBuilder, generateDescription, generateRefNumber } from '../../data/uiData/job.data';
 
 // Navigate first, then create
 await jobPage.navigateToLogJob();
@@ -2982,7 +2982,7 @@ await quotePage.clickSave();
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { QuoteBuilder, generateQuoteDescription, generateQuoteRef } from '../../data/testData/quote.data';
+import { QuoteBuilder, generateQuoteDescription, generateQuoteRef } from '../../data/uiData/quote.data';
 
 // Navigate first, then create
 await quotePage.navigateToLogQuote();
@@ -3764,7 +3764,7 @@ await ppmPage.clickNext();
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { PPMBuilder, generatePPMDescription, generatePlanReference } from '../../data/testData/ppm.data';
+import { PPMBuilder, generatePPMDescription, generatePlanReference } from '../../data/uiData/ppm.data';
 
 // Navigate first, then create
 await ppmPage.navigateToAddPPMQuote();
@@ -4392,7 +4392,7 @@ await createStockPOPage.createStockPO({
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { StockPOBuilder, generateAccountNumber } from '../../data/testData/stockPO.data';
+import { StockPOBuilder, generateAccountNumber } from '../../data/uiData/stockPO.data';
 
 // Navigate first, then create
 await createStockPOPage.navigateToCreateStockPO();
@@ -4533,7 +4533,7 @@ await createStockReorderPage.selectStocksAndProceed([0, 1, 2]);
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { StockReorderBuilder } from '../../data/testData/stockReorder.data';
+import { StockReorderBuilder } from '../../data/uiData/stockReorder.data';
 
 // Navigate first, then create
 await createStockReorderPage.navigateToCreateStockReorder();
@@ -7128,7 +7128,7 @@ const customerGroupedInvoicePage = new CustomerGroupedInvoicePage(page);
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { CustomerGroupedInvoiceBuilder } from '../../data/testData/customerGroupedInvoice.data';
+import { CustomerGroupedInvoiceBuilder } from '../../data/uiData/customerGroupedInvoice.data';
 
 // Navigate first, then create
 await customerGroupedInvoicePage.navigateToCustomerGroupedInvoice();
@@ -7277,7 +7277,7 @@ const batchInvoicePage = new BatchInvoicePage(page);
 ### Data Builder Pattern (Recommended)
 
 ```typescript
-import { BatchInvoiceBuilder } from '../../data/testData/batchInvoice.data';
+import { BatchInvoiceBuilder } from '../../data/uiData/batchInvoice.data';
 
 // Navigate first, then create
 await batchInvoicePage.navigateToBatchInvoice();
