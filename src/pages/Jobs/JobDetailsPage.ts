@@ -186,7 +186,7 @@ export class JobDetailsPage extends BasePage {
     // Job Summary Section
     this.jobSummaryHeading = page.locator('h4:has-text("Job Summary")');
     this.customerLink = page.locator('#customerNameLink');
-    this.siteLink = page.locator('text=Site').locator('..').getByRole('link');
+    this.siteLink = page.locator('#siteNameLink');
     this.profitabilitySection = page.locator('h3:has-text("Profitability")');
     this.actualProfitToDate = page.locator('text*=Actual Profit to Date');
 
@@ -325,8 +325,80 @@ export class JobDetailsPage extends BasePage {
    */
   async confirmCompleteJob(): Promise<void> {
     await test.step('Confirm Complete Job', async () => {
-      await this.page.getByRole('button', { name: 'Complete' }).click();
+      const completeButton = this.page.getByRole('button', { name: 'Complete' });
+      
+      // Handle potential blocking conditions that disable the Complete button
+      await this.handleJobCompletionPrerequisites();
+      
+      // Click the Complete button
+      await completeButton.click();
     });
+  }
+
+  /**
+   * Handle prerequisites that may block job completion
+   */
+  private async handleJobCompletionPrerequisites(): Promise<void> {
+    const completeButton = this.page.getByRole('button', { name: 'Complete' });
+    
+    // Check if button is initially disabled
+    const isButtonDisabled = await this.isCompleteButtonDisabled();
+    
+    if (isButtonDisabled) {
+      await this.handleCancelOpenVisitsRequirement();
+    }
+  }
+
+  /**
+   * Check if Complete button is disabled
+   */
+  private async isCompleteButtonDisabled(): Promise<boolean> {
+    const completeButton = this.page.getByRole('button', { name: 'Complete' });
+    const disabled = await completeButton.getAttribute('disabled');
+    return disabled !== null;
+  }
+
+  /**
+   * Handle the "Cancel open visits" requirement if present
+   */
+  private async handleCancelOpenVisitsRequirement(): Promise<void> {
+    const cancelVisitsText = this.page.locator('text="Cancel open visits"');
+    
+    if (await cancelVisitsText.isVisible()) {
+      // Find checkbox associated with cancel visits option
+      const cancelVisitsCheckbox = cancelVisitsText
+        .locator('..')
+        .locator('input[type="checkbox"]')
+        .first();
+      
+      if (await cancelVisitsCheckbox.isVisible()) {
+        await cancelVisitsCheckbox.check();
+        
+        // Wait for the Complete button to be enabled
+        await this.waitForCompleteButtonEnabled();
+      }
+    }
+  }
+
+  /**
+   * Wait for Complete button to be enabled
+   */
+  private async waitForCompleteButtonEnabled(): Promise<void> {
+    const completeButton = this.page.getByRole('button', { name: 'Complete' });
+    
+    await completeButton.waitFor({
+      state: 'visible',
+      timeout: 5000
+    });
+    
+    // Wait for button to be enabled (disabled attribute removed)
+    await this.page.waitForFunction(
+      () => {
+        const button = document.querySelector('button:has-text("Complete")') as HTMLButtonElement;
+        return button && !button.disabled;
+      },
+      { timeout: 5000 }
+    );
   }
 
   /**
@@ -378,16 +450,21 @@ export class JobDetailsPage extends BasePage {
   async getJobStatus(): Promise<string> {
     return await test.step('Get job status', async () => {
       const titleText = await this.pageTitle.textContent() || '';
-      // Status is usually after the job number
-      const parts = titleText.split('/');
-
-      if (parts.length > 1) {
-        const afterJobNumber = parts[1].trim();
-        const statusMatch = afterJobNumber.match(/M\d+\s+(.+)/);
-
-        return statusMatch ? statusMatch[1].trim() : '';
-      }
-      return '';
+      
+      // Extract text after job number from formats like:
+      // "Job Details / M12345 Some Text Status" or "M12345 Some Text Status"
+      const jobNumberPattern = /M\d+\s+(.+)/;
+      
+      // Handle both slash-separated and direct formats
+      const textToSearch = titleText.includes('/') 
+        ? titleText.split('/')[1]?.trim() || ''
+        : titleText;
+      
+      const match = textToSearch.match(jobNumberPattern);
+      const statusText = match?.[1]?.trim() || '';
+      
+      // Return the last word as the current job status
+      return statusText.split(/\s+/).pop() || '';
     });
   }
 
@@ -432,6 +509,14 @@ export class JobDetailsPage extends BasePage {
    */
   async getJobSummary(): Promise<JobSummaryInfo> {
     return await test.step('Get job summary', async () => {
+      // Wait for any modal to be closed (job completion dialog)
+      await this.page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 }).catch(() => {
+        // Modal might not exist, continue
+      });
+      
+      // Wait for page to update after job completion
+      await this.page.waitForTimeout(1000);
+      
       const [jobNumber, status, customer, site] = await Promise.all([
         this.getJobNumber(),
         this.getJobStatus(),

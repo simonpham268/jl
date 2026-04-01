@@ -177,6 +177,18 @@ git checkout -b feature/your-feature-name
 
 ### Generate Test Script
 
+#### Required Attachments for Script Generation
+When using Copilot to generate test scripts, **always attach these files**:
+- `agent-compliance.md` - Agent compliance and coding standards
+- `gen-prompt.md` - Test generation instructions and patterns  
+- `mapping-prompt.md` - UI element mapping and locator strategies
+- `scenario.md` (or `output/test-case-<testid>.md`) - Test scenario/steps to implement
+
+#### Required Attachments for Script Healing
+When using **playwright-healer** to fix failing tests, **always attach**:
+- `healer-prompt.md` - Healing rules and debugging strategies
+- The failing test file(s)
+
 #### Step 1: Get Test Case from Azure DevOps
 ```bash
 npm run generate -- <testid>
@@ -203,15 +215,18 @@ This generates `output/test-case-<testid>.md` with format:
 ### Step 3: Generate Script with Agent
 1. Select **playwright-test-generator** Agent in Copilot
 2. Attach files:
-   - `output/test-case-<testid>.md`
-   - `generate-prompt.md`
-   - `intent-mapping.md`
+   - `output/test-case-<testid>.md` (or scenario.md file)
+   - `agent-compliance.md`
+   - `gen-prompt.md`
+   - `mapping-prompt.md`
 3. Prompt: `Generate script and follow strictly these md files`
 4. Save generated test to `src/tests/`
 
 ### Step 4: Fix Issues with Healer Agent
 1. Select **playwright-test-healer** Agent
-2. Attach failing test file
+2. Attach files:
+   - `healer-prompt.md`
+   - Failing test file
 3. Prompt: `Fix broken locators and flaky steps`
 4. Re-run tests until stable
 

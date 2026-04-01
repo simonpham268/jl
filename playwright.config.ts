@@ -46,7 +46,10 @@ export default defineConfig({
       outputFolder: 'allure-results',
       detail: true,
       suiteTitle: false,
-      traces: 'on-failure',
+      environmentInfo: {
+        framework: 'playwright',
+        browser: 'chromium'
+      },
     }],
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -56,8 +59,8 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    screenshot: process.env.CI ? 'only-on-failure' : 'off',
-    video: process.env.CI ? 'retain-on-failure' : 'off',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
 
     /* Use saved authentication state */
     storageState: '.auth/storageState.json',
