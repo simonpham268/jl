@@ -46,7 +46,7 @@ export interface QuoteSearchOptions {
 /**
  * Quote tabs
  */
-export type QuoteTab = 'All' | 'Open' | 'Won' | 'Lost' | 'Expired';
+export type QuoteTab = 'All' | 'Outstanding' | 'Accepted' | 'Rejected' | 'Expired';
 
 /**
  * Table columns that can be sorted
@@ -98,9 +98,9 @@ export class AllQuotesPage extends BasePage {
   // Locators - Tabs
   // ========================
   readonly allTab: Locator;
-  readonly openTab: Locator;
-  readonly wonTab: Locator;
-  readonly lostTab: Locator;
+  readonly outstandingTab: Locator;
+  readonly acceptedTab: Locator;
+  readonly rejectedTab: Locator;
   readonly expiredTab: Locator;
 
   // ========================
@@ -170,9 +170,9 @@ export class AllQuotesPage extends BasePage {
 
     // Tabs
     this.allTab = page.getByRole('tab', { name: /^All/ });
-    this.openTab = page.getByRole('tab', { name: /^Open/ });
-    this.wonTab = page.getByRole('tab', { name: /^Won/ });
-    this.lostTab = page.getByRole('tab', { name: /^Lost/ });
+    this.outstandingTab = page.getByRole('tab', { name: /^Outstanding/ });
+    this.acceptedTab = page.getByRole('tab', { name: /^Accepted/ });
+    this.rejectedTab = page.getByRole('tab', { name: /^Rejected/ });
     this.expiredTab = page.getByRole('tab', { name: /^Expired/ });
 
     // Table
@@ -357,9 +357,9 @@ export class AllQuotesPage extends BasePage {
     await test.step(`Switch to ${tab} tab`, async () => {
       const tabMap: Record<QuoteTab, Locator> = {
         'All': this.allTab,
-        'Open': this.openTab,
-        'Won': this.wonTab,
-        'Lost': this.lostTab,
+        'Outstanding': this.outstandingTab,
+        'Accepted': this.acceptedTab,
+        'Rejected': this.rejectedTab,
         'Expired': this.expiredTab,
       };
 
@@ -375,9 +375,9 @@ export class AllQuotesPage extends BasePage {
     return await test.step(`Get ${tab} tab count`, async () => {
       const tabMap: Record<QuoteTab, Locator> = {
         'All': this.allTab,
-        'Open': this.openTab,
-        'Won': this.wonTab,
-        'Lost': this.lostTab,
+        'Outstanding': this.outstandingTab,
+        'Accepted': this.acceptedTab,
+        'Rejected': this.rejectedTab,
         'Expired': this.expiredTab,
       };
       const text = await tabMap[tab].textContent() || '';
@@ -427,7 +427,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteByCustomerName(customerName: string): Promise<void> {
     await test.step(`Click quote by customer: ${customerName}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${customerName}")`);
-
+      
       await row.click();
     });
   }
@@ -488,7 +488,8 @@ export class AllQuotesPage extends BasePage {
         const quoteNo = await cells.nth(0).textContent() || '';
 
         items.push({ quoteNo: quoteNo.trim() });
-      }      return items;
+      }
+      return items;
     });
   }
 
@@ -613,6 +614,71 @@ export class AllQuotesPage extends BasePage {
   async clickPrint(): Promise<void> {
     await test.step('Click Print', async () => {
       await this.printButton.click();
+    });
+  }
+
+  // ========================
+  // Quote Rejection Actions
+  // ========================
+
+  /**
+   * Click Reject button for selected quote
+   */
+  async clickRejectButton(): Promise<void> {
+    await test.step('Click Reject button', async () => {
+      const rejectButton = this.page.getByRole('button', { name: /reject/i });
+      await rejectButton.click();
+    });
+  }
+
+  /**
+   * Select rejection reason from dropdown
+   */
+  async selectRejectionReason(reason: string): Promise<void> {
+    await test.step(`Select rejection reason: ${reason}`, async () => {
+      const reasonDropdown = this.page.locator('select[name*="reason"], [id*="reason"] select, .reason-dropdown select').first();
+      await reasonDropdown.selectOption(reason);
+    });
+  }
+
+  /**
+   * Fill rejection reason text
+   */
+  async fillRejectionReason(rejectionText: string): Promise<void> {
+    await test.step(`Fill rejection reason: ${rejectionText}`, async () => {
+      const rejectionInput = this.page.locator('textarea[name*="reason"], input[name*="reason"], [id*="rejection"] textarea, [id*="rejection"] input').first();
+      await rejectionInput.fill(rejectionText);
+    });
+  }
+
+  /**
+   * Save rejection
+   */
+  async saveRejection(): Promise<void> {
+    await test.step('Save rejection', async () => {
+      const saveButton = this.page.getByRole('button', { name: /save/i });
+      await saveButton.click();
+      await this.page.waitForLoadState('networkidle');
+    });
+  }
+
+  /**
+   * Get quote status text
+   */
+  async getQuoteStatusText(): Promise<string> {
+    return await test.step('Get quote status text', async () => {
+      const statusElement = this.page.locator('.status-text, .quote-status, [class*="status"], .badge').first();
+      return await statusElement.textContent() || '';
+    });
+  }
+
+  /**
+   * Check if Revert button is visible
+   */
+  async isRevertButtonVisible(): Promise<boolean> {
+    return await test.step('Check if Revert button is visible', async () => {
+      const revertButton = this.page.getByRole('button', { name: /revert/i });
+      return await revertButton.isVisible();
     });
   }
 }
