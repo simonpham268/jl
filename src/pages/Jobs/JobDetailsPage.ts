@@ -325,13 +325,9 @@ export class JobDetailsPage extends BasePage {
    */
   async confirmCompleteJob(): Promise<void> {
     await test.step('Confirm Complete Job', async () => {
-      const completeButton = this.page.getByRole('button', { name: 'Complete' });
-      
       // Handle potential blocking conditions that disable the Complete button
       await this.handleJobCompletionPrerequisites();
-      
-      // Click the Complete button
-      await completeButton.click();
+      await this.page.getByRole('button', { name: 'Complete' }).click();
     });
   }
 
@@ -340,10 +336,10 @@ export class JobDetailsPage extends BasePage {
    */
   private async handleJobCompletionPrerequisites(): Promise<void> {
     const completeButton = this.page.getByRole('button', { name: 'Complete' });
-    
+
     // Check if button is initially disabled
     const isButtonDisabled = await this.isCompleteButtonDisabled();
-    
+
     if (isButtonDisabled) {
       await this.handleCancelOpenVisitsRequirement();
     }
@@ -362,21 +358,43 @@ export class JobDetailsPage extends BasePage {
    * Handle the "Cancel open visits" requirement if present
    */
   private async handleCancelOpenVisitsRequirement(): Promise<void> {
-    const cancelVisitsText = this.page.locator('text="Cancel open visits"');
-    
-    if (await cancelVisitsText.isVisible()) {
-      // Find checkbox associated with cancel visits option
-      const cancelVisitsCheckbox = cancelVisitsText
-        .locator('..')
-        .locator('input[type="checkbox"]')
-        .first();
-      
-      if (await cancelVisitsCheckbox.isVisible()) {
-        await cancelVisitsCheckbox.check();
-        
+    // Look for the "Cancel open visits" clickable element using multiple selector strategies
+    try {
+      // Try different selectors to catch varying DOM structures
+      const selectors = [
+        'text="Cancel open visits"',
+        ':text("Cancel open visits")',
+        '*:has-text("Cancel open visits")',
+        'button:has-text("Cancel open visits")',
+        'a:has-text("Cancel open visits")',
+        '[role="button"]:has-text("Cancel open visits")'
+      ];
+
+      let cancelVisitsElement = null;
+
+      for (const selector of selectors) {
+        try {
+          cancelVisitsElement = this.page.locator(selector).first();
+          if (await cancelVisitsElement.isVisible({ timeout: 1000 })) {
+            console.log(`Found "Cancel open visits" using selector: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+          cancelVisitsElement = null;
+        }
+      }
+
+      if (cancelVisitsElement && await cancelVisitsElement.isVisible()) {
+        await cancelVisitsElement.click();
+        console.log('Clicked "Cancel open visits" - waiting for Complete button to enable');
+
         // Wait for the Complete button to be enabled
         await this.waitForCompleteButtonEnabled();
       }
+    } catch (error) {
+      // If cancel visits option is not found, continue anyway
+      console.warn('Cancel open visits option not found or not clickable:', (error as Error).message);
     }
   }
 
@@ -385,12 +403,12 @@ export class JobDetailsPage extends BasePage {
    */
   private async waitForCompleteButtonEnabled(): Promise<void> {
     const completeButton = this.page.getByRole('button', { name: 'Complete' });
-    
+
     await completeButton.waitFor({
       state: 'visible',
       timeout: 5000
     });
-    
+
     // Wait for button to be enabled (disabled attribute removed)
     await this.page.waitForFunction(
       () => {
@@ -449,21 +467,29 @@ export class JobDetailsPage extends BasePage {
    */
   async getJobStatus(): Promise<string> {
     return await test.step('Get job status', async () => {
+      // Wait for status to be visible and not "New Job" (indicating completion)
+      await this.page.waitForFunction(
+        () => {
+          const statusLabel = document.querySelector('.job-status:not(.hidden)');
+          return statusLabel && statusLabel.textContent && statusLabel.textContent.trim() !== 'New Job';
+        },
+        { timeout: 10000 }
+      );
+
+      const statusLabel = this.page.locator('.job-status:not(.hidden)').first();
+
+      if (await statusLabel.isVisible()) {
+        const statusText = await statusLabel.textContent() || '';
+        return statusText.trim();
+      }
+
       const titleText = await this.pageTitle.textContent() || '';
-      
-      // Extract text after job number from formats like:
-      // "Job Details / M12345 Some Text Status" or "M12345 Some Text Status"
       const jobNumberPattern = /M\d+\s+(.+)/;
-      
-      // Handle both slash-separated and direct formats
-      const textToSearch = titleText.includes('/') 
+      const textToSearch = titleText.includes('/')
         ? titleText.split('/')[1]?.trim() || ''
         : titleText;
-      
       const match = textToSearch.match(jobNumberPattern);
       const statusText = match?.[1]?.trim() || '';
-      
-      // Return the last word as the current job status
       return statusText.split(/\s+/).pop() || '';
     });
   }
@@ -513,10 +539,10 @@ export class JobDetailsPage extends BasePage {
       await this.page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 }).catch(() => {
         // Modal might not exist, continue
       });
-      
+
       // Wait for page to update after job completion
       await this.page.waitForTimeout(1000);
-      
+
       const [jobNumber, status, customer, site] = await Promise.all([
         this.getJobNumber(),
         this.getJobStatus(),

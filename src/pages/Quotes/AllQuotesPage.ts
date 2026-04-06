@@ -427,7 +427,7 @@ export class AllQuotesPage extends BasePage {
   async clickQuoteByCustomerName(customerName: string): Promise<void> {
     await test.step(`Click quote by customer: ${customerName}`, async () => {
       const row = this.tableBody.locator(`tr:has-text("${customerName}")`);
-      
+
       await row.click();
     });
   }
