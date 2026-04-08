@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "run-test-mcp-server"
+      ]
+    },
+    "sharepoint-docs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "./mcp-servers/tsconfig.json",
+        "./mcp-servers/sharepoint-server.ts"
+      ]
+    },
+    "release-notes": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "./mcp-servers/tsconfig.json",
+        "./mcp-servers/release-notes-server.ts"
+      ],
+      "env": {
+        "RELEASE_NOTES_URL": "https://support.joblogic.com/docs/latest-release-notes"
+      }
+    }
+  }
+}

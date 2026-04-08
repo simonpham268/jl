@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^node -e \"const \\{ PDFParse \\} = require\\('pdf-parse'\\); const p = new PDFParse\\(\\); console\\.log\\('Methods:', Object\\.getOwnPropertyNames\\(Object\\.getPrototypeOf\\(p\\)\\)\\.slice\\(0, 10\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

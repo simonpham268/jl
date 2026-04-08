@@ -20,14 +20,15 @@ yarn.lock
 /output/
 /input/
 
+# MCP Servers Data
+/mcp-servers/data/
+
 # Environment Variables
 .env
 .env.local
 .env.*.local
 
 # IDE/Editor
-.vscode/
-.idea/
 *.swp
 *.swo
 *~

@@ -18,7 +18,16 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "lint:file": "eslint --ext .ts",
-    "lint:file:fix": "eslint --ext .ts --fix"
+    "lint:file:fix": "eslint --ext .ts --fix",
+    "scan": "npx tsx src/utils/azured-devops/scan-regression-plans.ts",
+    "scan:web": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --web",
+    "scan:mobile": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --mobile",
+    "scan:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --active",
+    "scan:web:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --web --active",
+    "scan:mobile:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --mobile --active",
+    "crawl": "npx tsx mcp-servers/crawler.ts",
+    "crawl:rn": "npx tsx mcp-servers/crawler.ts release_notes",
+    "crawl:sp": "npx tsx mcp-servers/crawler.ts sharepoint"
   },
   "keywords": [],
   "author": "",
@@ -27,8 +36,10 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.57.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.0.9",
     "@types/node-fetch": "^2.6.13",
+    "@types/pdf-parse": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
     "allure-playwright": "^3.4.5",
@@ -43,11 +54,16 @@
     "typescript-eslint": "^8.57.2"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^12.8.0",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
+    "mammoth": "^1.12.0",
     "node-fetch": "^2.7.0",
+    "pdf-parse": "^2.4.5",
     "tsx": "^4.0.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
   },
   "pkg": {
     "assets": [

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "mcp__release-notes__refresh_index",
+      "mcp__playwright-test__browser_navigate",
+      "mcp__playwright-test__generator_setup_page"
+    ]
+  }
+}

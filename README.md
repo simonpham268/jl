@@ -5,8 +5,22 @@
 ```text
 playwright-auto/
 ├─ .auth/                       # Authentication storage state
-├─ .github/                     # CI/CD workflows (if available)
-├─ .vscode/                     # VS Code settings
+├─ .github/
+│  ├─ agents/                   # Copilot Chat agents
+│  │  ├─ playwright-test-generator.agent.md
+│  │  ├─ playwright-test-healer.agent.md
+│  │  └─ playwright-test-planner.agent.md
+│  └─ copilot-instructions.md   # Copilot global instructions
+├─ .vscode/
+│  └─ mcp.json                  # MCP server config (GitHub Copilot)
+├─ .mcp.json                     # MCP server config (Claude Code)
+├─ CLAUDE.md                     # Claude Code instructions
+├─ mcp-servers/                  # MCP servers for AI knowledge
+│  ├─ data/                      # SQLite FTS5 database (gitignored)
+│  │  └─ index.db               # ~100MB indexed content
+│  ├─ crawler.ts                 # Crawl release notes + SharePoint
+│  ├─ release-notes-server.ts   # MCP server for release notes
+│  └─ sharepoint-server.ts      # MCP server for SharePoint specs
 ├─ allure-results/              # Allure test report results
 ├─ build/                       # Build outputs
 ├─ input/                       # Input files for test generation
@@ -111,7 +125,10 @@ playwright-auto/
 │  └─ globalTeardown.ts         # Global teardown after test execution
 ├─ azure-pipelines.yml          # Azure Pipelines CI/CD
 ├─ playwright.config.ts         # Playwright project configuration
-├─ generate-prompt.md           # Test generation instructions
+├─ gen-prompt.md                # 24 framework rules for test generation
+├─ mapping-prompt.md            # Intent → page object method mappings
+├─ healer-prompt.md             # Rules for auto-healing broken tests
+├─ agent-compliance.md          # Agent compliance checklist
 ├─ swagger.json                 # OpenAPI source
 ├─ openapitools.json            # OpenAPI generator configuration
 ├─ package.json                 # Scripts + dependencies
@@ -281,6 +298,140 @@ npm run import-suite -- planId=109583 suiteId=109584 tags=[vienpham,vientesttest
 - `Automated` - Test case is automated
 - `Not Automated` - Test case is not automated
 - `Planned` - Automation is planned
+
+---
+
+## Scan Regression Plans
+
+Scan Azure DevOps regression test plans and report coverage.
+
+```bash
+npm run scan                # All plans
+npm run scan:web            # Web only (exclude mobile)
+npm run scan:mobile         # Mobile only
+npm run scan:active         # All + active test cases only
+npm run scan:web:active     # Web + active
+npm run scan:mobile:active  # Mobile + active
+```
+
+---
+
+## MCP Servers & Knowledge Base
+
+MCP (Model Context Protocol) servers provide indexed knowledge to AI assistants for test case generation with context.
+
+### Knowledge Base (Pre-indexed SQLite FTS5)
+
+| Source | Content | Size | Tool |
+|--------|---------|------|------|
+| Release Notes | JobLogic features 2019-2026, bug fixes | ~879 chunks | `get_release_notes(keyword)` |
+| SharePoint Specs | BA specs, Vibe specs (docx, pdf) | ~663 chunks | `search_sharepoint_docs(query)` |
+
+**Database location:** `mcp-servers/data/index.db` (~100MB, gitignored)
+
+### Quick Start for Team Members
+
+After cloning the repo, **copy the database file** to use MCP tools immediately (no need to re-crawl):
+
+```bash
+# 1. Create data folder if not exists
+mkdir -p mcp-servers/data
+
+# 2. Copy database from shared location
+# Option A: Download from SharePoint (recommended)
+# Link: https://joblogicltd.sharepoint.com/db%20resource/Forms/AllItems.aspx
+# Download all and save to: mcp-servers/data/
+
+# Option B: Build from scratch (~5-10 mins, requires Azure credentials)
+npx tsx mcp-servers/crawler.ts release-notes
+npx tsx mcp-servers/crawler.ts sharepoint
+```
+
+**Verify database:**
+```bash
+# Check file size (~100MB)
+ls -lh mcp-servers/data/index.db
+
+# Test MCP tools in VS Code Copilot/Claude Code
+# Type: "Get release notes for November 2024"
+```
+
+> ⚠️ **Note:** Database file is gitignored. Each machine needs to copy or build it.
+
+### Available MCP Tools
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `search_sharepoint_docs(query)` | Search BA specs by keyword | Find related specs, impact analysis |
+| `get_sharepoint_file_content(itemId)` | Read full spec content | Deep dive into specific spec |
+| `list_sharepoint_files(folderPath?, fileType?)` | Browse spec folders | Explore available specs |
+| `get_release_notes(keyword)` | Search release notes | Check existing features, known bugs |
+| `list_doc_pages()` | List release note pages | Browse documentation index |
+
+### Initial Setup
+
+#### 1. SharePoint Azure AD Credentials
+```env
+# .env
+AZURE_TENANT_ID=xxx
+AZURE_CLIENT_ID=xxx
+AZURE_CLIENT_SECRET=xxx
+```
+
+#### 2. Build the Knowledge Base (First time only)
+```bash
+# Install dependencies
+cd mcp-servers && npm install && cd ..
+
+# Crawl release notes (public URL)
+npx tsx mcp-servers/crawler.ts release-notes
+
+# Crawl SharePoint specs (requires Azure credentials)
+npx tsx mcp-servers/crawler.ts sharepoint
+
+# Force full re-index (skip delta sync)
+npx tsx mcp-servers/crawler.ts sharepoint --force
+```
+
+**Delta sync:** Crawler only re-indexes files with newer `modified_at` timestamp.
+
+### Extension Config Files
+
+| Extension | MCP Config | Instructions File |
+|-----------|------------|-------------------|
+| **GitHub Copilot** | `.vscode/mcp.json` | `.github/copilot-instructions.md` |
+| **Claude Code** | `.mcp.json` | `CLAUDE.md` |
+
+### Test Case Generation Workflow
+
+When uploading a spec and asking to generate test cases:
+
+1. **Analyze Spec** — Extract feature name, problem, proposed changes
+2. **Search DB for Context** (Automatic via MCP):
+   ```
+   search_sharepoint_docs("feature_keyword")  → Related specs, impacts
+   get_release_notes("feature_keyword")       → Known bugs, existing features
+   ```
+3. **Generate Test Cases** — Categories: Happy Path, Edge Cases, Negative, Impact, Integration
+4. **Output** — Save to `output/test-case-<feature>.md`
+
+### Example Prompts
+
+```
+# Generate test cases from spec
+Generate test cases cho spec này [attach file]
+
+# Search for related specs
+Search SharePoint for "COP Date Changes"
+
+# Get release notes
+Get release notes for November 2024
+
+# Impact analysis
+Tìm các specs liên quan đến feature "suspended asset"
+```
+
+Verify MCP servers: `Ctrl+Shift+P` → `MCP: List Servers`
 
 ---
 
