@@ -415,9 +415,11 @@ export class AllQuotesPage extends BasePage {
    */
   async clickQuoteByQuoteNo(quoteNo: string): Promise<void> {
     await test.step(`Click quote: ${quoteNo}`, async () => {
-      const row = this.tableBody.locator(`tr:has-text("${quoteNo}")`);
-
+      const row = this.tableBody.locator(`tr:has-text("${quoteNo}"), tr td:has-text("${quoteNo}")`).first();
+      await row.waitFor({ state: 'visible', timeout: 15000 });
+      await row.scrollIntoViewIfNeeded();
       await row.click();
+      await this.page.waitForLoadState('networkidle');
     });
   }
 
@@ -582,7 +584,9 @@ export class AllQuotesPage extends BasePage {
    */
   async viewFullQuoteDetails(): Promise<void> {
     await test.step('View full quote details', async () => {
-      await this.viewFullQuoteDetailsButton.click();
+      await this.viewFullQuoteDetailsButton.waitFor({ state: 'visible', timeout: 10000 });
+      await this.viewFullQuoteDetailsButton.evaluate((el: HTMLElement) => el.click());
+      await this.page.waitForURL(/\/Quote\/Detail\/\d+/, { timeout: 15000 });
     });
   }
 
@@ -614,71 +618,6 @@ export class AllQuotesPage extends BasePage {
   async clickPrint(): Promise<void> {
     await test.step('Click Print', async () => {
       await this.printButton.click();
-    });
-  }
-
-  // ========================
-  // Quote Rejection Actions
-  // ========================
-
-  /**
-   * Click Reject button for selected quote
-   */
-  async clickRejectButton(): Promise<void> {
-    await test.step('Click Reject button', async () => {
-      const rejectButton = this.page.getByRole('button', { name: /reject/i });
-      await rejectButton.click();
-    });
-  }
-
-  /**
-   * Select rejection reason from dropdown
-   */
-  async selectRejectionReason(reason: string): Promise<void> {
-    await test.step(`Select rejection reason: ${reason}`, async () => {
-      const reasonDropdown = this.page.locator('select[name*="reason"], [id*="reason"] select, .reason-dropdown select').first();
-      await reasonDropdown.selectOption(reason);
-    });
-  }
-
-  /**
-   * Fill rejection reason text
-   */
-  async fillRejectionReason(rejectionText: string): Promise<void> {
-    await test.step(`Fill rejection reason: ${rejectionText}`, async () => {
-      const rejectionInput = this.page.locator('textarea[name*="reason"], input[name*="reason"], [id*="rejection"] textarea, [id*="rejection"] input').first();
-      await rejectionInput.fill(rejectionText);
-    });
-  }
-
-  /**
-   * Save rejection
-   */
-  async saveRejection(): Promise<void> {
-    await test.step('Save rejection', async () => {
-      const saveButton = this.page.getByRole('button', { name: /save/i });
-      await saveButton.click();
-      await this.page.waitForLoadState('networkidle');
-    });
-  }
-
-  /**
-   * Get quote status text
-   */
-  async getQuoteStatusText(): Promise<string> {
-    return await test.step('Get quote status text', async () => {
-      const statusElement = this.page.locator('.status-text, .quote-status, [class*="status"], .badge').first();
-      return await statusElement.textContent() || '';
-    });
-  }
-
-  /**
-   * Check if Revert button is visible
-   */
-  async isRevertButtonVisible(): Promise<boolean> {
-    return await test.step('Check if Revert button is visible', async () => {
-      const revertButton = this.page.getByRole('button', { name: /revert/i });
-      return await revertButton.isVisible();
     });
   }
 }

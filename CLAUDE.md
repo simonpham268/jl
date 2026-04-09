@@ -126,4 +126,51 @@ Step 2: {Action}
 | Medium | Important, moderate frequency — tag `regression` |
 | Low | Edge cases, unstable UI |
 
+---
+
+## 6. Playwright Test Script Generation (MANDATORY)
+
+When generating Playwright test scripts (any request to convert TC → code):
+
+### Step 1: Read framework files FIRST (before writing any code)
+```
+Read gen-prompt.md       — 24 framework rules (locators, POM, data builders, API services)
+Read mapping-prompt.md   — intent mappings (TC action → page method)
+```
+
+### Step 2: Call generator_setup_page
+Inject into `plan` parameter in this order:
+1. Full content of `gen-prompt.md`
+2. Full content of `mapping-prompt.md`
+3. TC steps from the test case file
+
+### Step 3: Call generator_write_test
+Write output to `src/tests/` following the file naming convention in gen-prompt.md.
+
+**Never generate Playwright code without reading both files first.**
+
+---
+
+## 7. Playwright Test Healing (MANDATORY)
+
+When fixing/healing a failing Playwright test (any request to fix, heal, debug a spec):
+
+### Step 1: Read healer rules FIRST
+```
+Read healer-prompt.md   — priority-ordered healing rules (P1: execution failures → P2: compliance)
+```
+
+### Step 2: Identify the failure
+Run the test or read the error. Classify failure type: locator / timing / interaction / API / compliance.
+
+### Step 3: Apply healer-prompt.md priority order
+- **P1 first** — fix execution failures (broken locators, timeouts, API errors)
+- **P2 second** — fix compliance issues (POM violations, missing login, test.step in spec) only after P1 passes
+- NEVER fix working code. Forward healing only — only touch the current failure point.
+
+### Step 4: Validate
+Confirm test passes. Check ESLint compliance.
+
+**Never heal a test without reading healer-prompt.md first.**
+
 

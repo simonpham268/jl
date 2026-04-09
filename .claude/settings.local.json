@@ -7,7 +7,12 @@
       "Bash(npm install:*)",
       "mcp__release-notes__refresh_index",
       "mcp__playwright-test__browser_navigate",
-      "mcp__playwright-test__generator_setup_page"
+      "mcp__playwright-test__generator_setup_page",
+      "mcp__sharepoint-docs__get_sharepoint_file_content",
+      "mcp__playwright-test__generator_write_test",
+      "Bash(npx playwright:*)",
+      "mcp__playwright-test__test_run",
+      "mcp__playwright-test__test_debug"
     ]
   }
 }

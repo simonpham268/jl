@@ -37,6 +37,7 @@ export class DocumentTemplatesPage {
   // Results
   readonly dataTable: Locator;
   readonly loadingIndicator: Locator;
+  readonly noResultsMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -69,6 +70,18 @@ export class DocumentTemplatesPage {
     // Results
     this.dataTable = page.locator('table').first();
     this.loadingIndicator = page.locator('text=Loading Data... Please wait');
+    this.noResultsMessage = page.locator('text=No matching results found');
+  }
+
+  // ========================
+  // Private Helper Methods
+  // ========================
+
+  /**
+   * Get row locator by name (dynamic locator)
+   */
+  private getRowByName(name: string): Locator {
+    return this.page.locator(`tr:has-text("${name}")`);
   }
 
   // Navigation
@@ -230,9 +243,7 @@ export class DocumentTemplatesPage {
 
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
-      const noResults = this.page.locator('text=No matching results found');
-
-      return await noResults.isVisible();
+      return await this.noResultsMessage.isVisible();
     });
   }
 
@@ -254,9 +265,7 @@ export class DocumentTemplatesPage {
 
   async clickTemplateByName(name: string): Promise<void> {
     await test.step(`Click template "${name}"`, async () => {
-      const row = this.page.locator(`tr:has-text("${name}")`);
-
-      await row.click();
+      await this.getRowByName(name).click();
     });
   }
 

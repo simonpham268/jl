@@ -96,6 +96,17 @@ export class ExternalLinksPage extends BasePage {
   }
 
   // ========================
+  // Private Helper Methods
+  // ========================
+
+  /**
+   * Get row locator by text (dynamic locator)
+   */
+  private getRowByText(text: string): Locator {
+    return this.page.locator(`text=${text}`).locator('..');
+  }
+
+  // ========================
   // Navigation Methods
   // ========================
 
@@ -293,7 +304,7 @@ export class ExternalLinksPage extends BasePage {
    */
   async toggleFavourite(title: string): Promise<void> {
     await test.step(`Toggle favourite for link: ${title}`, async () => {
-      const linkRow = this.page.locator(`text=${title}`).locator('..');
+      const linkRow = this.getRowByText(title);
 
       await linkRow.locator('[title*="favourite"], [class*="star"]').click();
     });

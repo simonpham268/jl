@@ -6,6 +6,9 @@
 // All Stock Records
 export * from './StockRecordsPage';
 
+// Stock Record Detail
+export * from './StockRecordDetailPage';
+
 // Stock Locations
 export * from './StockLocationsPage';
 

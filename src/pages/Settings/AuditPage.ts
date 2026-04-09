@@ -27,6 +27,7 @@ export class AuditPage {
   // Results
   readonly dataTable: Locator;
   readonly loadingIndicator: Locator;
+  readonly noResultsMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -49,6 +50,7 @@ export class AuditPage {
     // Results
     this.dataTable = page.locator('table').first();
     this.loadingIndicator = page.locator('text=Loading Data... Please wait');
+    this.noResultsMessage = page.locator('text=No matching results found');
   }
 
   // Navigation
@@ -132,9 +134,7 @@ export class AuditPage {
 
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
-      const noResults = this.page.locator('text=No matching results found');
-
-      return await noResults.isVisible();
+      return await this.noResultsMessage.isVisible();
     });
   }
 

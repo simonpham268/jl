@@ -16,7 +16,24 @@
 7. Handle edge cases with try-catch and graceful fallbacks
 8. Silent fallback — no `console.debug/log` in catch blocks
 9. Return data from page methods for test verification when needed
-10. ALL locators as `readonly` properties in constructor, never in methods
+10. ALL locators as `readonly` properties in constructor, never in methods. This applies during healing too — any locator created as a local variable inside a method MUST be moved to the constructor:
+    ```typescript
+    // ❌ Wrong — locator defined inside method
+    async clickRejectButton(): Promise<void> {
+      const rejectButton = this.page.getByRole('button', { name: /reject/i });
+      await rejectButton.click();
+    }
+
+    // ✅ Correct — locator defined as readonly in constructor
+    readonly rejectButton: Locator;
+    constructor(page: Page) {
+      this.rejectButton = this.page.getByRole('button', { name: /reject/i });
+    }
+    async clickRejectButton(): Promise<void> {
+      await this.rejectButton.waitFor({ state: 'visible' });
+      await this.rejectButton.click();
+    }
+    ```
 11. Arrays/selector strategies as class properties, never in methods
 12. Check existing pages in relevant folders before creating new files (e.g., `src/pages/Jobs/`, `src/pages/Customers/`). Reuse/extend existing methods. Only create new files if functionality doesn't exist
 13. Always re-read source files when regenerating — ensure 100% compliance
@@ -45,6 +62,21 @@
     | Specific field values | `Api*DataBuilder.create().field().build()` |
     | Many custom fields | `Api*DataBuilder.create().field().custom().build()` |
     Services: `customerService`, `siteService`, `assetService`, `jobService`, `quoteService`, `ppmQuoteService`
+
+    **Accessing response fields — always typed, never `as any`:**
+    - Use typed model properties directly: `response.body?.Id`, `response.body?.redirectUrl`
+    - If a field exists at runtime but is missing from the TypeScript interface → **update the model first**, then access cleanly
+    - Guard body and extracted values before use:
+    ```typescript
+    // ✅ Correct — model updated, typed access
+    if (!response.body) throw new Error('No response body');
+    const quoteId = response.body.AdditionalData?.QuoteId;
+    if (!quoteId) throw new Error('Missing QuoteId');
+
+    // ❌ Wrong — bypasses type safety
+    const quoteId = (response.body as any).AdditionalData?.QuoteId;
+    ```
+    - To find the correct JSON path: run the relevant test in `src/tests/api.spec.ts` which logs `console.log(JSON.stringify(response))`
 19. NEVER add `test.step` wrappers in spec files — page methods already wrap internally. Call directly
 20. **MANDATORY login in ALL specs:**
     ```typescript

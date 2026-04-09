@@ -27,6 +27,11 @@ export class Sidebar extends BasePage {
   readonly customersSubmenu: Locator;
   readonly customersListLink: Locator;
 
+  // ========================
+  // Locators - Active State
+  // ========================
+  readonly activeMenuItem: Locator;
+
   constructor(page: Page) {
     super(page);
 
@@ -64,6 +69,9 @@ export class Sidebar extends BasePage {
     this.customersListLink = this.page.locator(
       'a[href*="/Customer/List"], a[href*="/Customer"]:has-text("List"), .submenu a:has-text("Customers")'
     ).first();
+
+    // Active State
+    this.activeMenuItem = this.page.locator('.nav-link.active, .active > a, [aria-current="page"]').first();
   }
 
   // ========================
@@ -151,6 +159,37 @@ export class Sidebar extends BasePage {
   }
 
   // ========================
+  // Private Helper Methods (dynamic locators)
+  // ========================
+
+  /**
+   * Get menu locator by name
+   */
+  private getMenuLocator(menu: string): Locator {
+    return this.page.locator(
+      `a:has-text("${menu}"), li:has-text("${menu}") > a, [data-toggle="collapse"]:has-text("${menu}"), .nav-link:has-text("${menu}")`
+    ).first();
+  }
+
+  /**
+   * Get submenu container locator by item name
+   */
+  private getSubmenuLocator(item: string): Locator {
+    return this.page.locator(
+      `.collapse:has(a:has-text("${item}")), .submenu:has(a:has-text("${item}")), ul:has(a:has-text("${item}"))`
+    ).first();
+  }
+
+  /**
+   * Get submenu item locator by name
+   */
+  private getSubItemLocator(item: string): Locator {
+    return this.page.locator(
+      `a:has-text("${item}"), .submenu a:has-text("${item}")`
+    ).first();
+  }
+
+  // ========================
   // Generic Navigation
   // ========================
 
@@ -166,9 +205,7 @@ export class Sidebar extends BasePage {
   async navigateTo(menu: string, subItem?: string): Promise<void> {
     await test.step(`Navigate to ${menu}${subItem ? ' > ' + subItem : ''}`, async () => {
       // Find and click the main menu
-      const menuLocator = this.page.locator(
-        `a:has-text("${menu}"), li:has-text("${menu}") > a, [data-toggle="collapse"]:has-text("${menu}"), .nav-link:has-text("${menu}")`
-      ).first();
+      const menuLocator = this.getMenuLocator(menu);
 
       await menuLocator.click();
       await this.page.waitForLoadState('domcontentloaded');
@@ -176,16 +213,12 @@ export class Sidebar extends BasePage {
       // If subItem is provided, wait for submenu and click
       if (subItem) {
         // Wait for submenu to expand
-        const submenuLocator = this.page.locator(
-          `.collapse:has(a:has-text("${subItem}")), .submenu:has(a:has-text("${subItem}")), ul:has(a:has-text("${subItem}"))`
-        ).first();
+        const submenuLocator = this.getSubmenuLocator(subItem);
 
         await submenuLocator.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
 
         // Click on submenu item
-        const subItemLocator = this.page.locator(
-          `a:has-text("${subItem}"), .submenu a:has-text("${subItem}")`
-        ).first();
+        const subItemLocator = this.getSubItemLocator(subItem);
 
         await subItemLocator.click();
         await this.page.waitForLoadState('domcontentloaded');
@@ -199,9 +232,7 @@ export class Sidebar extends BasePage {
 
   async getActiveMenuItem(): Promise<string | null> {
     return await test.step('Get active menu item text', async () => {
-      const activeItem = this.page.locator('.nav-link.active, .active > a, [aria-current="page"]').first();
-
-      return await this.getText(activeItem);
+      return await this.getText(this.activeMenuItem);
     });
   }
 }

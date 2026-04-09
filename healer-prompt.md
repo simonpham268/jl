@@ -2,6 +2,18 @@
 
 > **GOLDEN RULE**: Fix execution failures first, compliance second. **NEVER fix working code** — forward healing only, never backward.
 
+> **VERIFICATION RULE**: After fixing any interaction (click, fill, navigate), you MUST verify a state change occurred before concluding the fix worked. A fix is only complete when the **consequence** of the action is confirmed — not just that the action executed without throwing.
+
+| Action Fixed | Must Verify After |
+|---|---|
+| Click a row / list item | Sidebar or detail panel appeared (`waitFor visible`) |
+| Click a button (Save, Submit) | Success message, URL change, or element disappeared |
+| Fill a form field | Field contains expected value |
+| Navigate to page | Page title or key element is visible |
+| Click tab | Tab is active AND table/content reloaded |
+
+**Never declare a fix complete based solely on "no error thrown". Confirm the UI changed as expected.**
+
 ## Priority 1: Execution Healing (Fix Broken Tests)
 
 Fix these in order. Only touch the **current failure point**, never code that already passed.
@@ -44,6 +56,40 @@ const response = await jobService.createJob(jobData);
 if (!response?.body?.redirectUrl) throw new Error('Missing redirectUrl');
 ```
 
+**When fixing null/missing field errors on API responses:**
+
+Step 1 — Confirm the real JSON path by running the api.spec.ts logger:
+```typescript
+// src/tests/api.spec.ts already has: console.log(JSON.stringify(response))
+// Run it to see exact field names and nesting
+```
+
+Step 2 — **Preferred fix: update the TypeScript model**, then access cleanly:
+```typescript
+// In src/api/models/Quote.ts — add the missing field
+export interface CreateQuoteResponse {
+  AdditionalData?: { QuoteId: number; QuoteNumber: string; };
+  // ...other fields
+}
+
+// In spec — clean typed access with guards
+if (!response.body) throw new Error('No response body');
+const quoteId = response.body.AdditionalData?.QuoteId;
+if (!quoteId) throw new Error('Missing QuoteId in AdditionalData');
+```
+
+Step 3 — **Fallback only**: if the model is from a 3rd party or cannot be changed, use type cast:
+```typescript
+const quoteId = (response.body as any).AdditionalData?.QuoteId;
+if (!quoteId) throw new Error('Missing QuoteId');
+```
+
+| Wrong | Right |
+|---|---|
+| `response.body.AdditionalData.QuoteId` (no guard) | Guard body + optional chain |
+| `as any` as first choice | Update model first, `as any` is last resort |
+| Assume field name from TC description | Verify via `api.spec.ts` log before accessing |
+
 ---
 
 ## Priority 2: Framework Compliance (After Tests Pass)
@@ -64,6 +110,22 @@ test.beforeEach(async ({ page }) => {
 - **FORBIDDEN in specs**: `page.click()`, `page.fill()`, `page.goto()`, `page.waitForSelector()`
 - **Replace with**: Page object methods (e.g. `await jobDetailsPage.navigateTo(url)`)
 - No try-catch navigation wrappers in specs — use single page object call
+- **FORBIDDEN in page methods**: defining locators as local `const` variables inside methods. Move ALL locators to `readonly` class properties in the constructor:
+```typescript
+// ❌ Wrong — locator inside method (common healing mistake)
+async clickRejectButton(): Promise<void> {
+  const btn = this.page.getByRole('button', { name: /reject/i });
+  await btn.click();
+}
+
+// ✅ Correct — locator in constructor, method uses `this`
+readonly rejectButton: Locator;
+// constructor: this.rejectButton = this.page.getByRole('button', { name: /reject/i });
+async clickRejectButton(): Promise<void> {
+  await this.rejectButton.waitFor({ state: 'visible' });
+  await this.rejectButton.click();
+}
+```
 
 ### P2.4 — Remove test.step Wrappers
 Page methods already contain `test.step` internally. Remove wrappers in specs:
@@ -101,3 +163,32 @@ Single quotes, semicolons, proper spacing: `{ a: 1, b: 2 }`
 2. **Analyze** — Check page objects for available methods, verify imports
 3. **Heal** — Apply fixes: imports → structure → logic → assertions
 4. **Validate** — Run ESLint, verify test executes successfully
+
+---
+
+## When to Use test_debug MCP Tool
+
+Use `test_debug` at specific checkpoints — not as a first resort.
+
+| Checkpoint | When | Why |
+|------------|------|-----|
+| After P1.1 fix | Locator updated in code | Verify new locator resolves in live DOM before committing |
+| After P1.3 fix | Interaction fixed | Confirm element is visible + interactable in real browser state |
+| Before P2 fixes | P1 fix applied | Confirm test passes execution — only then proceed to compliance |
+| When locator is ambiguous | Multiple candidates found | Use live DOM inspection to pick correct selector |
+
+### How to use
+
+```
+# Run the failing test in debug mode to inspect live DOM:
+test_debug → src/tests/<file>.spec.ts
+
+# Then inspect snapshot to verify locator exists and is unique
+# Update locator in page object if needed
+# Re-run to confirm P1 resolved before moving to P2
+```
+
+### Do NOT use test_debug when
+- Test is already passing (no need to inspect)
+- Failure is clearly a P2 compliance issue (no DOM involved)
+- Error is an import or TypeScript compilation error — fix code directly

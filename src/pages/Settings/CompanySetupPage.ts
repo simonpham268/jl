@@ -45,6 +45,7 @@ export class CompanySetupPage {
   readonly uploadNewLogoHeading: Locator;
   readonly browseButton: Locator;
   readonly dropZone: Locator;
+  readonly fileInput: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -85,6 +86,7 @@ export class CompanySetupPage {
     this.uploadNewLogoHeading = page.locator('h4:has-text("Upload New Logo")');
     this.browseButton = page.getByRole('button', { name: 'Browse' });
     this.dropZone = page.locator('text=Drop file to upload');
+    this.fileInput = page.locator('input[type="file"]');
   }
 
   // Navigation
@@ -197,9 +199,7 @@ export class CompanySetupPage {
   // Logo Upload
   async uploadLogo(filePath: string): Promise<void> {
     await test.step('Upload company logo', async () => {
-      const fileInput = this.page.locator('input[type="file"]');
-
-      await fileInput.setInputFiles(filePath);
+      await this.fileInput.setInputFiles(filePath);
     });
   }
 

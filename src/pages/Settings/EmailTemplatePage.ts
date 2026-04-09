@@ -37,6 +37,7 @@ export class EmailTemplatePage {
   readonly loadingIndicator: Locator;
   readonly pagination: Locator;
   readonly resultsPerPageDropdown: Locator;
+  readonly noResultsMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -69,6 +70,18 @@ export class EmailTemplatePage {
     this.loadingIndicator = page.locator('text=Loading Data... Please wait');
     this.pagination = page.locator('nav[aria-label="Page navigation"]');
     this.resultsPerPageDropdown = page.locator('select:has-text("Results per page")');
+    this.noResultsMessage = page.locator('text=No matching results found');
+  }
+
+  // ========================
+  // Private Helper Methods
+  // ========================
+
+  /**
+   * Get row locator by name (dynamic locator)
+   */
+  private getRowByName(name: string): Locator {
+    return this.page.locator(`tr:has-text("${name}")`);
   }
 
   // Navigation
@@ -250,9 +263,7 @@ export class EmailTemplatePage {
 
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
-      const noResults = this.page.locator('text=No matching results found');
-
-      return await noResults.isVisible();
+      return await this.noResultsMessage.isVisible();
     });
   }
 
@@ -274,9 +285,7 @@ export class EmailTemplatePage {
 
   async clickTemplateByName(name: string): Promise<void> {
     await test.step(`Click template "${name}"`, async () => {
-      const row = this.page.locator(`tr:has-text("${name}")`);
-
-      await row.click();
+      await this.getRowByName(name).click();
     });
   }
 

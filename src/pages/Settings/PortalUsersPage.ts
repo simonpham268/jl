@@ -34,6 +34,7 @@ export class PortalUsersPage {
   readonly loadingIndicator: Locator;
   readonly columnSettingsButton: Locator;
   readonly pagination: Locator;
+  readonly noResultsMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -63,6 +64,18 @@ export class PortalUsersPage {
     this.loadingIndicator = page.locator('text=Loading Data... Please wait');
     this.columnSettingsButton = page.locator('button').filter({ hasText: '' }).first();
     this.pagination = page.locator('nav[aria-label="Page navigation"]');
+    this.noResultsMessage = page.locator('text=No matching results found');
+  }
+
+  // ========================
+  // Private Helper Methods
+  // ========================
+
+  /**
+   * Get row locator by name (dynamic locator)
+   */
+  private getRowByName(name: string): Locator {
+    return this.page.locator(`tr:has-text("${name}")`);
   }
 
   // Navigation
@@ -184,9 +197,7 @@ export class PortalUsersPage {
 
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
-      const noResults = this.page.locator('text=No matching results found');
-
-      return await noResults.isVisible();
+      return await this.noResultsMessage.isVisible();
     });
   }
 
@@ -208,9 +219,7 @@ export class PortalUsersPage {
 
   async clickUserByName(name: string): Promise<void> {
     await test.step(`Click user "${name}"`, async () => {
-      const row = this.page.locator(`tr:has-text("${name}")`);
-
-      await row.click();
+      await this.getRowByName(name).click();
     });
   }
 

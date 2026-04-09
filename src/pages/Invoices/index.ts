@@ -28,3 +28,9 @@ export {
   type InvoiceListItem,
   type InvoiceSummaryInfo
 } from './AllInvoicesPage';
+
+export {
+  InvoiceDetailPage,
+  type InvoiceDetailTab,
+  type InvoiceDetailData
+} from './InvoiceDetailPage';

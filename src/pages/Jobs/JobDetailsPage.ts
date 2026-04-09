@@ -72,6 +72,24 @@ export class JobDetailsPage extends BasePage {
   readonly moreOptionsButton: Locator;
 
   // ========================
+  // Locators - Dialog/Modal Buttons
+  // ========================
+  readonly completeDialogButton: Locator;
+  readonly confirmButton: Locator;
+  readonly deleteJobOption: Locator;
+
+  // ========================
+  // Locators - Tab Actions
+  // ========================
+  readonly activeTab: Locator;
+  readonly jobStatusLabel: Locator;
+  readonly addTaskButton: Locator;
+  readonly addCostButton: Locator;
+  readonly addVisitButton: Locator;
+  readonly addSubcontractorVisitButton: Locator;
+  readonly addJobFormButton: Locator;
+
+  // ========================
   // Locators - Tabs
   // ========================
   readonly detailsTab: Locator;
@@ -168,6 +186,20 @@ export class JobDetailsPage extends BasePage {
     this.shareButton = page.getByRole('button', { name: 'Share' });
     this.shareDropdown = page.locator('button:has-text("Share")').locator('..').locator('button').last();
     this.moreOptionsButton = page.locator('[class*="more-options"], [class*="dropdown"]').last();
+
+    // Dialog/Modal Buttons
+    this.completeDialogButton = page.getByRole('button', { name: 'Complete' });
+    this.confirmButton = page.getByRole('button', { name: 'Confirm' });
+    this.deleteJobOption = page.getByText('Delete Job');
+
+    // Tab Actions
+    this.activeTab = page.locator('[aria-selected="true"], [class*="active"]').first();
+    this.jobStatusLabel = page.locator('.job-status:not(.hidden)').first();
+    this.addTaskButton = page.getByRole('button', { name: /Add Task/i });
+    this.addCostButton = page.getByRole('button', { name: /Add Cost/i });
+    this.addVisitButton = page.getByRole('button', { name: /Add Visit/i });
+    this.addSubcontractorVisitButton = page.getByRole('button', { name: /Add.*Visit/i });
+    this.addJobFormButton = page.getByRole('button', { name: /Add Form/i });
 
     // Tabs
     this.detailsTab = page.getByRole('link', { name: ' Details' });
@@ -301,9 +333,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getActiveTab(): Promise<string> {
     return await test.step('Get active tab', async () => {
-      const activeTab = this.page.locator('[aria-selected="true"], [class*="active"]').first();
-
-      return await activeTab.textContent() || '';
+      return await this.activeTab.textContent() || '';
     });
   }
 
@@ -327,7 +357,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Confirm Complete Job', async () => {
       // Handle potential blocking conditions that disable the Complete button
       await this.handleJobCompletionPrerequisites();
-      await this.page.getByRole('button', { name: 'Complete' }).click();
+      await this.completeDialogButton.click();
     });
   }
 
@@ -335,8 +365,6 @@ export class JobDetailsPage extends BasePage {
    * Handle prerequisites that may block job completion
    */
   private async handleJobCompletionPrerequisites(): Promise<void> {
-    const completeButton = this.page.getByRole('button', { name: 'Complete' });
-
     // Check if button is initially disabled
     const isButtonDisabled = await this.isCompleteButtonDisabled();
 
@@ -349,8 +377,7 @@ export class JobDetailsPage extends BasePage {
    * Check if Complete button is disabled
    */
   private async isCompleteButtonDisabled(): Promise<boolean> {
-    const completeButton = this.page.getByRole('button', { name: 'Complete' });
-    const disabled = await completeButton.getAttribute('disabled');
+    const disabled = await this.completeDialogButton.getAttribute('disabled');
     return disabled !== null;
   }
 
@@ -402,9 +429,7 @@ export class JobDetailsPage extends BasePage {
    * Wait for Complete button to be enabled
    */
   private async waitForCompleteButtonEnabled(): Promise<void> {
-    const completeButton = this.page.getByRole('button', { name: 'Complete' });
-
-    await completeButton.waitFor({
+    await this.completeDialogButton.waitFor({
       state: 'visible',
       timeout: 5000
     });
@@ -476,10 +501,8 @@ export class JobDetailsPage extends BasePage {
         { timeout: 10000 }
       );
 
-      const statusLabel = this.page.locator('.job-status:not(.hidden)').first();
-
-      if (await statusLabel.isVisible()) {
-        const statusText = await statusLabel.textContent() || '';
+      if (await this.jobStatusLabel.isVisible()) {
+        const statusText = await this.jobStatusLabel.textContent() || '';
         return statusText.trim();
       }
 
@@ -823,9 +846,7 @@ export class JobDetailsPage extends BasePage {
   async addTask(): Promise<void> {
     await test.step('Add task', async () => {
       await this.switchToTab('Tasks');
-      const addButton = this.page.getByRole('button', { name: /Add Task/i });
-
-      await addButton.click();
+      await this.addTaskButton.click();
     });
   }
 
@@ -846,9 +867,7 @@ export class JobDetailsPage extends BasePage {
   async addCost(): Promise<void> {
     await test.step('Add cost', async () => {
       await this.switchToTab('Costs');
-      const addButton = this.page.getByRole('button', { name: /Add Cost/i });
-
-      await addButton.click();
+      await this.addCostButton.click();
     });
   }
 
@@ -869,9 +888,7 @@ export class JobDetailsPage extends BasePage {
   async addVisit(): Promise<void> {
     await test.step('Add visit', async () => {
       await this.switchToTab('Visits');
-      const addButton = this.page.getByRole('button', { name: /Add Visit/i });
-
-      await addButton.click();
+      await this.addVisitButton.click();
     });
   }
 
@@ -892,9 +909,7 @@ export class JobDetailsPage extends BasePage {
   async addSubcontractorVisit(): Promise<void> {
     await test.step('Add subcontractor visit', async () => {
       await this.switchToTab('Subcontractor');
-      const addButton = this.page.getByRole('button', { name: /Add.*Visit/i });
-
-      await addButton.click();
+      await this.addSubcontractorVisitButton.click();
     });
   }
 
@@ -941,9 +956,7 @@ export class JobDetailsPage extends BasePage {
   async addJobForm(): Promise<void> {
     await test.step('Add job form', async () => {
       await this.switchToTab('Job Forms');
-      const addButton = this.page.getByRole('button', { name: /Add Form/i });
-
-      await addButton.click();
+      await this.addJobFormButton.click();
     });
   }
 
@@ -968,14 +981,10 @@ export class JobDetailsPage extends BasePage {
   async deleteJob(): Promise<void> {
     await test.step('Delete job', async () => {
       await this.moreOptionsButton.click();
-      const deleteOption = this.page.getByText('Delete Job');
-
-      await deleteOption.click();
+      await this.deleteJobOption.click();
       // Confirm deletion if modal appears
-      const confirmButton = this.page.getByRole('button', { name: 'Confirm' });
-
-      if (await confirmButton.isVisible()) {
-        await confirmButton.click();
+      if (await this.confirmButton.isVisible()) {
+        await this.confirmButton.click();
       }
     });
   }

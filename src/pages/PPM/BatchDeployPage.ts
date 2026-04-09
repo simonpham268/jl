@@ -74,6 +74,7 @@ export class BatchDeployPage extends BasePage {
   readonly tableRows: Locator;
   readonly noResultsMessage: Locator;
   readonly loadingIndicator: Locator;
+  readonly selectAllCheckbox: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -114,6 +115,7 @@ export class BatchDeployPage extends BasePage {
     this.tableRows = page.locator('table tbody tr');
     this.noResultsMessage = page.locator('text=No matching results found');
     this.loadingIndicator = page.locator('text=Loading');
+    this.selectAllCheckbox = page.locator('table thead input[type="checkbox"]');
   }
 
   // ========================
@@ -319,9 +321,7 @@ export class BatchDeployPage extends BasePage {
    */
   async selectAllVisits(): Promise<void> {
     await test.step('Select all visits', async () => {
-      const header = this.page.locator('table thead input[type="checkbox"]');
-
-      await header.check();
+      await this.selectAllCheckbox.check();
     });
   }
 
@@ -330,9 +330,7 @@ export class BatchDeployPage extends BasePage {
    */
   async deselectAllVisits(): Promise<void> {
     await test.step('Deselect all visits', async () => {
-      const header = this.page.locator('table thead input[type="checkbox"]');
-
-      await header.uncheck();
+      await this.selectAllCheckbox.uncheck();
     });
   }
 

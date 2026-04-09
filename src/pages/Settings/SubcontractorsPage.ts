@@ -34,6 +34,7 @@ export class SubcontractorsPage {
   readonly columnSettingsButton: Locator;
   readonly dataTable: Locator;
   readonly loadingIndicator: Locator;
+  readonly noResultsMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -63,6 +64,18 @@ export class SubcontractorsPage {
     this.columnSettingsButton = page.locator('button').filter({ hasText: '' }).first();
     this.dataTable = page.locator('table').first();
     this.loadingIndicator = page.locator('text=Loading Data... Please wait');
+    this.noResultsMessage = page.locator('text=No matching results found');
+  }
+
+  // ========================
+  // Private Helper Methods
+  // ========================
+
+  /**
+   * Get row locator by name (dynamic locator)
+   */
+  private getRowByName(name: string): Locator {
+    return this.page.locator(`tr:has-text("${name}")`);
   }
 
   // Navigation
@@ -168,9 +181,7 @@ export class SubcontractorsPage {
 
   async isNoResultsVisible(): Promise<boolean> {
     return await test.step('Check if no results displayed', async () => {
-      const noResults = this.page.locator('text=No matching results found');
-
-      return await noResults.isVisible();
+      return await this.noResultsMessage.isVisible();
     });
   }
 
@@ -192,9 +203,7 @@ export class SubcontractorsPage {
 
   async clickSubcontractorByName(name: string): Promise<void> {
     await test.step(`Click subcontractor "${name}"`, async () => {
-      const row = this.page.locator(`tr:has-text("${name}")`);
-
-      await row.click();
+      await this.getRowByName(name).click();
     });
   }
 

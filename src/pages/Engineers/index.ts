@@ -6,6 +6,9 @@
 // Engineers List
 export * from './EngineersListPage';
 
+// Engineer Detail
+export * from './EngineerDetailPage';
+
 // Non Job Expenses
 export * from './NonJobExpensesPage';
 

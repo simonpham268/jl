@@ -16,6 +16,14 @@ export {
   PPMContractTab,
 } from './AllPPMContractsPage';
 
+// PPM Contract Detail Page
+export {
+  PPMContractDetailPage,
+  PPMContractDetailTab,
+  PPMContractSummaryInfo,
+  PPMContractDetailData,
+} from './PPMContractDetailPage';
+
 // All PPM Quotes Page
 export {
   AllPPMQuotesPage,

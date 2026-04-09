@@ -89,6 +89,17 @@ export class DynamicReportsPage extends BasePage {
   }
 
   // ========================
+  // Private Helper Methods
+  // ========================
+
+  /**
+   * Get row locator by text (dynamic locator)
+   */
+  private getRowByText(text: string): Locator {
+    return this.page.locator(`text=${text}`).locator('..');
+  }
+
+  // ========================
   // Navigation Methods
   // ========================
 
@@ -250,7 +261,7 @@ export class DynamicReportsPage extends BasePage {
    */
   async toggleFavourite(reportName: string): Promise<void> {
     await test.step(`Toggle favourite for report: ${reportName}`, async () => {
-      const reportRow = this.page.locator(`text=${reportName}`).locator('..');
+      const reportRow = this.getRowByText(reportName);
 
       await reportRow.locator('[title*="favourite"], [class*="star"]').click();
     });
