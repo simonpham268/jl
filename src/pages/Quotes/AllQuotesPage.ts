@@ -419,7 +419,7 @@ export class AllQuotesPage extends BasePage {
       await row.waitFor({ state: 'visible', timeout: 15000 });
       await row.scrollIntoViewIfNeeded();
       await row.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

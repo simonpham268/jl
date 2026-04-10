@@ -368,7 +368,7 @@ export class SitePage extends BasePage {
   async save(): Promise<void> {
     await test.step('Click Save button', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

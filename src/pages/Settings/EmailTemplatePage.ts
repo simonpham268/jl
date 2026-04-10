@@ -88,7 +88,7 @@ export class EmailTemplatePage {
   async navigateToEmailTemplate(): Promise<void> {
     await test.step('Navigate to Email Template page', async () => {
       await this.page.goto('/EmailTemplate');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -101,7 +101,7 @@ export class EmailTemplatePage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -109,49 +109,49 @@ export class EmailTemplatePage {
   async switchToJobTab(): Promise<void> {
     await test.step('Switch to Job tab', async () => {
       await this.jobTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToQuotesTab(): Promise<void> {
     await test.step('Switch to Quotes tab', async () => {
       await this.quotesTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToInvoicesTab(): Promise<void> {
     await test.step('Switch to Invoices tab', async () => {
       await this.invoicesTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToPPMsTab(): Promise<void> {
     await test.step('Switch to PPMs tab', async () => {
       await this.ppmsTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToPurchaseOrdersTab(): Promise<void> {
     await test.step('Switch to Purchase Orders tab', async () => {
       await this.purchaseOrdersTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToServiceLettersTab(): Promise<void> {
     await test.step('Switch to Service Letters tab', async () => {
       await this.serviceLettersTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToDocumentsTab(): Promise<void> {
     await test.step('Switch to Documents tab', async () => {
       await this.documentsTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -187,7 +187,7 @@ export class EmailTemplatePage {
   async clickAddTemplate(): Promise<void> {
     await test.step('Click Add Template link', async () => {
       await this.addTemplateLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -207,7 +207,7 @@ export class EmailTemplatePage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -223,7 +223,7 @@ export class EmailTemplatePage {
   async selectResultsPerPage(count: number): Promise<void> {
     await test.step(`Select ${count} results per page`, async () => {
       await this.resultsPerPageDropdown.selectOption({ label: `${count} Results per page` });
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -232,7 +232,7 @@ export class EmailTemplatePage {
       const pageLink = this.pagination.locator(`text="${pageNumber}"`);
 
       await pageLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -241,7 +241,7 @@ export class EmailTemplatePage {
       const nextButton = this.pagination.locator('text=»').first();
 
       await nextButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -250,7 +250,7 @@ export class EmailTemplatePage {
       const prevButton = this.pagination.locator('text=«').first();
 
       await prevButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

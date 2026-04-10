@@ -88,7 +88,7 @@ export class DocumentTemplatesPage {
   async navigateToDocumentTemplates(): Promise<void> {
     await test.step('Navigate to Document Templates page', async () => {
       await this.page.goto('/Template');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -101,7 +101,7 @@ export class DocumentTemplatesPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -109,56 +109,56 @@ export class DocumentTemplatesPage {
   async switchToJobsheet(): Promise<void> {
     await test.step('Switch to Jobsheet tab', async () => {
       await this.jobsheetTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToQuotes(): Promise<void> {
     await test.step('Switch to Quotes tab', async () => {
       await this.quotesTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToInvoiceCredit(): Promise<void> {
     await test.step('Switch to Invoice & Credit tab', async () => {
       await this.invoiceCreditTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToPPMs(): Promise<void> {
     await test.step('Switch to PPMs tab', async () => {
       await this.ppmsTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToPurchaseOrders(): Promise<void> {
     await test.step('Switch to Purchase Orders tab', async () => {
       await this.purchaseOrdersTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToServiceLetters(): Promise<void> {
     await test.step('Switch to Service Letters tab', async () => {
       await this.serviceLettersTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToGoodsReceivedNotes(): Promise<void> {
     await test.step('Switch to Goods Received Notes tab', async () => {
       await this.goodsReceivedNotesTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async switchToAssetTaskCompliance(): Promise<void> {
     await test.step('Switch to Asset & Task Compliance tab', async () => {
       await this.assetTaskComplianceTab.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -197,7 +197,7 @@ export class DocumentTemplatesPage {
   async clickAddTemplate(): Promise<void> {
     await test.step('Click Add Template button', async () => {
       await this.addTemplateButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -223,7 +223,7 @@ export class DocumentTemplatesPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

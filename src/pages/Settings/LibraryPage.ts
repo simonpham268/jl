@@ -99,7 +99,7 @@ export class LibraryPage {
   async navigateToLibrary(): Promise<void> {
     await test.step('Navigate to Library page', async () => {
       await this.page.goto('/Library');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -112,7 +112,7 @@ export class LibraryPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -120,231 +120,231 @@ export class LibraryPage {
   async clickCreditReasons(): Promise<void> {
     await test.step('Click Credit Reasons tile', async () => {
       await this.creditReasonsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickParts(): Promise<void> {
     await test.step('Click Parts tile', async () => {
       await this.partsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickEquipment(): Promise<void> {
     await test.step('Click Equipment tile', async () => {
       await this.equipmentTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickGasTypes(): Promise<void> {
     await test.step('Click Gas Types tile', async () => {
       await this.gasTypesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSellingRates(): Promise<void> {
     await test.step('Click Selling Rates tile', async () => {
       await this.sellingRatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickScheduleOfRates(): Promise<void> {
     await test.step('Click Schedule of Rates tile', async () => {
       await this.scheduleOfRatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickTasks(): Promise<void> {
     await test.step('Click Tasks tile', async () => {
       await this.tasksTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickPhrasebook(): Promise<void> {
     await test.step('Click Phrasebook tile', async () => {
       await this.phrasebookTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickFaultCodeLibrary(): Promise<void> {
     await test.step('Click Fault Code Library tile', async () => {
       await this.faultCodeLibraryTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickServiceTypes(): Promise<void> {
     await test.step('Click Service Types tile', async () => {
       await this.serviceTypesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickServiceKits(): Promise<void> {
     await test.step('Click Service Kits tile', async () => {
       await this.serviceKitsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickTaxRates(): Promise<void> {
     await test.step('Click Tax Rates tile', async () => {
       await this.taxRatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickNominalCodes(): Promise<void> {
     await test.step('Click Nominal Codes tile', async () => {
       await this.nominalCodesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickRefcomTransactionReasons(): Promise<void> {
     await test.step('Click Refcom Transaction Reasons tile', async () => {
       await this.refcomTransactionReasonsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickServiceJobs(): Promise<void> {
     await test.step('Click Service Jobs tile', async () => {
       await this.serviceJobsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSuppliers(): Promise<void> {
     await test.step('Click Suppliers tile', async () => {
       await this.suppliersTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickPriorities(): Promise<void> {
     await test.step('Click Priorities tile', async () => {
       await this.prioritiesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickTags(): Promise<void> {
     await test.step('Click Tags tile', async () => {
       await this.tagsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickNonProductiveTimeTypes(): Promise<void> {
     await test.step('Click Non-Productive Time Types tile', async () => {
       await this.nonProductiveTimeTypesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSources(): Promise<void> {
     await test.step('Click Sources tile', async () => {
       await this.sourcesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickQuoteRejectReasons(): Promise<void> {
     await test.step('Click Quote Reject Reasons tile', async () => {
       await this.quoteRejectReasonsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickIncompleteTaskReasons(): Promise<void> {
     await test.step('Click Incomplete Task Reasons tile', async () => {
       await this.incompleteTaskReasonsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickEngineerTrades(): Promise<void> {
     await test.step('Click Engineer Trades tile', async () => {
       await this.engineerTradesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickPayBands(): Promise<void> {
     await test.step('Click Pay Bands tile', async () => {
       await this.payBandsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickCompanyDocumentTypes(): Promise<void> {
     await test.step('Click Company Document Types tile', async () => {
       await this.companyDocumentTypesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickVehicles(): Promise<void> {
     await test.step('Click Vehicles tile', async () => {
       await this.vehiclesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickLocations(): Promise<void> {
     await test.step('Click Locations tile', async () => {
       await this.locationsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickPurchaseOrderTemplates(): Promise<void> {
     await test.step('Click Purchase Order Templates tile', async () => {
       await this.purchaseOrderTemplatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickQuoteTemplates(): Promise<void> {
     await test.step('Click Quote Templates tile', async () => {
       await this.quoteTemplatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickReportTemplates(): Promise<void> {
     await test.step('Click Report Templates tile', async () => {
       await this.reportTemplatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickMisc(): Promise<void> {
     await test.step('Click Misc. tile', async () => {
       await this.miscTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickJobTemplates(): Promise<void> {
     await test.step('Click Job Templates tile', async () => {
       await this.jobTemplatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickUserReferences(): Promise<void> {
     await test.step('Click User References tile', async () => {
       await this.userReferencesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

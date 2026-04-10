@@ -200,7 +200,7 @@ export class PPMContractDetailPage extends BasePage {
    */
   async waitForPageLoad(): Promise<void> {
     await test.step('Wait for PPM Contract detail page to load', async () => {
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await expect(this.summaryHeading).toBeVisible({ timeout: 15000 });
     });
   }
@@ -258,7 +258,7 @@ export class PPMContractDetailPage extends BasePage {
       };
 
       await tabMap[tab].click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -345,7 +345,7 @@ export class PPMContractDetailPage extends BasePage {
   async saveChanges(): Promise<void> {
     await test.step('Save changes', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

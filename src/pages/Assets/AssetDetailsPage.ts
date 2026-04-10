@@ -240,7 +240,7 @@ export class AssetDetailsPage extends BasePage {
    */
   async waitForPageLoad(): Promise<void> {
     await test.step('Wait for asset detail page to load', async () => {
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await expect(this.assetSummaryHeading).toBeVisible({ timeout: 15000 });
     });
   }
@@ -314,7 +314,7 @@ export class AssetDetailsPage extends BasePage {
         await this.historyTab.click();
         break;
       }
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -685,7 +685,7 @@ export class AssetDetailsPage extends BasePage {
   async save(): Promise<void> {
     await test.step('Save asset changes', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

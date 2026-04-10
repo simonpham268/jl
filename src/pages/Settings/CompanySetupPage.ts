@@ -93,7 +93,7 @@ export class CompanySetupPage {
   async navigateToCompanySetup(): Promise<void> {
     await test.step('Navigate to Company Setup page', async () => {
       await this.page.goto('/Setting/CompanySetup');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -106,7 +106,7 @@ export class CompanySetupPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -139,7 +139,7 @@ export class CompanySetupPage {
   async clickSave(): Promise<void> {
     await test.step('Click Save button', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

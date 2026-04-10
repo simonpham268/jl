@@ -733,7 +733,7 @@ export class JobDetailsPage extends BasePage {
   async saveChanges(): Promise<void> {
     await test.step('Save changes', async () => {
       await this.clickSave();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -971,7 +971,7 @@ export class JobDetailsPage extends BasePage {
     await test.step('Complete job', async () => {
       await this.clickCompleteJob();
       // Wait for confirmation modal or status change
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

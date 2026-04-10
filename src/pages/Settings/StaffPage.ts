@@ -84,7 +84,7 @@ export class StaffPage {
   async navigateToStaff(): Promise<void> {
     await test.step('Navigate to Staff page', async () => {
       await this.page.goto('/Staff');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -97,7 +97,7 @@ export class StaffPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -105,28 +105,28 @@ export class StaffPage {
   async clickUserAccessLog(): Promise<void> {
     await test.step('Click User Access Log link', async () => {
       await this.userAccessLogLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickAddUser(): Promise<void> {
     await test.step('Click Add User link', async () => {
       await this.addUserLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickEngineerTeams(): Promise<void> {
     await test.step('Click Engineer Teams link', async () => {
       await this.engineerTeamsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickManageUserRoles(): Promise<void> {
     await test.step('Click Manage User Roles link', async () => {
       await this.manageUserRolesLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -182,7 +182,7 @@ export class StaffPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

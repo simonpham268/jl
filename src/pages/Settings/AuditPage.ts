@@ -57,7 +57,7 @@ export class AuditPage {
   async navigateToAudit(): Promise<void> {
     await test.step('Navigate to Audit page', async () => {
       await this.page.goto('/Audit');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -70,7 +70,7 @@ export class AuditPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -121,7 +121,7 @@ export class AuditPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

@@ -127,7 +127,7 @@ export class ServiceJobLettersPage extends BasePage {
   async waitForTableLoad(): Promise<void> {
     await test.step('Wait for table to load', async () => {
       await this.loadingIndicator.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {});
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

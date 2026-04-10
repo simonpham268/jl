@@ -73,7 +73,7 @@ export class ElectronicFormsPage {
   async navigateToElectronicForms(): Promise<void> {
     await test.step('Navigate to Electronic Forms page', async () => {
       await this.page.goto('/CompanyForm');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -86,7 +86,7 @@ export class ElectronicFormsPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -107,7 +107,7 @@ export class ElectronicFormsPage {
   async clickAddCustomForm(): Promise<void> {
     await test.step('Click Add Custom Form link', async () => {
       await this.addCustomFormLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -137,7 +137,7 @@ export class ElectronicFormsPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

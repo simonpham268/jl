@@ -82,7 +82,7 @@ export class SubcontractorsPage {
   async navigateToSubcontractors(): Promise<void> {
     await test.step('Navigate to Subcontractors page', async () => {
       await this.page.goto('/Subcontractor');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -95,7 +95,7 @@ export class SubcontractorsPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -116,7 +116,7 @@ export class SubcontractorsPage {
   async clickAddSubcontractor(): Promise<void> {
     await test.step('Click Add Subcontractor button', async () => {
       await this.addSubcontractorButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -160,7 +160,7 @@ export class SubcontractorsPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

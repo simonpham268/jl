@@ -57,7 +57,7 @@ export class ImportHistoryPage {
   async navigateToImportHistory(): Promise<void> {
     await test.step('Navigate to Import History page', async () => {
       await this.page.goto('/Import/History');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -70,7 +70,7 @@ export class ImportHistoryPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -111,7 +111,7 @@ export class ImportHistoryPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

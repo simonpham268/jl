@@ -67,7 +67,7 @@ export class SettingsPage {
   async navigateToSettings(): Promise<void> {
     await test.step('Navigate to Settings page', async () => {
       await this.page.goto('/Setting/');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -81,140 +81,140 @@ export class SettingsPage {
   async clickActivate(): Promise<void> {
     await test.step('Click Activate tile', async () => {
       await this.activateTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickCompanySetup(): Promise<void> {
     await test.step('Click Company Setup tile', async () => {
       await this.companySetupTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSystemSetup(): Promise<void> {
     await test.step('Click System Setup tile', async () => {
       await this.systemSetupTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickStaff(): Promise<void> {
     await test.step('Click Staff tile', async () => {
       await this.staffTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickCreditCardPayments(): Promise<void> {
     await test.step('Click Credit Card Payments tile', async () => {
       await this.creditCardPaymentsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickElectronicForms(): Promise<void> {
     await test.step('Click Electronic Forms tile', async () => {
       await this.electronicFormsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickLibrary(): Promise<void> {
     await test.step('Click Library tile', async () => {
       await this.libraryTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickAccountIntegration(): Promise<void> {
     await test.step('Click Account Integration tile', async () => {
       await this.accountIntegrationTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSchemeProviders(): Promise<void> {
     await test.step('Click Scheme Providers tile', async () => {
       await this.schemeProvidersTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickCustomerPortalAccess(): Promise<void> {
     await test.step('Click Customer Portal Access tile', async () => {
       await this.customerPortalAccessTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSyncHistory(): Promise<void> {
     await test.step('Click Sync History tile', async () => {
       await this.syncHistoryTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickAudit(): Promise<void> {
     await test.step('Click Audit tile', async () => {
       await this.auditTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickHistoryOfImports(): Promise<void> {
     await test.step('Click History of Imports tile', async () => {
       await this.historyOfImportsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickDocumentTemplates(): Promise<void> {
     await test.step('Click Document Templates tile', async () => {
       await this.documentTemplatesTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickCompanyDocumentation(): Promise<void> {
     await test.step('Click Company Documentation tile', async () => {
       await this.companyDocumentationTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickOutboundEmails(): Promise<void> {
     await test.step('Click Outbound Emails tile', async () => {
       await this.outboundEmailsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickSubcontractors(): Promise<void> {
     await test.step('Click Subcontractors tile', async () => {
       await this.subcontractorsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickEmail(): Promise<void> {
     await test.step('Click Email tile', async () => {
       await this.emailTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickEmailNotification(): Promise<void> {
     await test.step('Click Email Notification tile', async () => {
       await this.emailNotificationTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickFTPAccounts(): Promise<void> {
     await test.step('Click FTP Accounts tile', async () => {
       await this.ftpAccountsTile.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

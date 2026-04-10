@@ -36,7 +36,7 @@ export class HomePage extends BasePage {
   async waitForHomePageLoad(): Promise<void> {
     await test.step('Wait for home page to load', async () => {
       await this.page.waitForLoadState('domcontentloaded');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

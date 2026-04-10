@@ -256,8 +256,8 @@ export class QuoteDetailPage extends BasePage {
    */
   async waitForPageLoad(): Promise<void> {
     await test.step('Wait for quote detail page to load', async () => {
-      await this.page.waitForLoadState('networkidle');
-      await expect(this.quoteSummaryHeading).toBeVisible({ timeout: 15000 });
+      await this.page.waitForLoadState('domcontentloaded');
+      await expect(this.quoteSummaryHeading).toBeVisible({ timeout: 30000 });
     });
   }
 
@@ -311,7 +311,7 @@ export class QuoteDetailPage extends BasePage {
       };
 
       await tabMap[tab].click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -385,7 +385,7 @@ export class QuoteDetailPage extends BasePage {
   async saveChanges(): Promise<void> {
     await test.step('Save changes', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

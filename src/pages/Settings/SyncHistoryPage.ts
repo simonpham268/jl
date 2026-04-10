@@ -57,7 +57,7 @@ export class SyncHistoryPage {
   async navigateToSyncHistory(): Promise<void> {
     await test.step('Navigate to Sync History page', async () => {
       await this.page.goto('/AccountIntegration/SyncHistory');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -70,7 +70,7 @@ export class SyncHistoryPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -111,7 +111,7 @@ export class SyncHistoryPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

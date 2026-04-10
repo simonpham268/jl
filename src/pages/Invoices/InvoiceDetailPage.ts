@@ -200,7 +200,7 @@ export class InvoiceDetailPage extends BasePage {
    */
   async waitForPageLoad(): Promise<void> {
     await test.step('Wait for invoice detail page to load', async () => {
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await expect(this.summaryHeading).toBeVisible({ timeout: 15000 });
     });
   }
@@ -263,7 +263,7 @@ export class InvoiceDetailPage extends BasePage {
       };
 
       await tabMap[tab].click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -344,7 +344,7 @@ export class InvoiceDetailPage extends BasePage {
   async saveChanges(): Promise<void> {
     await test.step('Save changes', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

@@ -82,7 +82,7 @@ export class PortalUsersPage {
   async navigateToPortalUsers(): Promise<void> {
     await test.step('Navigate to Portal Users page', async () => {
       await this.page.goto('/Portal');
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -95,7 +95,7 @@ export class PortalUsersPage {
   async goBackToSettings(): Promise<void> {
     await test.step('Go back to Settings page', async () => {
       await this.settingsLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -103,14 +103,14 @@ export class PortalUsersPage {
   async clickAddPortalUsers(): Promise<void> {
     await test.step('Click Add Portal Users link', async () => {
       await this.addPortalUsersLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickManagePortalRoles(): Promise<void> {
     await test.step('Click Manage Portal Roles link', async () => {
       await this.managePortalRolesLink.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -176,7 +176,7 @@ export class PortalUsersPage {
   async clickSearch(): Promise<void> {
     await test.step('Click Search button', async () => {
       await this.searchButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

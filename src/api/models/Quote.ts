@@ -96,6 +96,10 @@ export interface CreateQuoteResponse {
     Message: string | null;
     WarningMessage: string | null;
     QuoteId?: string | number;
+    AdditionalData?: {
+        QuoteId?: string | number;
+        quoteid?: string | number;
+    };
 }
 
 export interface UpdateQuoteRequest extends Partial<CreateQuoteRequest> {

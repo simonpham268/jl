@@ -181,7 +181,7 @@ export class StockRecordDetailPage extends BasePage {
    */
   async waitForPageLoad(): Promise<void> {
     await test.step('Wait for stock record detail page to load', async () => {
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await expect(this.pageTitle).toBeVisible({ timeout: 15000 });
     });
   }
@@ -213,7 +213,7 @@ export class StockRecordDetailPage extends BasePage {
       };
 
       await tabMap[tab].click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -253,7 +253,7 @@ export class StockRecordDetailPage extends BasePage {
   async saveChanges(): Promise<void> {
     await test.step('Save changes', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
