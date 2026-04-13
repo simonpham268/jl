@@ -25,6 +25,7 @@
     "scan:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --active",
     "scan:web:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --web --active",
     "scan:mobile:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --mobile --active",
+    "export:tc": "npx tsx src/utils/export-tc.ts",
     "crawl": "npx tsx mcp-servers/crawler.ts",
     "crawl:rn": "npx tsx mcp-servers/crawler.ts release_notes",
     "crawl:sp": "npx tsx mcp-servers/crawler.ts sharepoint",

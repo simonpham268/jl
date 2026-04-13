@@ -200,4 +200,47 @@ Confirm test passes. Check ESLint compliance.
 
 **Never heal a test without reading healer-prompt.md first.**
 
+---
+
+## 8. Test Case Export to Excel (MANDATORY)
+
+When the user confirms test cases are acceptable AND requests export/convert to Excel or CSV:
+
+### Trigger phrases
+- "export to Excel", "convert to xlsx", "export sang excel", "export TC"
+- "xuất excel", "convert TC", "save as xlsx", any similar intent
+
+### Step 1: Identify the TC file
+- The active TC file is `src/tests/test-cases/TC-<FEATURE>.md`
+- If not specified, ask the user which file to export
+
+### Step 2: Run export-tc.ts
+```bash
+npx tsx src/utils/export-tc.ts TC-<FEATURE>.md
+# With explicit area path (ask user if unsure):
+npx tsx src/utils/export-tc.ts TC-<FEATURE>.md --area="TMS\QC Team\JLWeb Test Cases\<Module>"
+# With explicit Jira override (auto-detected from MD header by default):
+npx tsx src/utils/export-tc.ts TC-<FEATURE>.md --jira=JEC-XXXX
+```
+
+### Output
+- File saved to `src/tests/test-cases/TC-<FEATURE>.xlsx`
+- Template: `Template TC.xlsx` at project root
+- Jira ticket auto-read from `**Jira:** DD-XXXX` in the MD header
+- Area Path dropdown populated from `Data` sheet in template
+- Status dropdown populated from `Data` sheet in template
+
+### Area Path options (from template Data sheet)
+```
+TMS\QC Team\JLWeb Test Cases\Registration and Login
+TMS\QC Team\JLWeb Test Cases\Jobs
+TMS\QC Team\JLWeb Test Cases\Invoices
+TMS\QC Team\JLWeb Test Cases\Assets
+TMS\QC Team\JLWeb Test Cases\Sites
+TMS\QC Team\JLWeb Test Cases\PPM
+TMS\QC Team\JLWeb Test Cases\Settings
+... (full list in Template TC.xlsx > Data sheet column B)
+```
+
+**No additional MCP tools required — export-tc.ts is self-contained.**
 
