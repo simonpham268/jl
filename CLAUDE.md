@@ -11,6 +11,9 @@
 | `list_sharepoint_files(folderPath?, fileType?)` | SharePoint folders | Browse available specs |
 | `get_release_notes(keyword)` | JobLogic features 2019-2026, bug fixes | Check existing features, known bugs |
 | `list_doc_pages()` | Release note pages | Browse documentation index |
+| `search_notion_specs(query)` | Notion BA/Vibe specs (430+ pages, indexed) | Find specs, feature details, business rules |
+| `get_notion_page(pageId)` | Full Notion page content | Deep dive into a specific Notion spec |
+| `list_notion_specs(cursor?)` | All Notion spec titles + IDs | Browse Notion spec index |
 
 ---
 
@@ -20,21 +23,45 @@
 - Read the uploaded spec carefully
 - Extract: feature name, problem statement, proposed changes, business rules
 
-### Step 2: Search DB for Context (MANDATORY)
-Run both searches in parallel:
+### Step 2: Extract Search Entities from Spec (MANDATORY — do before searching)
+
+Scan the spec text and collect exact strings for each category:
+
+| Category | What to look for | Example |
+|----------|-----------------|---------|
+| Workflow IDs | Alphanumeric codes like AH2.10, MP3.3 | `"AH2.10"`, `"PR2.2"` |
+| Jira references | DD-XXXX ticket IDs | `"DD-6663"` |
+| System/Portal names | Named systems, portals, integrations | `"RFW portal"`, `"Customer Portal"` |
+| Equipment/Domain terms | Technical nouns specific to the feature | `"Gas Valve"`, `"COP date"` |
+| Customer/Client name | VIP customer name if present | `"Budweiser"`, `"Linaker"` |
+| Referenced spec names | Any spec file or feature name mentioned | `"Bud #23"`, `"Asset Based PPM"` |
+
+### Step 3: Search DB for Context (MANDATORY)
+
+For each entity extracted in Step 2, run a targeted query. Run all in parallel:
 
 ```
-search_sharepoint_docs("feature_keyword")   # related specs, impacted areas
-get_release_notes("feature_keyword")        # existing features, known bugs
+# Always run these 3 with the main feature keyword:
+search_sharepoint_docs("<feature_keyword>")
+search_notion_specs("<feature_keyword>")
+get_release_notes("<feature_keyword>")
+
+# Then run one query per extracted entity:
+search_sharepoint_docs("<workflow_id>")        # e.g. "AH2.10"
+search_sharepoint_docs("<system_name>")        # e.g. "RFW portal"
+search_notion_specs("<customer_name>")         # e.g. "Budweiser"
+search_notion_specs("<domain_term>")           # e.g. "Gas Valve COP"
 ```
+
+If a result looks relevant, call `get_notion_page(pageId)` or `get_sharepoint_file_content(itemId)` to read full content.
 
 Look for:
 - Related features that interact with this one
 - Impact analysis — what else might break
 - Known bugs — historical issues with similar features
-- Referenced workflow IDs (e.g., AH2.10, MP3.3)
+- Business rules defined in referenced workflow IDs
 
-### Step 3: Generate Test Cases (15+ minimum)
+### Step 4: Generate Test Cases (15+ minimum)
 
 Cover all categories:
 
@@ -47,7 +74,7 @@ Cover all categories:
 | Impact Tests | Related features still work |
 | Integration | End-to-end scenarios from spec examples (3-4 cases) |
 
-### Step 4: Write Output File
+### Step 5: Write Output File
 
 ---
 

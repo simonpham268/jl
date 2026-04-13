@@ -30,9 +30,11 @@ import {
   dbClearSource,
   dbClearSourceRef,
   dbGetSpDoc,
+  dbGetNotionPage,
   dbInsertChunks,
   dbMarkIndexed,
   dbUpsertSpDoc,
+  dbUpsertNotionPage,
   openDb,
 } from './db.js';
 
@@ -389,6 +391,177 @@ export async function crawlSharePoint(db: ReturnType<typeof openDb>, forceReinde
 }
 
 // ========================
+// Notion crawler (Playwright-based, no API key needed)
+// ========================
+
+const NOTION_SITE_URL = process.env.NOTION_SITE_URL ?? '';
+
+
+export async function crawlNotion(db: ReturnType<typeof openDb>, forceReindex = false): Promise<number> {
+  if (!NOTION_SITE_URL) {
+    throw new Error('NOTION_SITE_URL must be set in .env.uat');
+  }
+
+  console.log(`[crawler] Crawling Notion (hover title → Open in side peek → extract → Close)${forceReindex ? ' (force)' : ''}…`);
+
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    viewport: { width: 1440, height: 900 },
+  });
+  const page = await context.newPage();
+  let totalChunks = 0;
+
+  try {
+    // ── Step 1: Load database ──
+    console.log('[crawler] Loading Notion database…');
+    await page.goto(NOTION_SITE_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForTimeout(6000); // Wait for rows to fully render
+
+    // ── Step 2: Scroll to load ALL rows ──
+    if (forceReindex) dbClearSource(db, 'notion');
+
+    // ── Steps 3+4: Scroll → crawl visible rows → scroll → crawl new rows → repeat ──
+    // Notion uses virtual scrolling: rows outside viewport are removed from DOM.
+    // Strategy: collect visible unprocessed rows → process each → scroll down → repeat
+    // until 3 consecutive scrolls produce no new rows.
+
+    // Helper: scroll the Notion table container (not window — Notion uses its own scroller)
+    const scrollNotion = (px: number) => page.evaluate((amount: number) => {
+      const firstRow = document.querySelector('.notion-table-view-row');
+      if (firstRow) {
+        let el: Element | null = firstRow.parentElement;
+        while (el && el !== document.body) {
+          const s = window.getComputedStyle(el);
+          if (s.overflowY === 'auto' || s.overflowY === 'scroll') {
+            el.scrollBy(0, amount);
+            return;
+          }
+          el = el.parentElement;
+        }
+      }
+      window.scrollBy(0, amount);
+    }, px);
+
+    const processedTitles = new Set<string>();
+    let stableScrolls = 0;
+    let totalRows = 0;
+
+    // Process one row at a time from currently visible DOM.
+    // After each row, re-check DOM — avoids stale refs from virtual scrolling.
+    // Scroll down only when no unprocessed rows are visible.
+    while (stableScrolls < 30) {
+      // Find the FIRST visible unprocessed row in current DOM
+      const rows = await page.locator('.notion-table-view-row').all();
+      let foundRow: { rowEl: ReturnType<typeof page.locator>; title: string } | null = null;
+
+      for (const rowEl of rows) {
+        const cell = rowEl.locator('.notion-table-view-cell').first();
+        // Use evaluate to strip button/action elements before reading text —
+        // Notion renders "Open"/"Close" buttons inside the cell DOM (hidden via CSS)
+        // and textContent() would include them, corrupting the title.
+        const title = await cell.evaluate((el) => {
+          const clone = el.cloneNode(true) as HTMLElement;
+          clone.querySelectorAll('[role="button"], button, [aria-label]').forEach((n) => n.remove());
+          return (clone.textContent ?? '').trim().replace(/\s+/g, ' ');
+        }).catch(() => '');
+        if (!title || title.length < 2 || processedTitles.has(title)) continue;
+        foundRow = { rowEl, title };
+        break;
+      }
+
+      if (!foundRow) {
+        // All visible rows processed — scroll down to load more
+        stableScrolls++;
+        await scrollNotion(500);
+        await page.waitForTimeout(1500);
+        continue;
+      }
+
+      stableScrolls = 0;
+      const { rowEl, title } = foundRow;
+      processedTitles.add(title); // Mark before processing to prevent retries on error
+      totalRows++;
+
+      const stableId = Buffer.from(title).toString('hex').slice(0, 32).padEnd(32, '0');
+
+      if (!forceReindex && dbGetNotionPage(db, stableId)) {
+        console.log(`[crawler] Skip (indexed): "${title}"`);
+        continue;
+      }
+
+      console.log(`[crawler] [${totalRows}] Processing: "${title}"`);
+
+      try {
+        const titleCell = rowEl.locator('.notion-table-view-cell').first();
+
+        // Hover deepest div — Notion's mouseenter fires 4 levels deep
+        const titleInner = titleCell.locator('div div div div').first();
+        if (await titleInner.count() > 0) {
+          await titleInner.hover();
+        } else {
+          await titleCell.hover();
+        }
+        await page.waitForTimeout(600);
+
+        // Click "Open in side peek" (Notion uses div[role="button"], not <button>)
+        const openBtn = page.locator('[aria-label="Open in side peek"]').first();
+        if (!await openBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+          console.log(`[crawler]   OPEN button not found — skipping`);
+          continue;
+        }
+        await openBtn.click();
+
+        // Wait for URL &pm=s then wait for h1 (content loaded)
+        await page.waitForURL(/pm=s/, { timeout: 8000 }).catch(() => {});
+        const sidePeek = page.locator('[role="region"][aria-label="Side Peek"]');
+        await page.locator('[role="region"][aria-label="Side Peek"] h1')
+          .waitFor({ state: 'visible', timeout: 10000 })
+          .catch(() => {});
+        await page.waitForTimeout(500);
+
+        const notionUrl = page.url();
+        const peekText = await sidePeek.innerText().catch(() => '');
+
+        if (peekText && peekText.length > 30) {
+          const fullText = `# ${title}\n\n${peekText}`;
+          const metadata = { pageId: stableId, title, notionUrl };
+          dbClearSourceRef(db, 'notion', stableId);
+          const chunks = chunkText(fullText, 'notion', stableId, metadata, title);
+          dbInsertChunks(db, chunks);
+          dbUpsertNotionPage(db, stableId, title, new Date().toISOString());
+          totalChunks += chunks.length;
+          console.log(`[crawler] Indexed: "${title}" → ${chunks.length} chunks`);
+        } else {
+          console.log(`[crawler] Empty content: "${title}" — skipped`);
+        }
+
+        // Close side peek
+        const closeBtn = page.getByRole('button', { name: 'Close', exact: true });
+        if (await closeBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeBtn.click();
+        } else {
+          await page.keyboard.press('Escape');
+        }
+        await page.waitForTimeout(800);
+
+      } catch (err) {
+        console.warn(`[crawler] Failed "${title}":`, err instanceof Error ? err.message : err);
+        await page.keyboard.press('Escape').catch(() => {});
+        await page.waitForTimeout(500);
+      }
+    }
+
+    dbMarkIndexed(db, 'notion', totalChunks);
+    console.log(`[crawler] Notion done: ${totalChunks} chunks from ${processedTitles.size} unique rows`);
+    return totalChunks;
+
+  } finally {
+    await browser.close();
+  }
+}
+
+// ========================
 // CLI entry point
 // ========================
 
@@ -402,6 +575,7 @@ if (isMain) {
   (async () => {
     if (source === 'release_notes' || source === 'all') await crawlReleaseNotes(db);
     if (source === 'sharepoint' || source === 'all') await crawlSharePoint(db, forceReindex);
+    if (source === 'notion' || source === 'all') await crawlNotion(db, forceReindex);
     db.close();
     console.log('[crawler] Done.');
   })().catch((err) => {

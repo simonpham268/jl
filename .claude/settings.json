@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "WebFetch"
+      "WebFetch",
+      "Bash(node -e *)",
+      "Bash(npm run crawl*)",
+      "Bash(npm run *)",
+      "Bash(npx tsx *)"
     ]
   }
 }

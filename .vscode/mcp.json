@@ -30,6 +30,16 @@
         "./mcp-servers/tsconfig.json",
         "./mcp-servers/sharepoint-server.ts"
       ]
+    },
+    "notion-specs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "./mcp-servers/tsconfig.json",
+        "./mcp-servers/notion-server.ts"
+      ]
     }
   }
 }

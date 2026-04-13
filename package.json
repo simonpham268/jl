@@ -27,7 +27,13 @@
     "scan:mobile:active": "npx tsx src/utils/azured-devops/scan-regression-plans.ts --mobile --active",
     "crawl": "npx tsx mcp-servers/crawler.ts",
     "crawl:rn": "npx tsx mcp-servers/crawler.ts release_notes",
-    "crawl:sp": "npx tsx mcp-servers/crawler.ts sharepoint"
+    "crawl:sp": "npx tsx mcp-servers/crawler.ts sharepoint",
+    "crawl:notion": "npx tsx mcp-servers/crawler.ts notion",
+    "crawl:notion:force": "npx tsx mcp-servers/crawler.ts notion --force",
+    "export:notion": "npx tsx mcp-servers/notion-exporter.ts",
+    "export:notion:force": "npx tsx mcp-servers/notion-exporter.ts --force",
+    "export:notion:sp": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint",
+    "export:notion:sp:force": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint --force"
   },
   "keywords": [],
   "author": "",
@@ -56,6 +62,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "better-sqlite3": "^12.8.0",
+    "docx": "^9.6.1",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
     "mammoth": "^1.12.0",

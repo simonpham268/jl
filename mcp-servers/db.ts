@@ -141,3 +141,43 @@ export function dbUpsertSpDoc(
       indexed_at  = excluded.indexed_at
   `).run(itemId, filePath, fileName, modifiedAt, Date.now());
 }
+
+// ========================
+// Notion delta sync
+// ========================
+
+export function dbGetNotionPage(db: Database.Database, pageId: string): { last_edited: string } | null {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS notion_pages (
+      page_id     TEXT PRIMARY KEY,
+      title       TEXT NOT NULL,
+      last_edited TEXT NOT NULL,
+      indexed_at  INTEGER NOT NULL
+    )
+  `);
+  return db.prepare('SELECT last_edited FROM notion_pages WHERE page_id = ?').get(pageId) as { last_edited: string } | null;
+}
+
+export function dbUpsertNotionPage(
+  db: Database.Database,
+  pageId: string,
+  title: string,
+  lastEdited: string,
+): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS notion_pages (
+      page_id     TEXT PRIMARY KEY,
+      title       TEXT NOT NULL,
+      last_edited TEXT NOT NULL,
+      indexed_at  INTEGER NOT NULL
+    )
+  `);
+  db.prepare(`
+    INSERT INTO notion_pages (page_id, title, last_edited, indexed_at)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(page_id) DO UPDATE SET
+      title       = excluded.title,
+      last_edited = excluded.last_edited,
+      indexed_at  = excluded.indexed_at
+  `).run(pageId, title, lastEdited, Date.now());
+}

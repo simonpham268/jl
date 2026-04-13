@@ -30,6 +30,16 @@
       "env": {
         "RELEASE_NOTES_URL": "https://support.joblogic.com/docs/latest-release-notes"
       }
+    },
+    "notion-specs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "./mcp-servers/tsconfig.json",
+        "./mcp-servers/notion-server.ts"
+      ]
     }
   }
 }

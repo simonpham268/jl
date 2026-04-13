@@ -12,7 +12,9 @@
       "mcp__playwright-test__generator_write_test",
       "Bash(npx playwright:*)",
       "mcp__playwright-test__test_run",
-      "mcp__playwright-test__test_debug"
+      "mcp__playwright-test__test_debug",
+      "mcp__notion-specs__search_notion_specs",
+      "mcp__notion-specs__get_notion_page"
     ]
   }
 }
