@@ -11,6 +11,9 @@
 | `list_sharepoint_files(folderPath?, fileType?)` | SharePoint folders | Browse available specs |
 | `get_release_notes(keyword)` | JobLogic features 2019-2026, bug fixes | Check existing features, known bugs |
 | `list_doc_pages()` | Release note pages | Browse documentation index |
+| `search_notion_specs(query)` | Notion BA/Vibe specs (430+ pages, indexed) | Find specs, feature details, business rules |
+| `get_notion_page(pageId)` | Full Notion page content | Deep dive into a specific Notion spec |
+| `list_notion_specs(cursor?)` | All Notion spec titles + IDs | Browse Notion spec index |
 
 ---
 
@@ -20,21 +23,45 @@
 - Read the uploaded spec carefully
 - Extract: feature name, problem statement, proposed changes, business rules
 
-### Step 2: Search DB for Context (MANDATORY)
-Run both searches in parallel:
+### Step 2: Extract Search Entities from Spec (MANDATORY — do before searching)
+
+Scan the spec text and collect exact strings for each category:
+
+| Category | What to look for | Example |
+|----------|-----------------|---------|
+| Workflow IDs | Alphanumeric codes like AH2.10, MP3.3 | `"AH2.10"`, `"PR2.2"` |
+| Jira references | DD-XXXX ticket IDs | `"DD-6663"` |
+| System/Portal names | Named systems, portals, integrations | `"RFW portal"`, `"Customer Portal"` |
+| Equipment/Domain terms | Technical nouns specific to the feature | `"Gas Valve"`, `"COP date"` |
+| Customer/Client name | VIP customer name if present | `"Budweiser"`, `"Linaker"` |
+| Referenced spec names | Any spec file or feature name mentioned | `"Bud #23"`, `"Asset Based PPM"` |
+
+### Step 3: Search DB for Context (MANDATORY)
+
+For each entity extracted in Step 2, run a targeted query. Run all in parallel:
 
 ```
-search_sharepoint_docs("feature_keyword")   # related specs, impacted areas
-get_release_notes("feature_keyword")        # existing features, known bugs
+# Always run these 3 with the main feature keyword:
+search_sharepoint_docs("<feature_keyword>")
+search_notion_specs("<feature_keyword>")
+get_release_notes("<feature_keyword>")
+
+# Then run one query per extracted entity:
+search_sharepoint_docs("<workflow_id>")        # e.g. "AH2.10"
+search_sharepoint_docs("<system_name>")        # e.g. "RFW portal"
+search_notion_specs("<customer_name>")         # e.g. "Budweiser"
+search_notion_specs("<domain_term>")           # e.g. "Gas Valve COP"
 ```
+
+If a result looks relevant, call `get_notion_page(pageId)` or `get_sharepoint_file_content(itemId)` to read full content.
 
 Look for:
 - Related features that interact with this one
 - Impact analysis — what else might break
 - Known bugs — historical issues with similar features
-- Referenced workflow IDs (e.g., AH2.10, MP3.3)
+- Business rules defined in referenced workflow IDs
 
-### Step 3: Generate Test Cases (15+ minimum)
+### Step 4: Generate Test Cases (15+ minimum)
 
 Cover all categories:
 
@@ -47,13 +74,13 @@ Cover all categories:
 | Impact Tests | Related features still work |
 | Integration | End-to-end scenarios from spec examples (3-4 cases) |
 
-### Step 4: Write Output File
+### Step 5: Write Output File
 
 ---
 
 ## 3. Output Format
 
-Save to `output/TC-<FEATURE>.md`. Each file must start with the feature header sections, followed by the test cases.
+Save to `src/tests/test-cases/TC-<FEATURE>.md`. Each file must start with the feature header sections, followed by the test cases.
 
 ```markdown
 # Test Cases: {Feature Name}
@@ -128,12 +155,47 @@ Step 2: {Action}
 
 ---
 
-## 6. Automation Script Generation
+## 6. Playwright Test Script Generation (MANDATORY)
 
-1. Follow ALL 24 rules from `gen-prompt.md`
-2. Apply intent mappings from `mapping-prompt.md`
-3. Use test case `.md` as input
-4. ESLint compliance: semicolons, single quotes, 2-space indent
+When generating Playwright test scripts (any request to convert TC → code):
 
-## 7. Healing Broken Tests
-Follow `healer-prompt.md`
+### Step 1: Read framework files FIRST (before writing any code)
+```
+Read gen-prompt.md       — 24 framework rules (locators, POM, data builders, API services)
+Read mapping-prompt.md   — intent mappings (TC action → page method)
+```
+
+### Step 2: Call generator_setup_page
+Inject into `plan` parameter in this order:
+1. Full content of `gen-prompt.md`
+2. Full content of `mapping-prompt.md`
+3. TC steps from the test case file
+
+### Step 3: Call generator_write_test
+Write output to `src/tests/` following the file naming convention in gen-prompt.md.
+
+**Never generate Playwright code without reading both files first.**
+
+---
+
+## 7. Playwright Test Healing (MANDATORY)
+
+When fixing/healing a failing Playwright test (any request to fix, heal, debug a spec):
+
+### Step 1: Read healer rules FIRST
+```
+Read healer-prompt.md   — priority-ordered healing rules (P1: execution failures → P2: compliance)
+```
+
+### Step 2: Identify the failure
+Run the test or read the error. Classify failure type: locator / timing / interaction / API / compliance.
+
+### Step 3: Apply healer-prompt.md priority order
+- **P1 first** — fix execution failures (broken locators, timeouts, API errors)
+- **P2 second** — fix compliance issues (POM violations, missing login, test.step in spec) only after P1 passes
+- NEVER fix working code. Forward healing only — only touch the current failure point.
+
+### Step 4: Validate
+Confirm test passes. Check ESLint compliance.
+
+**Never heal a test without reading healer-prompt.md first.**
