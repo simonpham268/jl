@@ -80,7 +80,7 @@ Cover all categories:
 
 ## 3. Output Format
 
-Save to `src/tests/test-cases/TC-<FEATURE>.md`. Each file must start with the feature header sections, followed by the test cases.
+Save to `docs/TC-<FEATURE>.md`. Each file must start with the feature header sections, followed by the test cases.
 
 ```markdown
 # Test Cases: {Feature Name}
@@ -155,54 +155,7 @@ Step 2: {Action}
 
 ---
 
-## 6. Playwright Test Script Generation (MANDATORY)
-
-When generating Playwright test scripts (any request to convert TC → code):
-
-### Step 1: Read framework files FIRST (before writing any code)
-```
-Read gen-prompt.md       — 24 framework rules (locators, POM, data builders, API services)
-Read mapping-prompt.md   — intent mappings (TC action → page method)
-```
-
-### Step 2: Call generator_setup_page
-Inject into `plan` parameter in this order:
-1. Full content of `gen-prompt.md`
-2. Full content of `mapping-prompt.md`
-3. TC steps from the test case file
-
-### Step 3: Call generator_write_test
-Write output to `src/tests/` following the file naming convention in gen-prompt.md.
-
-**Never generate Playwright code without reading both files first.**
-
----
-
-## 7. Playwright Test Healing (MANDATORY)
-
-When fixing/healing a failing Playwright test (any request to fix, heal, debug a spec):
-
-### Step 1: Read healer rules FIRST
-```
-Read healer-prompt.md   — priority-ordered healing rules (P1: execution failures → P2: compliance)
-```
-
-### Step 2: Identify the failure
-Run the test or read the error. Classify failure type: locator / timing / interaction / API / compliance.
-
-### Step 3: Apply healer-prompt.md priority order
-- **P1 first** — fix execution failures (broken locators, timeouts, API errors)
-- **P2 second** — fix compliance issues (POM violations, missing login, test.step in spec) only after P1 passes
-- NEVER fix working code. Forward healing only — only touch the current failure point.
-
-### Step 4: Validate
-Confirm test passes. Check ESLint compliance.
-
-**Never heal a test without reading healer-prompt.md first.**
-
----
-
-## 8. Test Case Export to Excel (MANDATORY)
+## 6. Test Case Export to Excel (MANDATORY)
 
 When the user confirms test cases are acceptable AND requests export/convert to Excel or CSV:
 
@@ -211,7 +164,7 @@ When the user confirms test cases are acceptable AND requests export/convert to 
 - "xuất excel", "convert TC", "save as xlsx", any similar intent
 
 ### Step 1: Identify the TC file
-- The active TC file is `src/tests/test-cases/TC-<FEATURE>.md`
+- The active TC file is `docs/TC-<FEATURE>.md`
 - If not specified, ask the user which file to export
 
 ### Step 2: Run export-tc.ts
@@ -224,8 +177,8 @@ npx tsx src/utils/export-tc.ts TC-<FEATURE>.md --jira=JEC-XXXX
 ```
 
 ### Output
-- File saved to `src/tests/test-cases/TC-<FEATURE>.xlsx`
-- Template: `Template TC.xlsx` at project root
+- File saved to `docs/TC-<FEATURE>.xlsx`
+- Template: `template/Template TC.xlsx`
 - Jira ticket auto-read from `**Jira:** DD-XXXX` in the MD header
 - Area Path dropdown populated from `Data` sheet in template
 - Status dropdown populated from `Data` sheet in template
@@ -239,8 +192,87 @@ TMS\QC Team\JLWeb Test Cases\Assets
 TMS\QC Team\JLWeb Test Cases\Sites
 TMS\QC Team\JLWeb Test Cases\PPM
 TMS\QC Team\JLWeb Test Cases\Settings
-... (full list in Template TC.xlsx > Data sheet column B)
+... (full list in template/Template TC.xlsx > Data sheet column B)
 ```
 
 **No additional MCP tools required — export-tc.ts is self-contained.**
+
+---
+
+## 7. Playwright Test Script Generation (MANDATORY)
+
+When generating Playwright test scripts (any request to convert TC → code):
+
+### Step 1: Read framework files FIRST (before writing any code)
+```
+Read prompts/gen-prompt.md       — 24 framework rules (locators, POM, data builders, API services)
+Read prompts/mapping-prompt.md   — intent mappings (TC action → page method)
+```
+
+### Step 2: (Optional) Capture locators from real app
+If unsure about selectors, use Playwright MCP tools:
+- `browser_navigate` → go to target page
+- `browser_snapshot` → see DOM structure (accessibility tree)
+- `browser_generate_locator` → get correct selector for element
+
+### Step 3: Write test following rules
+- Use existing POM methods from `src/pages/*`
+- Use data builders from `src/data/*`
+- Use API services from `src/api/services/*` for setup/teardown
+- Follow all 24 rules from gen-prompt.md strictly
+
+### Step 4: Validate
+- `test_run` to verify test passes
+- Check ESLint compliance
+- **Self-verify compliance checklist:**
+  - [ ] All page methods wrapped in `test.step()`
+  - [ ] Locators as `readonly` in constructor, not in methods
+  - [ ] Used existing POM from `src/pages/*`, no duplicate
+  - [ ] Data from builders (`src/data/*`), not hardcoded
+  - [ ] API services for setup/teardown, not UI
+  - [ ] No `expect()` between steps
+  - [ ] No `console.log/debug` in code
+
+**Never generate Playwright code without reading both prompt files first.**
+
+---
+
+## 8. Playwright Test Healing (MANDATORY)
+
+When fixing/healing a failing Playwright test (any request to fix, heal, debug a spec):
+
+### For Simple Errors (syntax, import, obvious typo)
+Fix directly — no need to run browser.
+
+### For Complex Failures (locator, timing, element not found)
+
+#### Step 1: Run the failing test
+Use `test_run` tool to identify exact failure point and error message.
+
+#### Step 2: Debug and inspect
+Use Playwright MCP tools to understand the actual state:
+- `test_debug` — pause at error, interactive debugging
+- `browser_snapshot` — see DOM state (accessibility tree)
+- `browser_generate_locator` — get correct selector for element
+- `browser_console_messages` — check for JS errors
+- `browser_network_requests` — check API failures
+
+#### Step 3: Apply healer rules
+Read `prompts/healer-prompt.md` and apply priority order:
+- **P1 first** — fix execution failures (broken locators, timeouts, API errors)
+- **P2 second** — fix compliance issues (POM violations, missing login, test.step) only after P1 passes
+- NEVER fix working code. Forward healing only — only touch the current failure point.
+
+#### Step 4: Verify
+`test_run` again to confirm fix works. Check ESLint compliance.
+- **Self-verify compliance checklist:**
+  - [ ] Only fixed the failing point (forward healing)
+  - [ ] Did not touch working code
+  - [ ] Locators moved to constructor if added
+  - [ ] No hardcoded waits added
+  - [ ] P1 (execution) fixed before P2 (compliance)
+
+**Never heal a test without reading prompts/healer-prompt.md first.**
+
+
 

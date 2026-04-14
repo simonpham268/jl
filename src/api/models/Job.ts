@@ -83,6 +83,16 @@ export interface CreateJobRequest {
     ConversionRate?: number;
 }
 
+/** Required fields for CreateJobRequest - used by buildFormData */
+export const CREATE_JOB_REQUIRED_FIELDS: (keyof CreateJobRequest)[] = [
+  'JobSiteId',
+  'Description',
+  'JobCustomerId',
+  'DateLogged',
+  'JobTypeId',
+  'AssignedToUserId'
+];
+
 export interface CreateJobResponse {
     success: boolean;
     errors: string[];

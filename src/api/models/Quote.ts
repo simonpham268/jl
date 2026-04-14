@@ -90,6 +90,15 @@ export interface CreateQuoteRequest {
     JobUserReferenceDropdownListValue?: string;
 }
 
+/** Required fields for CreateQuoteRequest - used by buildFormData */
+export const CREATE_QUOTE_REQUIRED_FIELDS: (keyof CreateQuoteRequest)[] = [
+  'QuoteCustomerId',
+  'QuoteSiteId',
+  'Description',
+  'AssignedToUserId',
+  'JobTypeId'
+];
+
 export interface CreateQuoteResponse {
     success: boolean;
     errors: string[];

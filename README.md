@@ -23,8 +23,12 @@ playwright-auto/
 │  └─ sharepoint-server.ts      # MCP server for SharePoint specs
 ├─ allure-results/              # Allure test report results
 ├─ build/                       # Build outputs
+├─ docs/                        # Test case documents (gitignored: .md, .xlsx, .csv, .docx, .pdf)
+│  └─ TC-*.md                   # Generated test cases
 ├─ input/                       # Input files for test generation
-├─ output/                      # Generated test case markdown files
+├─ output/                      # Other generated outputs
+├─ template/                    # Excel templates
+│  └─ Template TC.xlsx          # Test case export template
 ├─ test-results/                # Playwright test results
 ├─ src/
 │  ├─ api/
@@ -125,10 +129,10 @@ playwright-auto/
 │  └─ globalTeardown.ts         # Global teardown after test execution
 ├─ azure-pipelines.yml          # Azure Pipelines CI/CD
 ├─ playwright.config.ts         # Playwright project configuration
-├─ gen-prompt.md                # 24 framework rules for test generation
-├─ mapping-prompt.md            # Intent → page object method mappings
-├─ healer-prompt.md             # Rules for auto-healing broken tests
-├─ agent-compliance.md          # Agent compliance checklist
+├─ prompts/                     # Agent prompt files
+│  ├─ gen-prompt.md             # 24 framework rules for test generation
+│  ├─ mapping-prompt.md         # Intent → page object method mappings
+│  └─ healer-prompt.md          # Rules for auto-healing broken tests
 ├─ swagger.json                 # OpenAPI source
 ├─ openapitools.json            # OpenAPI generator configuration
 ├─ package.json                 # Scripts + dependencies
@@ -194,17 +198,12 @@ git checkout -b feature/your-feature-name
 
 ### Generate Test Script
 
-#### Required Attachments for Script Generation
-When using Copilot to generate test scripts, **always attach these files**:
-- `agent-compliance.md` - Agent compliance and coding standards
-- `gen-prompt.md` - Test generation instructions and patterns  
-- `mapping-prompt.md` - UI element mapping and locator strategies
-- `scenario.md` (or `output/test-case-<testid>.md`) - Test scenario/steps to implement
+#### Agent Instructions (Auto-loaded)
+Instructions are automatically loaded by agents from:
+- **Claude Code:** `CLAUDE.md` 
+- **GitHub Copilot:** `.github/copilot-instructions.md`
 
-#### Required Attachments for Script Healing
-When using **playwright-healer** to fix failing tests, **always attach**:
-- `healer-prompt.md` - Healing rules and debugging strategies
-- The failing test file(s)
+No need to manually attach prompt files — agents read `prompts/gen-prompt.md`, `prompts/mapping-prompt.md`, and `prompts/healer-prompt.md` automatically.
 
 #### Step 1: Get Test Case from Azure DevOps
 ```bash
@@ -231,20 +230,14 @@ This generates `output/test-case-<testid>.md` with format:
 
 ### Step 3: Generate Script with Agent
 1. Select **playwright-test-generator** Agent in Copilot
-2. Attach files:
-   - `output/test-case-<testid>.md` (or scenario.md file)
-   - `agent-compliance.md`
-   - `gen-prompt.md`
-   - `mapping-prompt.md`
-3. Prompt: `Generate script and follow strictly these md files`
+2. Attach: `output/test-case-<testid>.md` (or scenario.md file)
+3. Prompt: `Generate playwright test script`
 4. Save generated test to `src/tests/`
 
 ### Step 4: Fix Issues with Healer Agent
 1. Select **playwright-test-healer** Agent
-2. Attach files:
-   - `healer-prompt.md`
-   - Failing test file
-3. Prompt: `Fix broken locators and flaky steps`
+2. Attach: Failing test file
+3. Prompt: `Fix this failing test`
 4. Re-run tests until stable
 
 ### Step 5: Finalize
@@ -326,8 +319,9 @@ MCP (Model Context Protocol) servers provide indexed knowledge to AI assistants 
 |--------|---------|------|------|
 | Release Notes | JobLogic features 2019-2026, bug fixes | ~879 chunks | `get_release_notes(keyword)` |
 | SharePoint Specs | BA specs, Vibe specs (docx, pdf) | ~663 chunks | `search_sharepoint_docs(query)` |
+| Notion Specs | BA specs, Vibe specs (430+ pages, indexed) | ~4000+ chunks | `search_notion_specs(query)` |
 
-**Database location:** `mcp-servers/data/index.db` (~100MB, gitignored)
+**Database location:** `mcp-servers/data/index.db` (~150MB, gitignored)
 
 ### Quick Start for Team Members
 
@@ -345,15 +339,17 @@ mkdir -p mcp-servers/data
 # Option B: Build from scratch (~5-10 mins, requires Azure credentials)
 npx tsx mcp-servers/crawler.ts release-notes
 npx tsx mcp-servers/crawler.ts sharepoint
+npx tsx mcp-servers/crawler.ts notion
 ```
 
 **Verify database:**
 ```bash
-# Check file size (~100MB)
+# Check file size (~150MB with Notion)
 ls -lh mcp-servers/data/index.db
 
 # Test MCP tools in VS Code Copilot/Claude Code
 # Type: "Get release notes for November 2024"
+# Type: "Search Notion for PPM"
 ```
 
 > ⚠️ **Note:** Database file is gitignored. Each machine needs to copy or build it.
@@ -365,6 +361,10 @@ ls -lh mcp-servers/data/index.db
 | `search_sharepoint_docs(query)` | Search BA specs by keyword | Find related specs, impact analysis |
 | `get_sharepoint_file_content(itemId)` | Read full spec content | Deep dive into specific spec |
 | `list_sharepoint_files(folderPath?, fileType?)` | Browse spec folders | Explore available specs |
+| `search_notion_specs(query)` | Search Notion specs (FTS5) | Find specs, feature details, business rules |
+| `get_notion_page(pageId)` | Read full Notion page content | Deep dive into specific Notion spec |
+| `list_notion_specs(cursor?)` | List all Notion spec titles + IDs | Browse Notion spec index |
+| `refresh_notion_index(force?)` | Re-crawl and rebuild Notion index | Update index with new specs |
 | `get_release_notes(keyword)` | Search release notes | Check existing features, known bugs |
 | `list_doc_pages()` | List release note pages | Browse documentation index |
 
@@ -389,8 +389,12 @@ npx tsx mcp-servers/crawler.ts release-notes
 # Crawl SharePoint specs (requires Azure credentials)
 npx tsx mcp-servers/crawler.ts sharepoint
 
+# Crawl Notion specs (uses Playwright to browse Notion)
+npx tsx mcp-servers/crawler.ts notion
+
 # Force full re-index (skip delta sync)
 npx tsx mcp-servers/crawler.ts sharepoint --force
+npx tsx mcp-servers/crawler.ts notion --force
 ```
 
 **Delta sync:** Crawler only re-indexes files with newer `modified_at` timestamp.
@@ -410,6 +414,7 @@ When uploading a spec and asking to generate test cases:
 2. **Search DB for Context** (Automatic via MCP):
    ```
    search_sharepoint_docs("feature_keyword")  → Related specs, impacts
+   search_notion_specs("feature_keyword")     → BA specs, business rules
    get_release_notes("feature_keyword")       → Known bugs, existing features
    ```
 3. **Generate Test Cases** — Categories: Happy Path, Edge Cases, Negative, Impact, Integration
@@ -421,8 +426,9 @@ When uploading a spec and asking to generate test cases:
 # Generate test cases from spec
 Generate test cases cho spec này [attach file]
 
-# Search for related specs
+# Search for related specs (SharePoint + Notion)
 Search SharePoint for "COP Date Changes"
+Search Notion for "suspended asset"
 
 # Get release notes
 Get release notes for November 2024

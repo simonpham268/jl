@@ -39,6 +39,11 @@ yarn.lock
 /build/
 *.tsbuildinfo
 
+# Documentation (ignore generated/downloaded files, keep folder structure)
+docs/*.md
+docs/*.xlsx
+docs/*.csv
+
 # Logs
 logs/
 *.log

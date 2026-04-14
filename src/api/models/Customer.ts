@@ -52,6 +52,11 @@ export interface CreateCustomerRequest {
     ContactPosition?: string;
 }
 
+/** Required fields for CreateCustomerRequest - used by buildFormData */
+export const CREATE_CUSTOMER_REQUIRED_FIELDS: (keyof CreateCustomerRequest)[] = [
+  'Name'
+];
+
 export interface CreateCustomerResponse {
     success: boolean;
     errors: string[];

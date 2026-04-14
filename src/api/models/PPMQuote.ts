@@ -89,6 +89,15 @@ export interface CreatePPMQuoteRequest {
     ExcludeWeekends?: boolean;
 }
 
+/** Required fields for CreatePPMQuoteRequest - used by buildFormData */
+export const CREATE_PPM_QUOTE_REQUIRED_FIELDS: (keyof CreatePPMQuoteRequest)[] = [
+  'StartDate',
+  'EndDate',
+  'PPMCustomerId',
+  'PPMSiteId',
+  'PPMSellingRateId'
+];
+
 export interface CreatePPMQuoteResponse {
     success: boolean;
     errors: string[];

@@ -2,6 +2,8 @@ import type { ApiClient } from '../base/ApiClient';
 import type { ApiResponse, PaginatedResponse } from '../base/ApiResponse';
 import { SITE_ENDPOINTS } from '../endpoints/site.endpoints';
 import type { Site, CreateSiteRequest, CreateSiteResponse, UpdateSiteRequest } from '../models/Site';
+import { CREATE_SITE_REQUIRED_FIELDS } from '../models/Site';
+import { buildFormData } from '../utils/formBuilder';
 
 export interface SiteListParams {
     page?: number;
@@ -35,37 +37,8 @@ export class SiteService {
   }
 
   async createSite(data: CreateSiteRequest): Promise<ApiResponse<CreateSiteResponse>> {
-    const form: Record<string, string | number> = {
-      // Required fields
-      CustomerId: data.CustomerId,
-      CustomerName: data.CustomerName,
-      Name: data.Name,
-    };
-
-    // Optional - Address
-    if (data.AreaId) form.AreaId = data.AreaId;
-    if (data.Address1) form.Address1 = data.Address1;
-    if (data.Address2) form.Address2 = data.Address2;
-    if (data.Address3) form.Address3 = data.Address3;
-    if (data.Address4) form.Address4 = data.Address4;
-    if (data.Postcode) form.Postcode = data.Postcode;
-    if (data.Telephone) form.Telephone = data.Telephone;
-    if (data.FullTelephone) form.FullTelephone = data.FullTelephone;
-    if (data.Latitude) form.Latitude = data.Latitude;
-    if (data.Longitude) form.Longitude = data.Longitude;
-
-    // Optional - Contact
-    if (data.ContactFirstName) form.ContactFirstName = data.ContactFirstName;
-    if (data.ContactLastName) form.ContactLastName = data.ContactLastName;
-    if (data.ContactPosition) form.ContactPosition = data.ContactPosition;
-    if (data.ContactEmail) form.ContactEmail = data.ContactEmail;
-    if (data.ContactTelephone) form.ContactTelephone = data.ContactTelephone;
-    if (data.FullContactTelephone) form.FullContactTelephone = data.FullContactTelephone;
-
-    // Optional - Other
-    if (data.CustomReference) form.CustomReference = data.CustomReference;
-    if (data.AccountManagerId) form.AccountManagerId = data.AccountManagerId;
-    if (data.ParentSiteId) form.ParentSiteId = data.ParentSiteId;    return this.client.post<CreateSiteResponse>(SITE_ENDPOINTS.CREATE, { form });
+    const form = buildFormData(data, CREATE_SITE_REQUIRED_FIELDS);
+    return this.client.post<CreateSiteResponse>(SITE_ENDPOINTS.CREATE, { form });
   }
 
   async updateSite(id: string | number, data: UpdateSiteRequest): Promise<ApiResponse<Site>> {

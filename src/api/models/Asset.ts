@@ -98,6 +98,13 @@ export interface CreateAssetRequest {
     Taps?: string;
 }
 
+/** Required fields for CreateAssetRequest - used by buildFormData */
+export const CREATE_ASSET_REQUIRED_FIELDS: (keyof CreateAssetRequest)[] = [
+  'CustomerId',
+  'SiteId',
+  'Description'
+];
+
 export interface CreateAssetResponse {
     success: boolean;
     errors: string[];

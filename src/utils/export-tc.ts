@@ -1,6 +1,6 @@
 /// <reference types="node" />
 /**
- * Export TC markdown test cases to Excel using Template TC.xlsx
+ * Export TC markdown test cases to Excel using template/Template TC.xlsx
  *
  * Usage:
  *   npx tsx src/utils/export-tc.ts TC-FILE.md
@@ -17,8 +17,8 @@ import path from 'path';
 // ─── Paths ─────────────────────────────────────────────────────────────────────
 
 // __dirname = <root>/src/utils
-const TEMPLATE_PATH = path.join(__dirname, '..', '..', 'Template TC.xlsx');
-const TC_DIR = path.join(__dirname, '..', 'tests', 'test-cases');
+const TEMPLATE_PATH = path.join(__dirname, '..', '..', 'template', 'Template TC.xlsx');
+const TC_DIR = path.join(__dirname, '..', '..', 'docs');
 const DEFAULT_AREA = 'TMS\\QC Team\\JLWeb Test Cases\\';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────

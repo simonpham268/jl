@@ -55,6 +55,13 @@ export interface CreateSiteRequest {
     ParentSiteId?: string | number;
 }
 
+/** Required fields for CreateSiteRequest - used by buildFormData */
+export const CREATE_SITE_REQUIRED_FIELDS: (keyof CreateSiteRequest)[] = [
+  'CustomerId',
+  'CustomerName',
+  'Name'
+];
+
 export interface CreateSiteResponse {
     success: boolean;
     errors: string[];
