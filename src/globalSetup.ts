@@ -40,8 +40,8 @@ export default async function globalSetup() {
     await loginPage.goToBaseURL(baseUrl);
     await loginPage.login(username, password);
 
-    await page.waitForURL('**/Dashboard**', { timeout: 60000 }).catch(() => {
-      return page.waitForURL('**/', { timeout: 60000 });
+    await page.waitForFunction(() => document.title.includes('Dashboard'), { timeout: 60000 }).catch(() => {
+      return page.waitForLoadState('domcontentloaded', { timeout: 60000 });
     });
 
     console.log('Login successful, saving authentication state...');
