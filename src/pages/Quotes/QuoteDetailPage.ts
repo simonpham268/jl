@@ -44,6 +44,18 @@ export interface QuoteDetailData {
  * URL Pattern: /Quote/Detail/{quoteId}
  */
 export class QuoteDetailPage extends BasePage {
+  // DOM name mapping: display name → id suffix used in #body-{dom} and tr[class*="{dom}-Collapse"]
+  private readonly costHeaderDomNames: Record<string, string> = {
+    'Labour': 'Labour',
+    'Travel': 'Travel',
+    'Material': 'Material',
+    'Expenses': 'Expense',
+    'Call-out': 'Callout',
+    'Other': 'Other',
+    'Subcontractor': 'Subcontractor',
+    'Schedule of Rates': 'ScheduleOfRates',
+  };
+
   // ========================
   // Locators - Page Header
   // ========================
@@ -130,6 +142,19 @@ export class QuoteDetailPage extends BasePage {
   readonly rejectModalCloseButton: Locator;
 
   // ========================
+  // Locators - Prices Tab / SOR Toggle
+  // ========================
+  readonly sorToggle: Locator;
+  readonly sorLabel: Locator;
+  readonly pricesTable: Locator;
+  readonly loadingOverlay: Locator;
+  readonly costHeaderEnableBtn: (headerName: string) => Locator;
+  readonly costHeaderCollapseRows: (domName: string) => Locator;
+  readonly costHeaderChargeableCell: (domName: string) => Locator;
+  readonly sorItemDropdownIcon: Locator;
+  readonly sorFirstOption: Locator;
+
+  // ========================
   // Locators - Toast & Modal
   // ========================
   readonly toastMessage: Locator;
@@ -147,8 +172,8 @@ export class QuoteDetailPage extends BasePage {
     this.statusBadge = page.locator('h3').locator('[class*="badge"], [class*="status"]');
 
     // Tabs
-    this.detailsTab = page.getByRole('link', { name: 'Details', exact: true });
-    this.pricesTab = page.getByRole('link', { name: 'Prices', exact: true });
+    this.detailsTab = page.locator('a[href="#detailTab"][data-toggle="tab"], a[data-toggle="tab"]:has-text("Details")').first();
+    this.pricesTab = page.locator('a[href="#priceTab"][data-toggle="tab"]');
     this.contactsTab = page.getByRole('link', { name: 'Contacts', exact: true });
     this.assetsTab = page.getByRole('link', { name: 'Assets', exact: true });
     this.historyButton = page.getByRole('button', { name: 'History' });
@@ -214,6 +239,20 @@ export class QuoteDetailPage extends BasePage {
     this.rejectModalTextarea = this.rejectModal.locator('textarea').first();
     this.rejectModalSaveButton = this.rejectModal.getByRole('button', { name: /save/i });
     this.rejectModalCloseButton = this.rejectModal.getByRole('button', { name: /close|cancel/i });
+
+    // Prices Tab / SOR Toggle
+    this.sorToggle = page.locator('.toggle-sor input.v-switch-input');
+    this.sorLabel = page.locator('.toggle-sor label.jl-toggle-enable');
+    this.pricesTable = page.locator('table.nested-tr-table');
+    this.loadingOverlay = page.locator('section.jl-content-wrap.loading');
+    this.costHeaderEnableBtn = (headerName: string) =>
+      page.locator(`#body-${this.costHeaderDomNames[headerName] ?? headerName} .jl-action-btns .jl-icon-green`);
+    this.costHeaderCollapseRows = (domName: string) =>
+      page.locator(`tr[class*="${domName}-Collapse"]`);
+    this.costHeaderChargeableCell = (domName: string) =>
+      page.locator(`tr[class*="${domName}-Collapse"] td`).filter({ hasText: /^(YES|NO)$/ }).first();
+    this.sorItemDropdownIcon = page.locator('.jl-select:has(input[name="jl-select-sorlibraryitem"]) .jl__open-indicator');
+    this.sorFirstOption = page.getByRole('option').first();
 
     // Toast & Modal
     this.toastMessage = page.locator('.toast, [class*="toast"], [role="alert"]');
@@ -713,6 +752,154 @@ export class QuoteDetailPage extends BasePage {
     await test.step('Cancel action', async () => {
       await this.confirmNoButton.click();
       await this.confirmModal.waitFor({ state: 'hidden', timeout: 5000 });
+    });
+  }
+
+  // ========================
+  // Prices Tab / SOR Toggle
+  // ========================
+
+  /**
+   * Check if SOR toggle is currently enabled (checked)
+   */
+  async isSorToggleChecked(): Promise<boolean> {
+    return await test.step('Check if SOR toggle is checked', async () => {
+      await this.sorToggle.waitFor({ state: 'attached', timeout: 10000 });
+      return await this.sorToggle.isChecked();
+    });
+  }
+
+  /**
+   * Toggle the SOR toggle to a specific state (or flip it if forceState is not provided)
+   * Waits for the loading overlay to appear and disappear after toggling
+   */
+  async toggleSorToggle(forceState?: boolean): Promise<void> {
+    await test.step(`Toggle SOR toggle to ${forceState !== undefined ? (forceState ? 'ON' : 'OFF') : 'opposite'}`, async () => {
+      await this.sorToggle.waitFor({ state: 'attached', timeout: 10000 });
+      const currentState = await this.sorToggle.isChecked();
+      const shouldClick = forceState === undefined || currentState !== forceState;
+      if (shouldClick) {
+        await this.sorLabel.click();
+        // Spinner may appear and disappear faster than Playwright can poll — catch that race condition
+        try {
+          await this.loadingOverlay.waitFor({ state: 'attached', timeout: 3000 });
+        } catch {
+          // Spinner appeared and disappeared before we could catch it — that's fine
+        }
+        // Always wait for spinner to be gone (succeeds immediately if already detached)
+        await this.loadingOverlay.waitFor({ state: 'detached', timeout: 30000 });
+        await this.page.waitForLoadState('domcontentloaded');
+        // Wait for prices table to be visible — ensures DOM has fully re-rendered after toggle
+        await this.pricesTable.waitFor({ state: 'visible', timeout: 15000 });
+      }
+    });
+  }
+
+  /**
+   * Enable a cost header row by clicking the enable (green) button and saving
+   * @param headerName - Display name of the header (e.g. 'Labour', 'Travel')
+   */
+  private async enableCostHeaderRow(headerName: string): Promise<void> {
+    await test.step(`Enable cost header row: ${headerName}`, async () => {
+      const btn = this.costHeaderEnableBtn(headerName);
+      await btn.waitFor({ state: 'visible', timeout: this.elementTimeout });
+      await btn.click();
+
+      // Schedule of Rates requires selecting an item from a combobox before saving
+      if (headerName === 'Schedule of Rates') {
+        await this.sorItemDropdownIcon.waitFor({ state: 'visible', timeout: 10000 });
+        await this.sorItemDropdownIcon.click();
+        await this.sorFirstOption.waitFor({ state: 'visible', timeout: 5000 });
+        await this.sorFirstOption.click();
+      }
+
+      await this.saveButton.waitFor({ state: 'visible', timeout: 15000 });
+      await this.saveButton.click();
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  /**
+   * Enable multiple cost header rows by name
+   * @param headers - Array of display names (e.g. ['Labour', 'Travel', 'Material'])
+   */
+  async enableCostHeaderRows(headers: string[]): Promise<void> {
+    await test.step(`Enable cost header rows: ${headers.join(', ')}`, async () => {
+      for (const header of headers) {
+        await this.enableCostHeaderRow(header);
+      }
+    });
+  }
+
+  /**
+   * Get the chargeable status (YES/NO) of a cost header's line items
+   * @param headerName - Display name of the header (e.g. 'Labour')
+   */
+  async getCostHeaderChargeableStatus(headerName: string): Promise<string> {
+    return await test.step(`Get chargeable status for ${headerName}`, async () => {
+      const domName = this.costHeaderDomNames[headerName] ?? headerName;
+      const count = await this.costHeaderChargeableCell(domName).count();
+      if (count === 0) return 'EMPTY';
+      return (await this.costHeaderChargeableCell(domName).textContent())?.trim() || '';
+    });
+  }
+
+  /**
+   * Verify that a cost header's line items are all NonChargeable (NO)
+   */
+  async verifyCostHeaderIsNonChargeable(headerName: string): Promise<boolean> {
+    return await test.step(`Verify ${headerName} is NonChargeable`, async () => {
+      const status = await this.getCostHeaderChargeableStatus(headerName);
+      return status === 'NO';
+    });
+  }
+
+  /**
+   * Get all non-SOR cost header display names that have line items in the prices table
+   */
+  async getNonSorCostHeaders(): Promise<string[]> {
+    return await test.step('Get all non-SOR cost headers that have line items', async () => {
+      const allHeaders: Array<{ display: string; dom: string }> = [
+        { display: 'Labour', dom: 'Labour' },
+        { display: 'Travel', dom: 'Travel' },
+        { display: 'Material', dom: 'Material' },
+        { display: 'Expenses', dom: 'Expense' },
+        { display: 'Call-out', dom: 'Callout' },
+        { display: 'Other', dom: 'Other' },
+        { display: 'Subcontractor', dom: 'Subcontractor' },
+      ];
+      const available: string[] = [];
+      for (const h of allHeaders) {
+        const count = await this.costHeaderCollapseRows(h.dom).count();
+        if (count > 0) available.push(h.display);
+      }
+      return available;
+    });
+  }
+
+  /**
+   * Verify all non-SOR cost headers with line items are NonChargeable
+   * Returns true if all are NO, false if any are YES
+   */
+  async verifyAllNonSorHeadersNonChargeable(): Promise<boolean> {
+    return await test.step('Verify all non-SOR headers are NonChargeable', async () => {
+      const headers = await this.getNonSorCostHeaders();
+      for (const header of headers) {
+        const isNonChargeable = await this.verifyCostHeaderIsNonChargeable(header);
+        if (!isNonChargeable) return false;
+      }
+      return true;
+    });
+  }
+
+  /**
+   * Verify the Schedule of Rates Cost Header remains Chargeable (YES) after SOR toggle is activated
+   * The SOR header should NOT become NonChargeable when the SOR toggle is turned ON
+   */
+  async verifySorCostHeaderIsChargeable(): Promise<boolean> {
+    return await test.step('Verify Schedule of Rates Cost Header is still Chargeable', async () => {
+      const status = await this.getCostHeaderChargeableStatus('Schedule of Rates');
+      return status === 'YES';
     });
   }
 }

@@ -121,13 +121,13 @@ export class StockRecordDetailPage extends BasePage {
     this.numberInput = page.locator('text=Number').locator('..').getByRole('textbox');
     this.descriptionInput = page.locator('text=Description').locator('..').getByRole('textbox');
     this.referenceInput = page.locator('text=Reference').locator('..').getByRole('textbox');
-    this.pricePerUnitInput = page.locator('text=Price Per Unit').locator('..').getByRole('spinbutton, textbox');
-    this.sellPerUnitInput = page.locator('text=Sell Per Unit').locator('..').getByRole('spinbutton, textbox');
+    this.pricePerUnitInput = page.locator('text=Price Per Unit').locator('..').locator('input');
+    this.sellPerUnitInput = page.locator('text=Sell Per Unit').locator('..').locator('input');
     this.unitDropdown = page.locator('text=Unit').locator('..').locator('[role="combobox"], [class*="multiselect"]');
     this.stockTypeDropdown = page.locator('text=Stock Type').locator('..').locator('[role="combobox"], [class*="multiselect"]');
     this.supplierDropdown = page.locator('text=Supplier').locator('..').locator('[role="combobox"], [class*="multiselect"]');
-    this.reorderLevelInput = page.locator('text=Reorder Level').locator('..').getByRole('spinbutton, textbox');
-    this.reorderQuantityInput = page.locator('text=Reorder Quantity').locator('..').getByRole('spinbutton, textbox');
+    this.reorderLevelInput = page.locator('text=Reorder Level').locator('..').locator('input');
+    this.reorderQuantityInput = page.locator('text=Reorder Quantity').locator('..').locator('input');
 
     // Stock Location Section
     this.addLocationButton = page.getByRole('button', { name: /Add.*Location/i });

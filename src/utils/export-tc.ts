@@ -30,7 +30,7 @@ const SYSTEM_TAGS = new Set(['smoke', 'regression', 'edge-case']);
 
 const FILL_YELLOW: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
 const FILL_WHITE: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { theme: 0 } };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const FILL_BLUE: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { theme: 9, tint: 0.79998168889431 } as any };
 
 const FONT_BASE: Partial<ExcelJS.Font> = { size: 10, name: 'Arial' };

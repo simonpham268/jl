@@ -104,6 +104,7 @@ export interface CreateQuoteResponse {
     errors: string[];
     Message: string | null;
     WarningMessage: string | null;
+    redirectUrl?: string | null;
     QuoteId?: string | number;
     AdditionalData?: {
         QuoteId?: string | number;

@@ -90,25 +90,25 @@ export default defineConfig({
 
     },
 
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-        deviceScaleFactor: undefined,
-        launchOptions: {
-          args: [
-            '--start-maximized',
-            '--disable-notifications',
-            '--disable-geolocation',
-            '--disable-infobars',
-            '--disable-features=TranslateUI',
-            '--disable-translate',
-            '--lang=en-US',],
-
-        },
-        headless: !!process.env.CI,
-        viewport: null
-      },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: {
+    //     ...devices['Desktop Firefox'],
+    //     deviceScaleFactor: undefined,
+    //     launchOptions: {
+    //       args: [
+    //         '--start-maximized',
+    //         '--disable-notifications',
+    //         '--disable-geolocation',
+    //         '--disable-infobars',
+    //         '--disable-features=TranslateUI',
+    //         '--disable-translate',
+    //         '--lang=en-US',],
+    //
+    //     },
+    //     headless: !!process.env.CI,
+    //     viewport: null
+    //   },
+    // },
   ],
 });
