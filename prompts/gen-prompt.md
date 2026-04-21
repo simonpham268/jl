@@ -40,7 +40,7 @@
 14. When user attaches `.md` files with "generate test script": follow ALL attached files STRICTLY (test cases, framework guidelines, intent-mapping). Attached docs override defaults. Never deviate
 15. Auto-generate test header: `/** ID: {id} Tags: {tags} */ test('[TC{id}] @{tag} @Regression: {desc}', ...)`
 16. Use Data Builder pattern — import from `data/uiData/`
-17. Use high-level `createNewEntity(data)` instead of individual field methods
+17. **Multi-step Collapse** — any action with numbered sub-steps → collapse into ONE parent method named after the parent action (see mapping-prompt.md Multi-step Collapse Rule). Applies to forms, modals, workflows, confirmations — not just create pages. Never generate individual sub-calls per numbered step
 18. **API services for preconditions** — 3 methods:
     ```typescript
     // Method 1: Basic (env-based, no specific fields)
@@ -269,4 +269,4 @@ npx playwright test --reporter=allure-playwright  # Allure
 
 ## References
 - [Playwright Docs](https://playwright.dev) · [POM](https://playwright.dev/docs/pom) · [Best Practices](https://playwright.dev/docs/best-practices)
-- [Intent Mapping Rules](./intent-mapping.md)
+- [Intent Mapping Rules](./mapping-prompt.md)

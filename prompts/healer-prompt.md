@@ -22,10 +22,20 @@ Fix these in order. Only touch the **current failure point**, never code that al
 
 **Trigger**: `element not found`, `timeout waiting for selector`
 
-Inspect live DOM, update locators with 2-3 fallback selectors:
+**Step 1 — Inspect live DOM with `test_debug`:**
+Run the failing spec in debug mode to inspect the DOM at the exact failure point:
+```
+test_debug → src/tests/<file>.spec.ts
+```
+Use the snapshot to find the real element: role, label, `data-testid`, `id`.
+
+**Step 2 — Write correct locator (priority order):**
 ```typescript
-// ❌ page.locator('#old-selector')
-// ✅ page.locator('#new-selector, [data-testid="element"], .fallback-class').first()
+// Priority: Role-based → data-testid → ID → CSS
+// ✅ this.page.getByRole('button', { name: /save/i })
+// ✅ this.page.locator('[data-testid="save-btn"]')
+// ✅ this.page.locator('#save-button')
+// ✅ this.page.locator('#new-selector, [data-testid="element"]').first()  // CSS last resort
 ```
 
 ### P1.2 — Stuck Test / Timing Healing
@@ -40,6 +50,12 @@ Inspect live DOM, update locators with 2-3 fallback selectors:
 
 **Trigger**: Click/fill failures, element not interactable
 
+**Step 1 — Inspect with `test_debug`** to understand WHY the element is not interactable:
+- Hidden behind another element?
+- Disabled state?
+- Not yet rendered (timing issue)?
+
+**Step 2 — Apply fix based on finding:**
 Before interacting: `waitFor({ state: 'visible' })` → `scrollIntoViewIfNeeded()` → action.
 
 ### P1.4 — API Response & Service Healing

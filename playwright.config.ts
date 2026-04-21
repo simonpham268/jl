@@ -9,17 +9,17 @@ const environment = process.env.ENVIRONMENT || 'uat';
 const envFile = `.env.${environment}`;
 const envPath = path.resolve(__dirname, envFile);
 
-console.log(`Loading environment configuration: ${envFile}`);
-dotenv.config({ path: envPath });
+process.stderr.write(`Loading environment configuration: ${envFile}\n`);
+dotenv.config({ path: envPath, quiet: true });
 
 // Validate that the environment file exists
 if (!fs.existsSync(envPath)) {
-  console.warn(`Warning: Environment file ${envFile} not found. Using system environment variables.`);
+  process.stderr.write(`Warning: Environment file ${envFile} not found. Using system environment variables.\n`);
   // Fallback to .env.uat if the specified environment file doesn't exist
   const fallbackPath = path.resolve(__dirname, '.env.uat');
   if (fs.existsSync(fallbackPath)) {
-    console.log(`Falling back to .env.uat`);
-    dotenv.config({ path: fallbackPath });
+    process.stderr.write(`Falling back to .env.uat\n`);
+    dotenv.config({ path: fallbackPath, quiet: true });
   }
 }
 

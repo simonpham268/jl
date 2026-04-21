@@ -143,37 +143,37 @@ export class QuotePage extends BasePage {
 
     // Customer & Site Section
     this.customerCombobox = page.locator('text=Customer *').locator('..').locator('[role="combobox"]');
-    this.customerSearchbox = page.locator('text=Customer *').locator('..').locator('input[role="searchbox"]');
+    this.customerSearchbox = page.locator('text=Customer *').locator('..').getByRole('searchbox');
     this.customerClearButton = page.locator('text=Customer *').locator('..').getByRole('button', { name: 'Clear Selected' });
     this.siteCombobox = page.locator('text=Site *').locator('..').locator('[role="combobox"]');
-    this.siteSearchbox = page.locator('text=Site *').locator('..').locator('input[role="searchbox"]');
+    this.siteSearchbox = page.locator('text=Site *').locator('..').getByRole('searchbox');
     this.siteClearButton = page.locator('text=Site *').locator('..').getByRole('button', { name: 'Clear Selected' });
     this.logFromTemplateCheckbox = page.getByText('Log Quote from Template').locator('..').locator('input[type="checkbox"]');
     this.logFromRecentQuoteCheckbox = page.getByText('Log Quote from Recent Quote').locator('..').locator('input[type="checkbox"]');
 
     // Quote Details Section
     this.quoteDetailsHeading = page.locator('h4:has-text("Quote Details")');
-    this.jobTypeCombobox = page.locator('text=Job Type *').locator('..').locator('[role="combobox"]');
-    this.jobTypeSearchbox = page.locator('text=Job Type *').locator('..').locator('input[role="searchbox"]');
-    this.jobTypeClearButton = page.locator('text=Job Type *').locator('..').getByRole('button', { name: 'Clear Selected' });
+    this.jobTypeCombobox = page.locator('text=Job Type *').locator('xpath=../..').locator('[role="combobox"]');
+    this.jobTypeSearchbox = page.locator('text=Job Type *').locator('xpath=../..').getByRole('searchbox');
+    this.jobTypeClearButton = page.locator('text=Job Type *').locator('xpath=../..').getByRole('button', { name: 'Clear Selected' });
     this.jobCategoryCombobox = page.locator('text=Job Category').locator('..').locator('[role="combobox"]');
-    this.jobCategorySearchbox = page.locator('text=Job Category').locator('..').locator('input[role="searchbox"]');
+    this.jobCategorySearchbox = page.locator('text=Job Category').locator('..').getByRole('searchbox');
     this.descriptionTextbox = page.locator('text=Description*').locator('..').locator('input[type="text"], textarea');
     this.tagsDropdown = page.locator('text=Tag(s)').locator('..').locator('[class*="multiselect"]');
     this.titleInput = page.locator('text=Title').locator('..').locator('input[type="text"]');
     this.quoteReferenceNumberInput = page.locator('text=Quote Reference Number').locator('..').locator('input[type="text"]');
     this.sourceOfEnquiryCombobox = page.locator('text=Source of Enquiry').locator('..').locator('[role="combobox"]');
-    this.sourceOfEnquirySearchbox = page.locator('text=Source of Enquiry').locator('..').locator('input[role="searchbox"]');
+    this.sourceOfEnquirySearchbox = page.locator('text=Source of Enquiry').locator('..').getByRole('searchbox');
     this.quoteTradeCombobox = page.locator('text=Quote Trade').locator('..').locator('[role="combobox"]');
-    this.quoteTradeSearchbox = page.locator('text=Quote Trade').locator('..').locator('input[role="searchbox"]');
+    this.quoteTradeSearchbox = page.locator('text=Quote Trade').locator('..').getByRole('searchbox');
     this.priorityLevelCombobox = page.locator('text=Priority Level').locator('..').locator('[role="combobox"]');
-    this.priorityLevelSearchbox = page.locator('text=Priority Level').locator('..').locator('input[role="searchbox"]');
+    this.priorityLevelSearchbox = page.locator('text=Priority Level').locator('..').getByRole('searchbox');
     this.quoteRef1Input = page.locator('text=Quote Ref 1').locator('..').locator('input[type="text"]');
     this.quoteRef2Combobox = page.locator('text=Quote Ref 2').locator('..').locator('[role="combobox"]');
-    this.quoteRef2Searchbox = page.locator('text=Quote Ref 2').locator('..').locator('input[role="searchbox"]');
+    this.quoteRef2Searchbox = page.locator('text=Quote Ref 2').locator('..').getByRole('searchbox');
     this.expiryDateInput = page.getByPlaceholder('DD/MM/YYYY').first();
     this.quoteOwnerCombobox = page.locator('text=Quote Owner *').locator('..').locator('[role="combobox"]');
-    this.quoteOwnerSearchbox = page.locator('text=Quote Owner *').locator('..').locator('input[role="searchbox"]');
+    this.quoteOwnerSearchbox = page.locator('text=Quote Owner *').locator('..').getByRole('searchbox');
     this.quoteOwnerClearButton = page.locator('text=Quote Owner *').locator('..').getByRole('button', { name: 'Clear Selected' });
     this.expectedSaleDateInput = page.locator('text=Expected Sale Date').locator('..').locator('input[placeholder="DD/MM/YYYY"]');
     this.chanceOfSaleSlider = page.locator('text=Chance of Sale').locator('..').locator('[role="slider"], input[type="range"]');

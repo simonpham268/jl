@@ -34,7 +34,8 @@
     "export:notion": "npx tsx mcp-servers/notion-exporter.ts",
     "export:notion:force": "npx tsx mcp-servers/notion-exporter.ts --force",
     "export:notion:sp": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint",
-    "export:notion:sp:force": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint --force"
+    "export:notion:sp:force": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint --force",
+    "test:quick": "npx playwright test --reporter=line --project=chromium"
   },
   "keywords": [],
   "author": "",

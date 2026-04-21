@@ -220,10 +220,10 @@ export class JobPage extends BasePage {
 
     // Customer & Site Section
     this.customerCombobox = page.locator('#jlCustomerJob_Id__combobox');
-    this.customerSearchbox = page.locator('#jlCustomerJob_Id__combobox').locator('input[role="searchbox"]');
+    this.customerSearchbox = page.getByRole('searchbox', { name: 'Customer' });
     this.customerClearButton = page.locator('#jlCustomerJob_Id__combobox').getByRole('button', { name: 'Clear Selected' });
     this.siteCombobox = page.locator('#jlSiteJob_Id__combobox');
-    this.siteSearchbox = page.locator('#jlSiteJob_Id__combobox').locator('input[role="searchbox"]');
+    this.siteSearchbox = page.locator('#jlSiteJob_Id__combobox').getByRole('searchbox');
     this.siteClearButton = page.locator('#jlSiteJob_Id__combobox').getByRole('button', { name: 'Clear Selected' });
     this.logFromRecentJobCheckbox = page.getByText('Log Job from Recent Job').locator('..').locator('input[type="checkbox"]');
     this.logFromTemplateCheckbox = page.getByText('Log Job from Template').locator('..').locator('input[type="checkbox"]');
