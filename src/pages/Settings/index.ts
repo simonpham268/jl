@@ -6,6 +6,7 @@ export * from './LibraryPage';
 
 // Company & System Setup
 export * from './CompanySetupPage';
+export * from './SystemSetupPage';
 
 // User Management
 export * from './StaffPage';

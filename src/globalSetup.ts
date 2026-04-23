@@ -30,7 +30,7 @@ export default async function globalSetup() {
   console.log('Setting up authentication...');
   const baseUrl = requireEnv('BASE_URL');
   const username = requireEnv('USR');
-  const password = requireEnv('PWD');
+  const password = requireEnv('PSW');
 
   const browser = await chromium.launch();
   const page = await browser.newPage();
