@@ -1,7 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
 import { BasePage } from '../BasePage';
-import { sendKeyAndSelectItemOnDropdown } from '../../utils/DropdownUtils';
 import { ROUNDING_OPTION, ROUNDING_DURATION } from "../../constants/RoundingConst";
 import { JLDropdownElements } from '../Commons/JLDropdownElements';
 import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
@@ -12,9 +11,7 @@ import { NavigateUtils } from '../../utils/NavigateUtils';
  * System Setup Page Object
  * URL: /Setting/SystemSetup
  */
-export class SystemSetupPage {
-  readonly page: Page;
-
+export class SystemSetupPage extends BasePage {
   // Edit button
   readonly editButton: Locator;
   readonly saveButton: Locator; // TODO: verify in DOM
@@ -42,7 +39,7 @@ export class SystemSetupPage {
   readonly preserveUpliftDiscountVisual: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
 
     // Edit button
     this.editButton = page.locator('button#editButton');
@@ -72,10 +69,6 @@ export class SystemSetupPage {
     this.dropdownRoundingDuration = page.locator('//input[@aria-labelledby=\'jlRoundingDuration__combobox\']'); // TODO: verify in DOM
     this.jlDropdown = new JLDropdownElements(page);
     this.preserveUpliftCheckbox = page.locator('//input[contains(@name,\'Desktop.IsPreserveEnteredUpliftDiscountPercentage\')]/following-sibling::span'); // TODO: verify in DOM
-  }
-
-  async navigateToSystemSetup(): Promise<void> {
-    await this.navigate.navigateToSystemSetup();
   }
 
   async clickEdit(): Promise<void> {
@@ -166,24 +159,21 @@ export class SystemSetupPage {
   async configureSystemSettingsForRounding(config: RoundingSettingModel): Promise<void> {
     await test.step('Configure system settings for rounding', async () => {
       // reset to default first to ensure test consistency
-      await sendKeyAndSelectItemOnDropdown(
-          this.page,
+      await this.sendKeyAndSelectItemOnDropdown(
           this.dropdownRoundingOption,
           this.jlDropdown.jlDropdownOptions,
           ROUNDING_OPTION.NO_ROUNDING
         );
 
       if (config.roundingOption !== undefined) {
-        await sendKeyAndSelectItemOnDropdown(
-          this.page,
+        await this.sendKeyAndSelectItemOnDropdown(
           this.dropdownRoundingOption,
           this.jlDropdown.jlDropdownOptions,
           config.roundingOption
         );
       }
       if (config.roundingDuration !== undefined) {
-        await sendKeyAndSelectItemOnDropdown(
-          this.page,
+        await this.sendKeyAndSelectItemOnDropdown(
           this.dropdownRoundingDuration,
           this.jlDropdown.jlDropdownOptions,
           config.roundingDuration
