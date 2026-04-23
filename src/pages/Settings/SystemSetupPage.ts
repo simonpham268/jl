@@ -1,15 +1,23 @@
 import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
+import { BasePage } from '../BasePage';
+import { ROUNDING_OPTION, ROUNDING_DURATION } from "../../constants/RoundingConst";
+import { JLDropdownElements } from '../Commons/JLDropdownElements';
+import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
+
 
 /**
  * System Setup Page Object
  * URL: /Setting/SystemSetup
  */
-export class SystemSetupPage {
-  readonly page: Page;
-
+export class SystemSetupPage extends BasePage {
   // Edit button
   readonly editButton: Locator;
+  readonly saveButton: Locator; // TODO: verify in DOM
+  readonly dropdownRoundingOption: Locator; // TODO: verify in DOM
+  readonly dropdownRoundingDuration: Locator; // TODO: verify in DOM
+  readonly preserveUpliftCheckbox: Locator; // TODO: verify in DOM
+  readonly jlDropdown: JLDropdownElements;
 
   // Rounding Type dropdown
   readonly roundingTypeCombobox: Locator;
@@ -29,7 +37,7 @@ export class SystemSetupPage {
   readonly preserveUpliftDiscountVisual: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
 
     // Edit button
     this.editButton = page.locator('button#editButton');
@@ -50,6 +58,14 @@ export class SystemSetupPage {
     this.preserveUpliftDiscountLabel = page.locator('span.label-disabled:has-text("Preserve Entered Uplift/Discount Percentage")');
     this.preserveUpliftDiscountHelpText = page.locator('.jl-checkbox .glossary.jl-localted');
     this.preserveUpliftDiscountVisual = page.locator('label:has-text("Preserve Entered Uplift/Discount Percentage") span.my-checkbox');
+
+    this.editButton = page.locator('#editButton'); // TODO: verify in DOM
+    this.saveButton = page.locator('button.jl-button-green.jlSaveEditAble.jl-button-save'); // TODO: verify in DOM
+
+    this.dropdownRoundingOption = page.locator('//input[@aria-labelledby=\'jlRoundingType__combobox\']'); // TODO: verify in DOM
+    this.dropdownRoundingDuration = page.locator('//input[@aria-labelledby=\'jlRoundingDuration__combobox\']'); // TODO: verify in DOM
+    this.jlDropdown = new JLDropdownElements(page);
+    this.preserveUpliftCheckbox = page.locator('//input[contains(@name,\'Desktop.IsPreserveEnteredUpliftDiscountPercentage\')]/following-sibling::span'); // TODO: verify in DOM
   }
 
   async clickEdit(): Promise<void> {
@@ -136,4 +152,41 @@ export class SystemSetupPage {
       return !isChecked;
     });
   }
+
+  async configureSystemSettingsForRounding(config: RoundingSettingModel): Promise<void> {
+    await test.step('Configure system settings for rounding', async () => {
+      // reset to default first to ensure test consistency
+      await this.sendKeyAndSelectItemOnDropdown(
+          this.dropdownRoundingOption,
+          this.jlDropdown.jlDropdownOptions,
+          ROUNDING_OPTION.NO_ROUNDING
+        );
+
+      if (config.roundingOption !== undefined) {
+        await this.sendKeyAndSelectItemOnDropdown(
+          this.dropdownRoundingOption,
+          this.jlDropdown.jlDropdownOptions,
+          config.roundingOption
+        );
+      }
+      if (config.roundingDuration !== undefined) {
+        await this.sendKeyAndSelectItemOnDropdown(
+          this.dropdownRoundingDuration,
+          this.jlDropdown.jlDropdownOptions,
+          config.roundingDuration
+        );
+      }
+      if (config.preserveUplift !== undefined) {
+        await this.preserveUpliftCheckbox.click();
+      }
+    });
+  }
+
+  async clickSave(): Promise<void> {
+    await test.step('Click Save button', async () => {
+      await this.saveButton.click();
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
 }

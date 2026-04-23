@@ -1,4 +1,5 @@
 import type { Page, Locator } from '@playwright/test';
+import { test } from '@playwright/test';
 import { requireEnv } from '../utils/require.env';
 
 /**
@@ -31,7 +32,10 @@ export class BasePage {
   }
 
   async navigateTo(path: string): Promise<void> {
-    await this.page.goto(path);
+    await test.step(`Navigate to ${path}`, async () => {
+      await this.page.goto(path);
+      await this.page.waitForLoadState('domcontentloaded');
+    });
   }
 
   // ========================
@@ -104,5 +108,54 @@ export class BasePage {
 
   async waitForLocatorToDisappear(locator: Locator, timeout?: number): Promise<void> {
     await locator.waitFor({ state: 'hidden', timeout: timeout ?? this.waitDisappearTimeout });
+  }
+
+  // ========================
+  // Dropdown Methods
+  // ========================
+
+  async sendKeyAndSelectItemOnDropdown(
+    textBoxSelector: Locator,
+    optionItemSelector: Locator,
+    text: string,
+    textSelected?: string,
+    isDelay: boolean = false,
+    textBoxFocusedSelector?: string
+  ): Promise<void> {
+    let textBoxElement: Locator = textBoxSelector;
+    try {
+      await textBoxElement.scrollIntoViewIfNeeded();
+      await textBoxElement.click();
+      await this.page.waitForTimeout(100);
+
+      if (textBoxFocusedSelector != null)
+        textBoxElement = this.page.locator(textBoxFocusedSelector);
+
+      await textBoxElement.clear();
+      if (isDelay) {
+        await textBoxElement.pressSequentially(text, { delay: 100 });
+      } else {
+        await textBoxElement.pressSequentially(text);
+      }
+    } catch (error) {
+      throw new Error(`[BasePage] sendKeyAndSelectItemOnDropdown Step 1 failed - could not click/type into textbox with text "${text}": ${error}`);
+    }
+
+    const rawMatch = textSelected ?? text;
+    const matchText = rawMatch.length < 30 ? rawMatch : rawMatch.substring(0, 30);
+    const optionLocator = optionItemSelector.filter({ hasText: matchText });
+
+    try {
+      await optionLocator.first().waitFor({ state: 'visible', timeout: 10000 });
+    } catch (error) {
+      throw new Error(`[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - option with text "${matchText}" did not appear within 10s: ${error}`);
+    }
+
+    try {
+      await optionLocator.first().scrollIntoViewIfNeeded();
+      await optionLocator.first().click();
+    } catch (error) {
+      throw new Error(`[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - could not click option with text "${matchText}": ${error}`);
+    }
   }
 }
