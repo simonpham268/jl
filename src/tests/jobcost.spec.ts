@@ -10,7 +10,6 @@ import { OvertimeCostModal } from '../modals/OvertimeCostModal';
 import { PriceType, LabourCostModel, OvertimeCostModel } from '../models/CostModel';
 import { createBasicApiJobData } from '../data/apiData/job.api.data';
 import { roundTo2Decimals } from '../utils/RoundingUtils';
-import { NavigateUtils } from '../utils/NavigateUtils';
 import { ROUTE } from '../constants/RouteConst';
 
 
@@ -20,20 +19,17 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
   let systemSetupPage: SystemSetupPage;
   let labourCostPage: LabourCostModal;
   let overtimeCostPage: OvertimeCostModal;
-  let navigate: NavigateUtils;
-
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     jobDetailsPage = new JobDetailsPage(page);
     systemSetupPage = new SystemSetupPage(page);
-    navigate = new NavigateUtils(page);
     labourCostPage = new LabourCostModal(page);
     overtimeCostPage = new OvertimeCostModal(page);
     await loginPage.goToBaseURL();
   });
 
   test('TC_28_RQ2 @Smoke : [Jobs > Labour] Preserve entered uplift percentage of Labour when  uplift is authoritative', async ({ jobService }) => {
-    await navigate.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
     const roundingConfig: RoundingSettingModel = {
       roundingOption: ROUNDING_OPTION.ROUND_UP,
@@ -81,7 +77,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
   });
 
   test('TC_29_RQ2 @Smoke : [Jobs > Overtime] Preserve entered uplift percentage of Overtime when uplift is authoritative', async ({ jobService }) => {
-      await navigate.navigateTo(ROUTE.SYSTEM_SETUP);
+      await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
       await systemSetupPage.clickEdit();
       const roundingConfig: RoundingSettingModel = {
         roundingOption: ROUNDING_OPTION.ROUND_UP,

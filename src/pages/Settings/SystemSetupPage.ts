@@ -4,7 +4,6 @@ import { BasePage } from '../BasePage';
 import { ROUNDING_OPTION, ROUNDING_DURATION } from "../../constants/RoundingConst";
 import { JLDropdownElements } from '../Commons/JLDropdownElements';
 import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
-import { NavigateUtils } from '../../utils/NavigateUtils';
 
 
 /**
@@ -19,7 +18,6 @@ export class SystemSetupPage extends BasePage {
   readonly dropdownRoundingDuration: Locator; // TODO: verify in DOM
   readonly preserveUpliftCheckbox: Locator; // TODO: verify in DOM
   readonly jlDropdown: JLDropdownElements;
-  readonly navigate: NavigateUtils;
 
   // Rounding Type dropdown
   readonly roundingTypeCombobox: Locator;
@@ -61,7 +59,6 @@ export class SystemSetupPage extends BasePage {
     this.preserveUpliftDiscountHelpText = page.locator('.jl-checkbox .glossary.jl-localted');
     this.preserveUpliftDiscountVisual = page.locator('label:has-text("Preserve Entered Uplift/Discount Percentage") span.my-checkbox');
 
-    this.navigate = new NavigateUtils(page);
     this.editButton = page.locator('#editButton'); // TODO: verify in DOM
     this.saveButton = page.locator('button.jl-button-green.jlSaveEditAble.jl-button-save'); // TODO: verify in DOM
 

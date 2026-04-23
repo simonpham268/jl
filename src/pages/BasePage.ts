@@ -1,4 +1,5 @@
 import type { Page, Locator } from '@playwright/test';
+import { test } from '@playwright/test';
 import { requireEnv } from '../utils/require.env';
 
 /**
@@ -31,7 +32,10 @@ export class BasePage {
   }
 
   async navigateTo(path: string): Promise<void> {
-    await this.page.goto(path);
+    await test.step(`Navigate to ${path}`, async () => {
+      await this.page.goto(path);
+      await this.page.waitForLoadState('domcontentloaded');
+    });
   }
 
   // ========================
