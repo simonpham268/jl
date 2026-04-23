@@ -74,6 +74,10 @@ export class SystemSetupPage {
     this.preserveUpliftCheckbox = page.locator('//input[contains(@name,\'Desktop.IsPreserveEnteredUpliftDiscountPercentage\')]/following-sibling::span'); // TODO: verify in DOM
   }
 
+  async navigateToSystemSetup(): Promise<void> {
+    await this.navigate.navigateToSystemSetup();
+  }
+
   async clickEdit(): Promise<void> {
     await test.step('Click Edit button', async () => {
       await this.editButton.waitFor({ state: 'visible', timeout: 5000 });
