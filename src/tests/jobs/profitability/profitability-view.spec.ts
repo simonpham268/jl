@@ -81,11 +81,11 @@ test.describe('Profitability – Detail/Costs Tab', () => {
       await forEachTab(jobDetailsPage, ['Details', 'Costs'], async (tab) => {
         await jobDetailsPage.expandProfitOverview(tab);
         const loc = jobDetailsPage.getProfitLocators(tab);
-        await expect(loc.variableTargetProfitMarginAddButton).toBeVisible();
+        await expect(loc.targetProfitMarginAddButton).toBeVisible();
         await jobDetailsPage.clickAddVariableTargetProfitMargin(tab);
-        await expect(jobDetailsPage.variableTargetProfitMarginModal).toBeVisible();
-        await expect(jobDetailsPage.variableTargetProfitMarginPercentInput).toBeVisible();
-        await expect(jobDetailsPage.variableTargetProfitMarginModalSaveButton).toBeVisible();
+        await expect(jobDetailsPage.targetProfitMarginModal).toBeVisible();
+        await expect(jobDetailsPage.targetProfitMarginPercentInput).toBeVisible();
+        await expect(jobDetailsPage.targetProfitMarginModalSaveButton).toBeVisible();
       });
     });
   });
