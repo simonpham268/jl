@@ -1,6 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { BasePage } from '../BasePage';
+import type { JobService } from '../../api/services/JobService';
+import type { CreateJobRequest } from '../../api/models';
 
 /**
  * Job Details tabs
@@ -360,6 +362,17 @@ export class JobDetailsPage extends BasePage {
   /**
    * Navigate to Job Details page by ID
    */
+  static async createJobAndGetRedirectUrl(
+    jobService: JobService,
+    data: CreateJobRequest,
+  ): Promise<string> {
+    const response = await jobService.createJob(data);
+    if (!response.body) throw new Error('No response body from job creation');
+    const redirectUrl = response.body.redirectUrl;
+    if (!redirectUrl) throw new Error('Missing redirectUrl from job creation');
+    return redirectUrl;
+  }
+
   async navigateToJob(redirectUrl: string): Promise<void> {
     await test.step(`Navigate to Job ${redirectUrl}`, async () => {
       await this.page.goto(redirectUrl);
@@ -367,21 +380,14 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  async assertProfitabilitySectionVisible(): Promise<void> {
-    await test.step('Assert Profitability section is visible', async () => {
-      await this.page.waitForLoadState('domcontentloaded');
-      await expect(this.profitabilitySection).toBeVisible();
-    });
-  }
-
-  private getProfitLocators(tab: string) {
+  getProfitLocators(tab: string) {
     const container = this.page.locator(this.profitTabSelectors[tab]);
     return {
-      profitOverviewToggle: container.getByText('Profit Overview'),
+      profitOverviewSection: container.getByText('Profit Overview'),
       quotedProfitabilitySection: container.getByText('Quoted Profitability'),
       profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
       profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
-      costBreakdownByCategoryToggle: container.getByText('Cost breakdown by category', { exact: true }),
+      costBreakdownByCategorySection: container.getByText('Cost breakdown by category', { exact: true }),
       costBreakdownCategoryColumn: container.getByRole('columnheader', { name: 'Category' }),
       costBreakdownQuotedColumn: container.getByRole('columnheader', { name: 'Quoted' }),
       costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
@@ -399,16 +405,7 @@ export class JobDetailsPage extends BasePage {
         (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
         (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
       if (isExpanded) return;
-      await loc.profitOverviewToggle.click();
-    });
-  }
-
-  async assertProfitOverviewSubsectionsVisible(tab: 'Costs' | 'Details'): Promise<void> {
-    await test.step('Assert Profit Overview subsections are visible', async () => {
-      const loc = this.getProfitLocators(tab);
-      await expect(loc.quotedProfitabilitySection).toBeVisible();
-      await expect(loc.profitabilityIncludeWIPSection).toBeVisible();
-      await expect(loc.profitabilityActualsOnlySection).toBeVisible();
+      await loc.profitOverviewSection.click();
     });
   }
 
@@ -417,19 +414,8 @@ export class JobDetailsPage extends BasePage {
       const loc = this.getProfitLocators(tab);
       const isExpanded = await loc.costBreakdownCategoryColumn.isVisible().catch(() => false);
       if (isExpanded) return;
-      await loc.costBreakdownByCategoryToggle.click();
+      await loc.costBreakdownByCategorySection.click();
       await this.page.waitForLoadState('domcontentloaded');
-    });
-  }
-
-  async assertCostBreakdownByCategoryColumnsVisible(tab: 'Costs' | 'Details'): Promise<void> {
-    await test.step('Assert Cost Breakdown by Category columns are visible', async () => {
-      const loc = this.getProfitLocators(tab);
-      const cols = [loc.costBreakdownCategoryColumn, loc.costBreakdownQuotedColumn, loc.costBreakdownPOCommittedColumn, loc.costBreakdownActualColumn, loc.costBreakdownUnallocatedCostColumn];
-
-      for (const col of cols) {
-        await expect(col).toBeVisible();
-      }
     });
   }
 
