@@ -1,12 +1,12 @@
-import type { Locator, Page } from "@playwright/test";
-import { test } from "@playwright/test";
-import { BasePage } from "../BasePage";
+import type { Locator, Page } from '@playwright/test';
+import { test } from '@playwright/test';
+import { BasePage } from '../BasePage';
 import {
   ROUNDING_OPTION,
   ROUNDING_DURATION,
-} from "../../constants/RoundingConst";
-import { JLDropdownElements } from "../Commons/JLDropdownElements";
-import type { RoundingSettingModel } from "../../models/RoundingSettingModel";
+} from '../../constants/RoundingConst';
+import { JLDropdownElements } from '../Commons/JLDropdownElements';
+import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
 
 /**
  * System Setup Page Object
@@ -45,23 +45,23 @@ export class SystemSetupPage extends BasePage {
     super(page);
 
     // Job Profitability View
-    this.jobProfitabilityViewLabel = page.getByText("Job Profitability View");
+    this.jobProfitabilityViewLabel = page.getByText('Job Profitability View');
 
     // Rounding Type
-    this.roundingTypeCombobox = page.locator("#jlRoundingType__combobox");
-    this.roundingTypeListbox = page.locator("#jlRoundingType__listbox");
-    this.roundingTypeOptions = page.locator("#jlRoundingType__listbox li");
+    this.roundingTypeCombobox = page.locator('#jlRoundingType__combobox');
+    this.roundingTypeListbox = page.locator('#jlRoundingType__listbox');
+    this.roundingTypeOptions = page.locator('#jlRoundingType__listbox li');
 
     // Rounding Duration
     this.roundingDurationCombobox = page.locator(
-      "#jlRoundingDuration__combobox",
+      '#jlRoundingDuration__combobox',
     );
     this.roundingDurationSearchInput = page.locator(
-      "#jlRoundingDuration__combobox .jl__search",
+      '#jlRoundingDuration__combobox .jl__search',
     );
-    this.roundingDurationListbox = page.locator("#jlRoundingDuration__listbox");
+    this.roundingDurationListbox = page.locator('#jlRoundingDuration__listbox');
     this.roundingDurationOptions = page.locator(
-      "#jlRoundingDuration__listbox li",
+      '#jlRoundingDuration__listbox li',
     );
 
     // Preserve Uplift/Discount
@@ -72,15 +72,15 @@ export class SystemSetupPage extends BasePage {
       'span.label-disabled:has-text("Preserve Entered Uplift/Discount Percentage")',
     );
     this.preserveUpliftDiscountHelpText = page.locator(
-      ".jl-checkbox .glossary.jl-localted",
+      '.jl-checkbox .glossary.jl-localted',
     );
     this.preserveUpliftDiscountVisual = page.locator(
       'label:has-text("Preserve Entered Uplift/Discount Percentage") span.my-checkbox',
     );
 
-    this.editButton = page.locator("#editButton"); // TODO: verify in DOM
+    this.editButton = page.locator('#editButton'); // TODO: verify in DOM
     this.saveButton = page.locator(
-      "button.jl-button-green.jlSaveEditAble.jl-button-save",
+      'button.jl-button-green.jlSaveEditAble.jl-button-save',
     ); // TODO: verify in DOM
 
     this.dropdownRoundingOption = page.locator(
@@ -96,9 +96,9 @@ export class SystemSetupPage extends BasePage {
   }
 
   async navigateToSystemSetup(): Promise<void> {
-    await test.step("Navigate to System Setup page", async () => {
-      await super.navigateTo("/Setting/SystemSetup");
-      await this.page.waitForLoadState("domcontentloaded");
+    await test.step('Navigate to System Setup page', async () => {
+      await super.navigateTo('/Setting/SystemSetup');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -110,7 +110,7 @@ export class SystemSetupPage extends BasePage {
       if (!hasControl) return;
 
       const targetRadio = this.page
-        .locator("label")
+        .locator('label')
         .filter({ hasText: view })
         .locator('input[name="JobProfitabilityViewType"]')
         .first();
@@ -118,13 +118,13 @@ export class SystemSetupPage extends BasePage {
 
       await this.editButton.click();
       await this.page
-        .locator("label")
+        .locator('label')
         .filter({ hasText: view })
-        .locator("span.my-shape")
+        .locator('span.my-shape')
         .first()
         .click();
       await this.saveButton.click();
-      await this.page.waitForLoadState("domcontentloaded");
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -143,7 +143,7 @@ export class SystemSetupPage extends BasePage {
       const option = this.roundingTypeOptions.nth(optionIndex);
       const text = await option.textContent();
       await option.click();
-      return text?.trim() ?? "";
+      return text?.trim() ?? '';
     });
   }
 
@@ -158,9 +158,9 @@ export class SystemSetupPage extends BasePage {
   }
 
   async isRoundingDurationEnabled(): Promise<boolean> {
-    return await test.step("Check if Rounding Duration is enabled", async () => {
+    return await test.step('Check if Rounding Duration is enabled', async () => {
       const isDisabled =
-        await this.roundingDurationSearchInput.getAttribute("disabled");
+        await this.roundingDurationSearchInput.getAttribute('disabled');
       return isDisabled === null;
     });
   }
@@ -179,36 +179,36 @@ export class SystemSetupPage extends BasePage {
       const option = this.roundingDurationOptions.nth(optionIndex);
       const text = await option.textContent();
       await option.click();
-      return text?.trim() ?? "";
+      return text?.trim() ?? '';
     });
   }
 
   async isPreserveUpliftDiscountDisplayed(): Promise<boolean> {
-    return await test.step("Check if Preserve Uplift/Discount checkbox is displayed", async () => {
+    return await test.step('Check if Preserve Uplift/Discount checkbox is displayed', async () => {
       return await this.preserveUpliftDiscountCheckbox.isVisible();
     });
   }
 
   async getPreserveUpliftDiscountLabelText(): Promise<string> {
-    return await test.step("Get Preserve Uplift/Discount label text", async () => {
+    return await test.step('Get Preserve Uplift/Discount label text', async () => {
       await this.preserveUpliftDiscountLabel.waitFor({
-        state: "visible",
+        state: 'visible',
         timeout: this.elementTimeout,
       });
-      return (await this.preserveUpliftDiscountLabel.textContent()) ?? "";
+      return (await this.preserveUpliftDiscountLabel.textContent()) ?? '';
     });
   }
 
   async isPreserveUpliftDiscountDisabled(): Promise<boolean> {
-    return await test.step("Check if Preserve Uplift/Discount checkbox is disabled", async () => {
+    return await test.step('Check if Preserve Uplift/Discount checkbox is disabled', async () => {
       const isDisabled =
-        await this.preserveUpliftDiscountCheckbox.getAttribute("disabled");
+        await this.preserveUpliftDiscountCheckbox.getAttribute('disabled');
       return isDisabled !== null;
     });
   }
 
   async togglePreserveUpliftDiscount(): Promise<boolean> {
-    return await test.step("Toggle Preserve Uplift/Discount checkbox", async () => {
+    return await test.step('Toggle Preserve Uplift/Discount checkbox', async () => {
       const isChecked = await this.preserveUpliftDiscountCheckbox.isChecked();
       await this.preserveUpliftDiscountCheckbox.evaluate((el: Element) =>
         (el as HTMLInputElement).click(),
@@ -220,7 +220,7 @@ export class SystemSetupPage extends BasePage {
   async configureSystemSettingsForRounding(
     config: RoundingSettingModel,
   ): Promise<void> {
-    await test.step("Configure system settings for rounding", async () => {
+    await test.step('Configure system settings for rounding', async () => {
       // reset to default first to ensure test consistency
       await this.sendKeyAndSelectItemOnDropdown(
         this.dropdownRoundingOption,
@@ -249,15 +249,15 @@ export class SystemSetupPage extends BasePage {
   }
 
   async clickSave(): Promise<void> {
-    await test.step("Click Save button", async () => {
+    await test.step('Click Save button', async () => {
       await this.saveButton.click();
-      await this.page.waitForLoadState("domcontentloaded");
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
   async clickEdit(): Promise<void> {
-    await test.step("Click Edit button", async () => {
-      await this.editButton.waitFor({ state: "visible", timeout: 5000 });
+    await test.step('Click Edit button', async () => {
+      await this.editButton.waitFor({ state: 'visible', timeout: 5000 });
       await this.editButton.click();
     });
   }

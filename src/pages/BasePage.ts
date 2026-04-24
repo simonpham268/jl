@@ -1,6 +1,6 @@
-import type { Page, Locator } from "@playwright/test";
-import { test } from "@playwright/test";
-import { requireEnv } from "../utils/require.env";
+import type { Page, Locator } from '@playwright/test';
+import { test } from '@playwright/test';
+import { requireEnv } from '../utils/require.env';
 
 /**
  * BasePage - Base class for all page objects
@@ -18,11 +18,11 @@ export class BasePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.elementTimeout = parseInt(process.env.TIMEOUT_ELEMENT || "5000");
+    this.elementTimeout = parseInt(process.env.TIMEOUT_ELEMENT || '5000');
     this.waitDisappearTimeout = parseInt(
-      process.env.TIMEOUT_WAIT_DISAPPEAR || "10000",
+      process.env.TIMEOUT_WAIT_DISAPPEAR || '10000',
     );
-    this.navigationTimeout = parseInt(requireEnv("TIMEOUT_NAVIGATION"));
+    this.navigationTimeout = parseInt(requireEnv('TIMEOUT_NAVIGATION'));
   }
 
   // ========================
@@ -30,13 +30,13 @@ export class BasePage {
   // ========================
 
   async goToBaseURL(baseUrl?: string): Promise<void> {
-    await this.page.goto(baseUrl || "/");
+    await this.page.goto(baseUrl || '/');
   }
 
   async navigateTo(path: string): Promise<void> {
     await test.step(`Navigate to ${path}`, async () => {
       await this.page.goto(path);
-      await this.page.waitForLoadState("domcontentloaded");
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -76,12 +76,12 @@ export class BasePage {
   // ========================
 
   async clickButton(name: string): Promise<void> {
-    await this.page.getByRole("button", { name }).click();
+    await this.page.getByRole('button', { name }).click();
   }
 
   async submit(): Promise<void> {
     await this.page
-      .getByRole("button", { name: /Submit|Save|Create/i })
+      .getByRole('button', { name: /Submit|Save|Create/i })
       .click();
   }
 
@@ -123,7 +123,7 @@ export class BasePage {
     timeout?: number,
   ): Promise<void> {
     await locator.waitFor({
-      state: "hidden",
+      state: 'hidden',
       timeout: timeout ?? this.waitDisappearTimeout,
     });
   }
@@ -175,6 +175,7 @@ export class BasePage {
     } catch (error) {
       throw new Error(
         `[BasePage] sendKeyAndSelectItemOnDropdown Step 1 failed - could not click/type into textbox with text "${text}": ${error}`,
+        { cause: error },
       );
     }
 
@@ -184,10 +185,11 @@ export class BasePage {
     const optionLocator = optionItemSelector.filter({ hasText: matchText });
 
     try {
-      await optionLocator.first().waitFor({ state: "visible", timeout: 10000 });
+      await optionLocator.first().waitFor({ state: 'visible', timeout: 10000 });
     } catch (error) {
       throw new Error(
         `[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - option with text "${matchText}" did not appear within 10s: ${error}`,
+        { cause: error },
       );
     }
 
@@ -197,6 +199,7 @@ export class BasePage {
     } catch (error) {
       throw new Error(
         `[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - could not click option with text "${matchText}": ${error}`,
+        { cause: error },
       );
     }
   }
