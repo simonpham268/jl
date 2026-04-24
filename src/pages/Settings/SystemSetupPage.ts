@@ -124,7 +124,7 @@ export class SystemSetupPage extends BasePage {
         .first()
         .click();
       await this.saveButton.click();
-      await this.page.waitForLoadState('domcontentloaded');
+      await this.page.waitForLoadState('networkidle');
     });
   }
 
