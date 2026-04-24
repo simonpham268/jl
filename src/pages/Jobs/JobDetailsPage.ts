@@ -1,6 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { BasePage } from '../BasePage';
+import type { JobService } from '../../api/services/JobService';
+import type { CreateJobRequest } from '../../api/models';
 
 /**
  * Job Details tabs
@@ -113,6 +115,15 @@ export class JobDetailsPage extends BasePage {
   readonly siteLink: Locator;
   readonly profitabilitySection: Locator;
   readonly actualProfitToDate: Locator;
+  readonly contentLoadingOverlay: Locator;
+
+  // ========================
+  // Locators - Profit Overview Section (tab-scoped)
+  // ========================
+  private readonly profitTabSelectors: Record<string, string> = {
+    Costs: '#CostDetails',
+    Details: '#detailTab',
+  };
 
   // ========================
   // Locators - Details Section
@@ -175,17 +186,31 @@ export class JobDetailsPage extends BasePage {
     // Header
     this.pageTitle = page.locator('h3').first();
     this.jobNumberText = page.locator('h3').locator('text=/M\\d+/');
-    this.jobStatusBadge = page.locator('h3').locator('[class*="badge"], [class*="status"]');
+    this.jobStatusBadge = page
+      .locator('h3')
+      .locator('[class*="badge"], [class*="status"]');
     this.jobsBackLink = page.getByRole('link', { name: 'Jobs' });
 
     // Header Actions
     this.completeJobButton = page.locator('#completeJob');
-    this.logRelatedWorkButton = page.getByRole('button', { name: 'Log Related Work' });
-    this.logRelatedWorkDropdown = page.locator('button:has-text("Log Related Work")').locator('..').locator('button').last();
+    this.logRelatedWorkButton = page.getByRole('button', {
+      name: 'Log Related Work',
+    });
+    this.logRelatedWorkDropdown = page
+      .locator('button:has-text("Log Related Work")')
+      .locator('..')
+      .locator('button')
+      .last();
     this.addInvoiceButton = page.getByText('Add Invoice');
     this.shareButton = page.getByRole('button', { name: 'Share' });
-    this.shareDropdown = page.locator('button:has-text("Share")').locator('..').locator('button').last();
-    this.moreOptionsButton = page.locator('[class*="more-options"], [class*="dropdown"]').last();
+    this.shareDropdown = page
+      .locator('button:has-text("Share")')
+      .locator('..')
+      .locator('button')
+      .last();
+    this.moreOptionsButton = page
+      .locator('[class*="more-options"], [class*="dropdown"]')
+      .last();
 
     // Dialog/Modal Buttons
     this.completeDialogButton = page.getByRole('button', { name: 'Complete' });
@@ -193,12 +218,16 @@ export class JobDetailsPage extends BasePage {
     this.deleteJobOption = page.getByText('Delete Job');
 
     // Tab Actions
-    this.activeTab = page.locator('[aria-selected="true"], [class*="active"]').first();
+    this.activeTab = page
+      .locator('[aria-selected="true"], [class*="active"]')
+      .first();
     this.jobStatusLabel = page.locator('.job-status:not(.hidden)').first();
     this.addTaskButton = page.getByRole('button', { name: /Add Task/i });
     this.addCostButton = page.getByRole('button', { name: /Add Cost/i });
     this.addVisitButton = page.getByRole('button', { name: /Add Visit/i });
-    this.addSubcontractorVisitButton = page.getByRole('button', { name: /Add.*Visit/i });
+    this.addSubcontractorVisitButton = page.getByRole('button', {
+      name: /Add.*Visit/i,
+    });
     this.addJobFormButton = page.getByRole('button', { name: /Add Form/i });
 
     // Tabs
@@ -219,8 +248,14 @@ export class JobDetailsPage extends BasePage {
     this.jobSummaryHeading = page.locator('h4:has-text("Job Summary")');
     this.customerLink = page.locator('#customerNameLink');
     this.siteLink = page.locator('#siteNameLink');
-    this.profitabilitySection = page.locator('h3:has-text("Profitability")');
+    this.profitabilitySection = page.getByRole('heading', {
+      name: 'Profitability',
+      exact: true,
+    });
     this.actualProfitToDate = page.locator('text*=Actual Profit to Date');
+    this.contentLoadingOverlay = page.locator(
+      'section.jl-content-wrap.loading',
+    );
 
     // Details Section
     this.detailsHeading = page.locator('h4:has-text("Details")');
@@ -229,37 +264,91 @@ export class JobDetailsPage extends BasePage {
     this.saveButton = page.getByRole('button', { name: 'Save' });
 
     // Job Details Fields
-    this.statusCombobox = page.locator('text=Status').locator('..').locator('[role="combobox"]');
-    this.jobTypeCombobox = page.locator('text=Job Type *').locator('..').locator('[role="combobox"]');
-    this.jobCategoryCombobox = page.locator('text=Job Category').locator('..').locator('[role="combobox"]');
-    this.descriptionTextbox = page.locator('text=Description*').locator('..').locator('input[type="text"], textarea');
+    this.statusCombobox = page
+      .locator('text=Status')
+      .locator('..')
+      .locator('[role="combobox"]');
+    this.jobTypeCombobox = page
+      .locator('text=Job Type *')
+      .locator('..')
+      .locator('[role="combobox"]');
+    this.jobCategoryCombobox = page
+      .locator('text=Job Category')
+      .locator('..')
+      .locator('[role="combobox"]');
+    this.descriptionTextbox = page
+      .locator('text=Description*')
+      .locator('..')
+      .locator('input[type="text"], textarea');
     this.jobNumberField = page.locator('text=Job Number').locator('..');
     this.loggedByField = page.locator('text=Logged By').locator('..');
-    this.tagsDropdown = page.locator('text=Tag(s)').locator('..').locator('[class*="multiselect"]');
-    this.dateLoggedInput = page.locator('text=Date Logged *').locator('..').locator('input[type="text"]');
-    this.dateCompleteInput = page.locator('text=Date Complete').locator('..').locator('input[type="text"]');
+    this.tagsDropdown = page
+      .locator('text=Tag(s)')
+      .locator('..')
+      .locator('[class*="multiselect"]');
+    this.dateLoggedInput = page
+      .locator('text=Date Logged *')
+      .locator('..')
+      .locator('input[type="text"]');
+    this.dateCompleteInput = page
+      .locator('text=Date Complete')
+      .locator('..')
+      .locator('input[type="text"]');
     this.recurJobCheckbox = page.getByText('Recur Job');
 
     // Additional Job Details
-    this.primaryJobTradeCombobox = page.locator('text=Primary Job Trade').locator('..').locator('[role="combobox"]');
-    this.secondaryJobTradesDropdown = page.locator('text=Secondary Job Trade(s)').locator('..').locator('[class*="multiselect"]');
-    this.preferredAppointmentDateInput = page.locator('text=Preferred Appointment Date').locator('..').locator('input');
-    this.customerOrderNumberInput = page.locator('text=Customer Order Number').locator('..').locator('input');
-    this.referenceNumberInput = page.locator('text=Reference Number').locator('..').locator('input');
-    this.jobOwnerCombobox = page.locator('text=Job Owner *').locator('..').locator('[role="combobox"]');
-    this.nextContactDateInput = page.locator('text=Next Contact Date').locator('..').locator('input');
+    this.primaryJobTradeCombobox = page
+      .locator('text=Primary Job Trade')
+      .locator('..')
+      .locator('[role="combobox"]');
+    this.secondaryJobTradesDropdown = page
+      .locator('text=Secondary Job Trade(s)')
+      .locator('..')
+      .locator('[class*="multiselect"]');
+    this.preferredAppointmentDateInput = page
+      .locator('text=Preferred Appointment Date')
+      .locator('..')
+      .locator('input');
+    this.customerOrderNumberInput = page
+      .locator('text=Customer Order Number')
+      .locator('..')
+      .locator('input');
+    this.referenceNumberInput = page
+      .locator('text=Reference Number')
+      .locator('..')
+      .locator('input');
+    this.jobOwnerCombobox = page
+      .locator('text=Job Owner *')
+      .locator('..')
+      .locator('[role="combobox"]');
+    this.nextContactDateInput = page
+      .locator('text=Next Contact Date')
+      .locator('..')
+      .locator('input');
     this.reqApprovalCheckbox = page.getByText('Req. Approval');
 
     // Job KPIs Section
     this.jobKpisHeading = page.locator('h4:has-text("Job KPIs")');
-    this.priorityLevelCombobox = page.locator('text=Priority Level').locator('..').locator('[role="combobox"]');
-    this.completionFromDateLoggedCheckbox = page.getByText('Completion Time from Date Logged');
-    this.completionFromEngineerOnsiteCheckbox = page.getByText('Completion Time from Engineer Onsite');
-    this.targetCompletionDateInput = page.locator('text=Target Completion Date').locator('..').locator('input');
+    this.priorityLevelCombobox = page
+      .locator('text=Priority Level')
+      .locator('..')
+      .locator('[role="combobox"]');
+    this.completionFromDateLoggedCheckbox = page.getByText(
+      'Completion Time from Date Logged',
+    );
+    this.completionFromEngineerOnsiteCheckbox = page.getByText(
+      'Completion Time from Engineer Onsite',
+    );
+    this.targetCompletionDateInput = page
+      .locator('text=Target Completion Date')
+      .locator('..')
+      .locator('input');
 
     // Fault Code Section
     this.faultCodeHeading = page.locator('h4:has-text("Fault Code")');
-    this.noFaultCodeMessage = page.locator('text*=No fault code library is assigned');
+    this.noFaultCodeMessage = page.locator(
+      'text*=No fault code library is assigned',
+    );
 
     // AI Summarise
     this.summariseButton = page.getByRole('button', { name: 'Summarise' });
@@ -273,6 +362,17 @@ export class JobDetailsPage extends BasePage {
   /**
    * Navigate to Job Details page by ID
    */
+  static async createJobAndGetRedirectUrl(
+    jobService: JobService,
+    data: CreateJobRequest,
+  ): Promise<string> {
+    const response = await jobService.createJob(data);
+    if (!response.body) throw new Error('No response body from job creation');
+    const redirectUrl = response.body.redirectUrl;
+    if (!redirectUrl) throw new Error('Missing redirectUrl from job creation');
+    return redirectUrl;
+  }
+
   async navigateToJob(redirectUrl: string): Promise<void> {
     await test.step(`Navigate to Job ${redirectUrl}`, async () => {
       await this.page.goto(redirectUrl);
@@ -280,14 +380,42 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  /**
-   * Assert page is loaded
-   */
-  async assertPageLoaded(): Promise<void> {
-    await test.step('Assert Job Details page is loaded', async () => {
-      await expect(this.pageTitle).toBeVisible();
-      await expect(this.detailsTab).toBeVisible();
-      await expect(this.jobSummaryHeading).toBeVisible();
+  getProfitLocators(tab: string) {
+    const container = this.page.locator(this.profitTabSelectors[tab]);
+    return {
+      profitOverviewSection: container.getByText('Profit Overview'),
+      quotedProfitabilitySection: container.getByText('Quoted Profitability'),
+      profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
+      profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
+      costBreakdownByCategorySection: container.getByText('Cost breakdown by category', { exact: true }),
+      costBreakdownCategoryColumn: container.getByRole('columnheader', { name: 'Category' }),
+      costBreakdownQuotedColumn: container.getByRole('columnheader', { name: 'Quoted' }),
+      costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
+      costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
+      costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
+    };
+  }
+
+  async expandProfitOverview(tab: 'Costs' | 'Details'): Promise<void> {
+    await test.step('Expand Profit Overview section', async () => {
+      await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
+      const loc = this.getProfitLocators(tab);
+      const isExpanded =
+        (await loc.quotedProfitabilitySection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
+      if (isExpanded) return;
+      await loc.profitOverviewSection.click();
+    });
+  }
+
+  async expandCostBreakdownByCategory(tab: 'Costs' | 'Details'): Promise<void> {
+    await test.step('Expand Cost Breakdown by Category section', async () => {
+      const loc = this.getProfitLocators(tab);
+      const isExpanded = await loc.costBreakdownCategoryColumn.isVisible().catch(() => false);
+      if (isExpanded) return;
+      await loc.costBreakdownByCategorySection.click();
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -310,16 +438,16 @@ export class JobDetailsPage extends BasePage {
   async switchToTab(tab: JobDetailTab): Promise<void> {
     await test.step(`Switch to ${tab} tab`, async () => {
       const tabMap: Record<JobDetailTab, Locator> = {
-        'Details': this.detailsTab,
-        'Contacts': this.contactsTab,
-        'Assets': this.assetsTab,
-        'Tasks': this.tasksTab,
-        'Costs': this.costsTab,
-        'Visits': this.visitsTab,
-        'Subcontractor': this.subcontractorTab,
+        Details: this.detailsTab,
+        Contacts: this.contactsTab,
+        Assets: this.assetsTab,
+        Tasks: this.tasksTab,
+        Costs: this.costsTab,
+        Visits: this.visitsTab,
+        Subcontractor: this.subcontractorTab,
         'SOR Items': this.sorItemsTab,
-        'History': this.historyTab,
-        'Info': this.infoTab,
+        History: this.historyTab,
+        Info: this.infoTab,
         'Refcom Audit': this.refcomAuditTab,
         'Job Forms': this.jobFormsTab,
       };
@@ -333,7 +461,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getActiveTab(): Promise<string> {
     return await test.step('Get active tab', async () => {
-      return await this.activeTab.textContent() || '';
+      return (await this.activeTab.textContent()) || '';
     });
   }
 
@@ -394,7 +522,7 @@ export class JobDetailsPage extends BasePage {
         '*:has-text("Cancel open visits")',
         'button:has-text("Cancel open visits")',
         'a:has-text("Cancel open visits")',
-        '[role="button"]:has-text("Cancel open visits")'
+        '[role="button"]:has-text("Cancel open visits")',
       ];
 
       let cancelVisitsElement = null;
@@ -403,7 +531,9 @@ export class JobDetailsPage extends BasePage {
         try {
           cancelVisitsElement = this.page.locator(selector).first();
           if (await cancelVisitsElement.isVisible({ timeout: 1000 })) {
-            console.log(`Found "Cancel open visits" using selector: ${selector}`);
+            console.log(
+              `Found "Cancel open visits" using selector: ${selector}`,
+            );
             break;
           }
         } catch (e) {
@@ -412,16 +542,21 @@ export class JobDetailsPage extends BasePage {
         }
       }
 
-      if (cancelVisitsElement && await cancelVisitsElement.isVisible()) {
+      if (cancelVisitsElement && (await cancelVisitsElement.isVisible())) {
         await cancelVisitsElement.click();
-        console.log('Clicked "Cancel open visits" - waiting for Complete button to enable');
+        console.log(
+          'Clicked "Cancel open visits" - waiting for Complete button to enable',
+        );
 
         // Wait for the Complete button to be enabled
         await this.waitForCompleteButtonEnabled();
       }
     } catch (error) {
       // If cancel visits option is not found, continue anyway
-      console.warn('Cancel open visits option not found or not clickable:', (error as Error).message);
+      console.warn(
+        'Cancel open visits option not found or not clickable:',
+        (error as Error).message,
+      );
     }
   }
 
@@ -431,16 +566,18 @@ export class JobDetailsPage extends BasePage {
   private async waitForCompleteButtonEnabled(): Promise<void> {
     await this.completeDialogButton.waitFor({
       state: 'visible',
-      timeout: 5000
+      timeout: 5000,
     });
 
     // Wait for button to be enabled (disabled attribute removed)
     await this.page.waitForFunction(
       () => {
-        const button = document.querySelector('button:has-text("Complete")') as HTMLButtonElement;
+        const button = document.querySelector(
+          'button:has-text("Complete")',
+        ) as HTMLButtonElement;
         return button && !button.disabled;
       },
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
   }
 
@@ -480,7 +617,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getJobNumber(): Promise<string> {
     return await test.step('Get job number', async () => {
-      const titleText = await this.pageTitle.textContent() || '';
+      const titleText = (await this.pageTitle.textContent()) || '';
       const match = titleText.match(/M\d+/);
 
       return match ? match[0] : '';
@@ -495,18 +632,24 @@ export class JobDetailsPage extends BasePage {
       // Wait for status to be visible and not "New Job" (indicating completion)
       await this.page.waitForFunction(
         () => {
-          const statusLabel = document.querySelector('.job-status:not(.hidden)');
-          return statusLabel && statusLabel.textContent && statusLabel.textContent.trim() !== 'New Job';
+          const statusLabel = document.querySelector(
+            '.job-status:not(.hidden)',
+          );
+          return (
+            statusLabel &&
+            statusLabel.textContent &&
+            statusLabel.textContent.trim() !== 'New Job'
+          );
         },
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
 
       if (await this.jobStatusLabel.isVisible()) {
-        const statusText = await this.jobStatusLabel.textContent() || '';
+        const statusText = (await this.jobStatusLabel.textContent()) || '';
         return statusText.trim();
       }
 
-      const titleText = await this.pageTitle.textContent() || '';
+      const titleText = (await this.pageTitle.textContent()) || '';
       const jobNumberPattern = /M\d+\s+(.+)/;
       const textToSearch = titleText.includes('/')
         ? titleText.split('/')[1]?.trim() || ''
@@ -522,7 +665,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getCustomerName(): Promise<string> {
     return await test.step('Get customer name', async () => {
-      return await this.customerLink.textContent() || '';
+      return (await this.customerLink.textContent()) || '';
     });
   }
 
@@ -531,7 +674,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getSiteName(): Promise<string> {
     return await test.step('Get site name', async () => {
-      return await this.siteLink.textContent() || '';
+      return (await this.siteLink.textContent()) || '';
     });
   }
 
@@ -559,9 +702,14 @@ export class JobDetailsPage extends BasePage {
   async getJobSummary(): Promise<JobSummaryInfo> {
     return await test.step('Get job summary', async () => {
       // Wait for any modal to be closed (job completion dialog)
-      await this.page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 }).catch(() => {
-        // Modal might not exist, continue
-      });
+      await this.page
+        .waitForSelector('[role="dialog"]', {
+          state: 'detached',
+          timeout: 5000,
+        })
+        .catch(() => {
+          // Modal might not exist, continue
+        });
 
       // Wait for page to update after job completion
       await this.page.waitForTimeout(1000);
@@ -635,7 +783,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getJobNumberFieldValue(): Promise<string> {
     return await test.step('Get Job Number field', async () => {
-      const text = await this.jobNumberField.textContent() || '';
+      const text = (await this.jobNumberField.textContent()) || '';
       const match = text.match(/M\d+/);
 
       return match ? match[0] : '';
@@ -647,7 +795,7 @@ export class JobDetailsPage extends BasePage {
    */
   async getLoggedBy(): Promise<string> {
     return await test.step('Get Logged By', async () => {
-      const text = await this.loggedByField.textContent() || '';
+      const text = (await this.loggedByField.textContent()) || '';
 
       return text.replace('Logged By', '').trim();
     });

@@ -19,7 +19,9 @@ export class BasePage {
   constructor(page: Page) {
     this.page = page;
     this.elementTimeout = parseInt(process.env.TIMEOUT_ELEMENT || '5000');
-    this.waitDisappearTimeout = parseInt(process.env.TIMEOUT_WAIT_DISAPPEAR || '10000');
+    this.waitDisappearTimeout = parseInt(
+      process.env.TIMEOUT_WAIT_DISAPPEAR || '10000',
+    );
     this.navigationTimeout = parseInt(requireEnv('TIMEOUT_NAVIGATION'));
   }
 
@@ -62,7 +64,10 @@ export class BasePage {
     await this.page.getByLabel(fieldName).click();
   }
 
-  async uploadFile(selector: string, filePath: string | string[]): Promise<void> {
+  async uploadFile(
+    selector: string,
+    filePath: string | string[],
+  ): Promise<void> {
     await this.page.locator(selector).setInputFiles(filePath);
   }
 
@@ -75,7 +80,9 @@ export class BasePage {
   }
 
   async submit(): Promise<void> {
-    await this.page.getByRole('button', { name: /Submit|Save|Create/i }).click();
+    await this.page
+      .getByRole('button', { name: /Submit|Save|Create/i })
+      .click();
   }
 
   // ========================
@@ -92,9 +99,14 @@ export class BasePage {
     }
   }
 
-  async getAttribute(locator: Locator, attributeName: string): Promise<string | null> {
+  async getAttribute(
+    locator: Locator,
+    attributeName: string,
+  ): Promise<string | null> {
     try {
-      const value = await locator.getAttribute(attributeName, { timeout: this.elementTimeout });
+      const value = await locator.getAttribute(attributeName, {
+        timeout: this.elementTimeout,
+      });
 
       return value?.trim() || null;
     } catch {
@@ -106,8 +118,31 @@ export class BasePage {
   // Wait Methods
   // ========================
 
-  async waitForLocatorToDisappear(locator: Locator, timeout?: number): Promise<void> {
-    await locator.waitFor({ state: 'hidden', timeout: timeout ?? this.waitDisappearTimeout });
+  async waitForLocatorToDisappear(
+    locator: Locator,
+    timeout?: number,
+  ): Promise<void> {
+    await locator.waitFor({
+      state: 'hidden',
+      timeout: timeout ?? this.waitDisappearTimeout,
+    });
+  }
+
+  protected async scrollUntilVisible(locator: Locator): Promise<boolean> {
+    const maxScrollAttempts = 12;
+
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+
+    for (let attempt = 0; attempt < maxScrollAttempts; attempt++) {
+      if (await locator.isVisible()) {
+        return true;
+      }
+
+      await this.page.mouse.wheel(0, 900);
+      await this.page.waitForTimeout(120);
+    }
+
+    return locator.isVisible();
   }
 
   // ========================
@@ -120,7 +155,7 @@ export class BasePage {
     text: string,
     textSelected?: string,
     isDelay: boolean = false,
-    textBoxFocusedSelector?: string
+    textBoxFocusedSelector?: string,
   ): Promise<void> {
     let textBoxElement: Locator = textBoxSelector;
     try {
@@ -138,24 +173,34 @@ export class BasePage {
         await textBoxElement.pressSequentially(text);
       }
     } catch (error) {
-      throw new Error(`[BasePage] sendKeyAndSelectItemOnDropdown Step 1 failed - could not click/type into textbox with text "${text}": ${error}`);
+      throw new Error(
+        `[BasePage] sendKeyAndSelectItemOnDropdown Step 1 failed - could not click/type into textbox with text "${text}": ${error}`,
+        { cause: error },
+      );
     }
 
     const rawMatch = textSelected ?? text;
-    const matchText = rawMatch.length < 30 ? rawMatch : rawMatch.substring(0, 30);
+    const matchText =
+      rawMatch.length < 30 ? rawMatch : rawMatch.substring(0, 30);
     const optionLocator = optionItemSelector.filter({ hasText: matchText });
 
     try {
       await optionLocator.first().waitFor({ state: 'visible', timeout: 10000 });
     } catch (error) {
-      throw new Error(`[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - option with text "${matchText}" did not appear within 10s: ${error}`);
+      throw new Error(
+        `[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - option with text "${matchText}" did not appear within 10s: ${error}`,
+        { cause: error },
+      );
     }
 
     try {
       await optionLocator.first().scrollIntoViewIfNeeded();
       await optionLocator.first().click();
     } catch (error) {
-      throw new Error(`[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - could not click option with text "${matchText}": ${error}`);
+      throw new Error(
+        `[BasePage] sendKeyAndSelectItemOnDropdown Step 2 failed - could not click option with text "${matchText}": ${error}`,
+        { cause: error },
+      );
     }
   }
 }
