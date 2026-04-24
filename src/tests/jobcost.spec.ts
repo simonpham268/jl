@@ -11,7 +11,9 @@ import { MileageCostModal } from '../modals/MileageCostModal';
 import { TravelCostModal } from '../modals/TravelCostModal';
 import { MaterialCostModal } from '../modals/MaterialCostModal';
 import { ExpensesCostModal } from '../modals/ExpensesCostModal';
-import { PriceType, type LabourCostModel, type OvertimeCostModel, type MileageCostModel, type TravelCostModel, type MaterialCostModel, type ExpensesCostModel } from '../models/CostModel';
+import { OtherCostModal } from '../modals/OtherCostModal';
+import { SubcontractorCostModal } from '../modals/SubcontractorCostModal';
+import { PriceType, type LabourCostModel, type OvertimeCostModel, type MileageCostModel, type TravelCostModel, type MaterialCostModel, type ExpensesCostModel, type OtherCostModel, type SubcontractorCostModel, type ScheduleOfRatesCostModel } from '../models/CostModel';
 import { createBasicApiJobData } from '../data/apiData/job.api.data';
 import { roundTo2Decimals } from '../utils/RoundingUtils';
 import { ROUTE } from '../constants/RouteConst';
@@ -26,6 +28,8 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
   let travelCostModal: TravelCostModal;
   let materialCostModal: MaterialCostModal;
   let expensesCostModal: ExpensesCostModal;
+  let otherCostModal: OtherCostModal;
+  let subcontractorCostModal: SubcontractorCostModal;
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     jobDetailsPage = new JobDetailsPage(page);
@@ -36,6 +40,8 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     travelCostModal = new TravelCostModal(page);
     materialCostModal = new MaterialCostModal(page);
     expensesCostModal = new ExpensesCostModal(page);
+    otherCostModal = new OtherCostModal(page);
+    subcontractorCostModal = new SubcontractorCostModal(page);
     await loginPage.goToBaseURL();
   });
 
@@ -179,7 +185,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-   test('TC_31_RQ2 @Smoke : [Jobs > Mileage] Preserve entered uplift percentage of Mileage when uplift is authoritative', async ({ jobService }) => {
+  test('TC_31_RQ2 @Smoke : [Jobs > Mileage] Preserve entered uplift percentage of Mileage when uplift is authoritative', async ({ jobService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -322,4 +328,101 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     const editSellPerHour = await expensesCostModal.getSellPerHour('Edit');
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
+
+  test('TC_34_RQ2 @Smoke : [Jobs > Other] Preserve entered uplift percentage of Other when uplift is authoritative', async ({ jobService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_NEAREST,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: true,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(createBasicApiJobData());
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+    await otherCostModal.clickAddOther();
+
+    const otherCostModel: OtherCostModel = {
+      description: `Other ${Date.now()}`,
+      costPerHour: parseFloat((Math.random() * 99 + 1).toFixed(2)),
+      priceType: PriceType.FIX_PRICE,
+      upliftPercent: Math.floor(Math.random() * 50) + 1,
+    };
+
+    const expectedSellPerHour = roundTo2Decimals(
+      otherCostModel.costPerHour * (1 + otherCostModel.upliftPercent / 100),
+      roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
+    ).toFixed(2);
+    console.log(`Test data - Cost Per Hour: ${otherCostModel.costPerHour}, Uplift Percent: ${otherCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
+
+    await otherCostModal.fillAddOtherCostModal(otherCostModel);
+
+    const actualSellPerHour = await otherCostModal.getSellPerHour();
+    expect(actualSellPerHour).toBe(expectedSellPerHour);
+
+    await otherCostModal.saveModal();
+    await otherCostModal.clickEditOtherRecord(otherCostModel.description);
+
+    const actualUplift = await otherCostModal.getUpliftPercent('Edit');
+    expect(parseFloat(actualUplift)).toBe(otherCostModel.upliftPercent);
+
+    const editSellPerHour = await otherCostModal.getSellPerHour('Edit');
+    expect(editSellPerHour).toBe(expectedSellPerHour);
+  });
+
+  test('TC_35_RQ2 @Smoke : [Jobs > Subcontractor] Preserve entered uplift percentage of Subcontractor when uplift is authoritative', async ({ jobService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_DOWN,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: true,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(createBasicApiJobData());
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+    await subcontractorCostModal.clickAddSubcontractor();
+
+    const subcontractorCostModel: SubcontractorCostModel = {
+      description: `Subcontractor ${Date.now()}`,
+      costPerHour: parseFloat((Math.random() * 99 + 1).toFixed(2)),
+      priceType: PriceType.FIX_PRICE,
+      upliftPercent: Math.floor(Math.random() * 50) + 1,
+    };
+
+    const expectedSellPerHour = roundTo2Decimals(
+      subcontractorCostModel.costPerHour * (1 + subcontractorCostModel.upliftPercent / 100),
+      roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
+    ).toFixed(2);
+    console.log(`Test data - Cost Per Hour: ${subcontractorCostModel.costPerHour}, Uplift Percent: ${subcontractorCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
+
+    await subcontractorCostModal.fillAddSubcontractorCostModal(subcontractorCostModel);
+
+    const actualSellPerHour = await subcontractorCostModal.getSellPerHour();
+    expect(actualSellPerHour).toBe(expectedSellPerHour);
+
+    await subcontractorCostModal.saveModal();
+    await subcontractorCostModal.clickEditSubcontractorRecord(subcontractorCostModel.description);
+
+    const actualUplift = await subcontractorCostModal.getUpliftPercent('Edit');
+    expect(parseFloat(actualUplift)).toBe(subcontractorCostModel.upliftPercent);
+
+    const editSellPerHour = await subcontractorCostModal.getSellPerHour('Edit');
+    expect(editSellPerHour).toBe(expectedSellPerHour);
+  });
+
 });
