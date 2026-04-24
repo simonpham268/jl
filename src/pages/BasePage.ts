@@ -1,6 +1,8 @@
 import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 import { requireEnv } from '../utils/require.env';
+import type { JobService } from '../api/services/JobService';
+import type { CreateJobRequest } from '../api/models';
 
 /**
  * BasePage - Base class for all page objects
@@ -19,8 +21,21 @@ export class BasePage {
   constructor(page: Page) {
     this.page = page;
     this.elementTimeout = parseInt(process.env.TIMEOUT_ELEMENT || '5000');
-    this.waitDisappearTimeout = parseInt(process.env.TIMEOUT_WAIT_DISAPPEAR || '10000');
+    this.waitDisappearTimeout = parseInt(
+      process.env.TIMEOUT_WAIT_DISAPPEAR || '10000',
+    );
     this.navigationTimeout = parseInt(requireEnv('TIMEOUT_NAVIGATION'));
+  }
+
+  static async createJobAndGetRedirectUrl(
+    jobService: JobService,
+    data: CreateJobRequest,
+  ): Promise<string> {
+    const response = await jobService.createJob(data);
+    if (!response.body) throw new Error('No response body from job creation');
+    const redirectUrl = response.body.redirectUrl;
+    if (!redirectUrl) throw new Error('Missing redirectUrl from job creation');
+    return redirectUrl;
   }
 
   // ========================
@@ -62,7 +77,10 @@ export class BasePage {
     await this.page.getByLabel(fieldName).click();
   }
 
-  async uploadFile(selector: string, filePath: string | string[]): Promise<void> {
+  async uploadFile(
+    selector: string,
+    filePath: string | string[],
+  ): Promise<void> {
     await this.page.locator(selector).setInputFiles(filePath);
   }
 
@@ -75,7 +93,9 @@ export class BasePage {
   }
 
   async submit(): Promise<void> {
-    await this.page.getByRole('button', { name: /Submit|Save|Create/i }).click();
+    await this.page
+      .getByRole('button', { name: /Submit|Save|Create/i })
+      .click();
   }
 
   // ========================
@@ -92,9 +112,14 @@ export class BasePage {
     }
   }
 
-  async getAttribute(locator: Locator, attributeName: string): Promise<string | null> {
+  async getAttribute(
+    locator: Locator,
+    attributeName: string,
+  ): Promise<string | null> {
     try {
-      const value = await locator.getAttribute(attributeName, { timeout: this.elementTimeout });
+      const value = await locator.getAttribute(attributeName, {
+        timeout: this.elementTimeout,
+      });
 
       return value?.trim() || null;
     } catch {
@@ -106,8 +131,31 @@ export class BasePage {
   // Wait Methods
   // ========================
 
-  async waitForLocatorToDisappear(locator: Locator, timeout?: number): Promise<void> {
-    await locator.waitFor({ state: 'hidden', timeout: timeout ?? this.waitDisappearTimeout });
+  async waitForLocatorToDisappear(
+    locator: Locator,
+    timeout?: number,
+  ): Promise<void> {
+    await locator.waitFor({
+      state: 'hidden',
+      timeout: timeout ?? this.waitDisappearTimeout,
+    });
+  }
+
+  protected async scrollUntilVisible(locator: Locator): Promise<boolean> {
+    const maxScrollAttempts = 12;
+
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+
+    for (let attempt = 0; attempt < maxScrollAttempts; attempt++) {
+      if (await locator.isVisible()) {
+        return true;
+      }
+
+      await this.page.mouse.wheel(0, 900);
+      await this.page.waitForTimeout(120);
+    }
+
+    return locator.isVisible();
   }
 
   // ========================
