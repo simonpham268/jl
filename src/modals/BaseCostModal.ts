@@ -1,7 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
 import { BasePage } from '../pages/BasePage';
-import { CostType, PriceType, type BaseCostModel } from '../models/CostModel';
+import type { CostType } from '../models/CostModel';
+import { PriceType, type BaseCostModel } from '../models/CostModel';
 
 export type ModalMode = 'Add' | 'Edit';
 
@@ -15,24 +16,24 @@ export abstract class BaseCostModal extends BasePage {
   readonly descriptionInput: Locator;
   readonly modalSaveButton: Locator;
 
-  constructor(page: Page, protected readonly costType: CostType) {
+  constructor(page: Page, protected readonly costType: CostType, protected readonly domName: string = costType) {
     super(page);
-    this.addButton = page.locator(`#Add-${costType}`); // TODO: verify in DOM
+    this.addButton = page.locator(`#Add-${domName}`);
     this.modalDialog = page.locator('[role="dialog"]'); // TODO: verify in DOM
-    this.costPerHourInput = page.locator(`//input[contains(@name,'CostPerUnit${costType}-Add')]`); // TODO: verify in DOM
-    this.fixPriceRadio = page.locator(`//input[contains(@name,'PriceCalculationType${costType}-Add')]/following-sibling::span[contains(text(),'Fixed Price')]`); // TODO: verify in DOM
-    this.actualRadio = page.locator(`//input[contains(@name,'PriceCalculationType${costType}-Add')]/following-sibling::span[contains(text(),'Actual')]`); // TODO: verify in DOM
-    this.estimatedRadio = page.locator(`//input[contains(@name,'PriceCalculationType${costType}-Add')]/following-sibling::span[contains(text(),'Estimated')]`); // TODO: verify in DOM
-    this.descriptionInput = page.locator(`//textarea[contains(@name,'Description${costType}-Add')]`); // TODO: verify in DOM
+    this.costPerHourInput = page.locator(`//input[contains(@name,'CostPerUnit${domName}-Add')]`); // TODO: verify in DOM
+    this.fixPriceRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Fixed Price')]`); // TODO: verify in DOM
+    this.actualRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Actual')]`); // TODO: verify in DOM
+    this.estimatedRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Estimated')]`); // TODO: verify in DOM
+    this.descriptionInput = page.locator(`//textarea[contains(@name,'Description${domName}-Add')]`); // TODO: verify in DOM
     this.modalSaveButton = page.locator('div[style*="display: block;"] .modal-footer .flex button.jl-custom-btn.jl-button-green'); // TODO: verify in DOM
   }
 
   getUpliftPercentInput(mode: ModalMode): Locator {
-    return this.page.locator(`//input[contains(@name,'Uplift${this.costType}-${mode}')]`); // TODO: verify in DOM
+    return this.page.locator(`//input[contains(@name,'Uplift${this.domName}-${mode}')]`); // TODO: verify in DOM
   }
 
   getSellPerHourInput(mode: ModalMode): Locator {
-    return this.page.locator(`//input[contains(@name,'SellPerUnit${this.costType}-${mode}')]`); // TODO: verify in DOM
+    return this.page.locator(`//input[contains(@name,'SellPerUnit${this.domName}-${mode}')]`); // TODO: verify in DOM
   }
 
   getEditButton(dynamicText: string): Locator {

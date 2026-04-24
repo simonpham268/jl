@@ -1,10 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
 import { BasePage } from '../BasePage';
-import { ROUNDING_OPTION, ROUNDING_DURATION } from "../../constants/RoundingConst";
+import { ROUNDING_OPTION, ROUNDING_DURATION } from '../../constants/RoundingConst';
 import { JLDropdownElements } from '../Commons/JLDropdownElements';
 import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
-
 
 /**
  * System Setup Page Object
@@ -157,10 +156,10 @@ export class SystemSetupPage extends BasePage {
     await test.step('Configure system settings for rounding', async () => {
       // reset to default first to ensure test consistency
       await this.sendKeyAndSelectItemOnDropdown(
-          this.dropdownRoundingOption,
-          this.jlDropdown.jlDropdownOptions,
-          ROUNDING_OPTION.NO_ROUNDING
-        );
+        this.dropdownRoundingOption,
+        this.jlDropdown.jlDropdownOptions,
+        ROUNDING_OPTION.NO_ROUNDING
+      );
 
       if (config.roundingOption !== undefined) {
         await this.sendKeyAndSelectItemOnDropdown(
@@ -188,5 +187,4 @@ export class SystemSetupPage extends BasePage {
       await this.page.waitForLoadState('domcontentloaded');
     });
   }
-
 }
