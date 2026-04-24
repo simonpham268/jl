@@ -393,6 +393,14 @@ export class JobDetailsPage extends BasePage {
       costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
       costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
       costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
+      // Profit Summary View — old profitability section
+      profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
+      quotedJobsLabel: container.locator('#quotedJobsTitle'),
+      costLabel: container.locator('#costTitle'),
+      sellLabel: container.locator('#sellTitle'),
+      profitColumnHeader: container.locator('div.summary-item-title').getByText('Profit', { exact: true }),
+      profitPercentColumnHeader: container.locator('div.summary-item-title').getByText('Profit %'),
+      profitMarginColumnHeader: container.locator('div.summary-item-title').getByText('Profit Margin'),
     };
   }
 
@@ -406,6 +414,15 @@ export class JobDetailsPage extends BasePage {
         (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
       if (isExpanded) return;
       await loc.profitOverviewSection.click();
+    });
+  }
+
+  async expandProfitabilitySection(tab: 'Costs' | 'Details'): Promise<void> {
+    await test.step('Expand Profitability section', async () => {
+      const loc = this.getProfitLocators(tab);
+      const isExpanded = await loc.quotedJobsLabel.isVisible().catch(() => false);
+      if (isExpanded) return;
+      await loc.profitSectionExpandButton.click();
     });
   }
 
