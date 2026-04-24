@@ -1,6 +1,10 @@
 export enum CostType {
   LABOUR = 'Labour',
   OVERTIME = 'Overtime',
+  MILEAGE = 'Mileage',
+  TRAVEL = 'Travel',
+  MATERIAL = 'Material',
+  EXPENSES = 'Expenses',
 }
 
 export enum PriceType {
@@ -18,3 +22,7 @@ export interface BaseCostModel {
 
 export type LabourCostModel = BaseCostModel;
 export type OvertimeCostModel = BaseCostModel;
+export type MileageCostModel = BaseCostModel;
+export type TravelCostModel = BaseCostModel;
+export type MaterialCostModel = BaseCostModel;
+export type ExpensesCostModel = BaseCostModel;
