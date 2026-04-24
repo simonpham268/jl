@@ -5,6 +5,9 @@ export enum CostType {
   TRAVEL = 'Travel',
   MATERIAL = 'Material',
   EXPENSES = 'Expenses',
+  OTHER = 'Other',
+  SUBCONTRACTOR = 'Subcontractor',
+  SCHEDULE_OF_RATES = 'ScheduleOfRate',
 }
 
 export enum PriceType {
@@ -26,3 +29,6 @@ export type MileageCostModel = BaseCostModel;
 export type TravelCostModel = BaseCostModel;
 export type MaterialCostModel = BaseCostModel;
 export type ExpensesCostModel = BaseCostModel;
+export type OtherCostModel = BaseCostModel;
+export type SubcontractorCostModel = BaseCostModel;
+export type ScheduleOfRatesCostModel = BaseCostModel;
