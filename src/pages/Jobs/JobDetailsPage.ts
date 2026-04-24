@@ -116,6 +116,9 @@ export class JobDetailsPage extends BasePage {
   readonly profitabilitySection: Locator;
   readonly actualProfitToDate: Locator;
   readonly contentLoadingOverlay: Locator;
+  readonly targetProfitMarginModal: Locator;
+  readonly targetProfitMarginPercentInput: Locator;
+  readonly targetProfitMarginModalSaveButton: Locator;
 
   // ========================
   // Locators - Profit Overview Section (tab-scoped)
@@ -256,6 +259,9 @@ export class JobDetailsPage extends BasePage {
     this.contentLoadingOverlay = page.locator(
       'section.jl-content-wrap.loading',
     );
+    this.targetProfitMarginModal = page.locator('[data-margin-popover]').filter({ hasText: 'Variable Target Profit Margin' });
+    this.targetProfitMarginPercentInput = this.targetProfitMarginModal.locator('.cp-popover-input-group').getByRole('spinbutton');
+    this.targetProfitMarginModalSaveButton = this.targetProfitMarginModal.getByRole('button', { name: 'Save' });
 
     // Details Section
     this.detailsHeading = page.locator('h4:has-text("Details")');
@@ -393,6 +399,7 @@ export class JobDetailsPage extends BasePage {
       costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
       costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
       costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
+      targetProfitMarginAddButton: container.locator('button.cp-add-margin-btn'),
       // Profit Summary View — old profitability section
       profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
       quotedJobsLabel: container.locator('#quotedJobsTitle'),
@@ -425,6 +432,13 @@ export class JobDetailsPage extends BasePage {
       await loc.profitSectionExpandButton.click();
     });
   }
+
+  async clickAddVariableTargetProfitMargin(tab: 'Costs' | 'Details'): Promise<void> {
+    await test.step('Click + Add for Variable Target Profit Margin', async () => {
+      await this.getProfitLocators(tab).targetProfitMarginAddButton.click();
+    });
+  }
+
 
   async expandCostBreakdownByCategory(tab: 'Costs' | 'Details'): Promise<void> {
     await test.step('Expand Cost Breakdown by Category section', async () => {
