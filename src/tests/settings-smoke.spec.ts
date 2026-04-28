@@ -20,12 +20,14 @@ test.describe('Settings Smoke', () => {
     systemSetupPage = new SystemSetupPage(page);
 
     await loginPage.goToBaseURL();
+    await systemSetupPage.navigateToSystemSetup();
+
   });
 
   test('[TC_01_RQ2] @Smoke: System Setup - Verify Preserve Uplift/Discount setting', async ({ page }) => {
-    await sidebar.navigateTo('Settings');
-    await settingsPage.assertPageLoaded();
-    await settingsPage.clickSystemSetup();
+    // await sidebar.navigateTo('Settings');
+    // await settingsPage.assertPageLoaded();
+    // await settingsPage.clickSystemSetup();
 
     // Verify Preserve Uplift/Discount checkbox is displayed
     const isDisplayed = await systemSetupPage.isPreserveUpliftDiscountDisplayed();
@@ -42,9 +44,9 @@ test.describe('Settings Smoke', () => {
   });
 
   test('[TC_02_RQ2] @Smoke: System Setup - Verify Preserve Uplift/Discount disabled when No Rounding selected', async ({ page }) => {
-    await sidebar.navigateTo('Settings');
-    await settingsPage.assertPageLoaded();
-    await settingsPage.clickSystemSetup();
+    // await sidebar.navigateTo('Settings');
+    // await settingsPage.assertPageLoaded();
+    // await settingsPage.clickSystemSetup();
 
     await systemSetupPage.clickEdit();
 
@@ -57,9 +59,9 @@ test.describe('Settings Smoke', () => {
   });
 
   test('[TC_03_RQ2] @Smoke: System Setup - Verify Preserve Uplift/Discount enabled when Rounding option is selected', async ({ page }) => {
-    await sidebar.navigateTo('Settings');
-    await settingsPage.assertPageLoaded();
-    await settingsPage.clickSystemSetup();
+    // await sidebar.navigateTo('Settings');
+    // await settingsPage.assertPageLoaded();
+    // await settingsPage.clickSystemSetup();
 
     await systemSetupPage.clickEdit();
 
@@ -75,4 +77,17 @@ test.describe('Settings Smoke', () => {
       console.log(`Preserve Uplift/Discount checkbox disabled for ${option}:`, isDisabled);
     }
   });
+
+    test('[TC_02_RQ4] @Smoke @Regression: [Settings > System Settings] Verify only one "Job Profitability View" option can be selected at a time', async () => {
+      const detailedRadio = systemSetupPage.getJobProfitabilityViewRadio('Detailed with Cost Breakdown View');
+      const summaryRadio = systemSetupPage.getJobProfitabilityViewRadio('Profit Summary View');
+  
+      await systemSetupPage.configureJobProfitabilityView('Detailed with Cost Breakdown View');
+      await expect(detailedRadio).toBeChecked();
+      await expect(summaryRadio).not.toBeChecked();
+  
+      await systemSetupPage.configureJobProfitabilityView('Profit Summary View');
+      await expect(summaryRadio).toBeChecked();
+      await expect(detailedRadio).not.toBeChecked();
+    });
 });

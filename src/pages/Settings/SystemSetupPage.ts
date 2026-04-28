@@ -102,6 +102,14 @@ export class SystemSetupPage extends BasePage {
     });
   }
 
+  getJobProfitabilityViewRadio(view: string): Locator {
+    return this.page
+      .locator('label')
+      .filter({ hasText: view })
+      .locator('input[name="JobProfitabilityViewType"]')
+      .first();
+  }
+
   async configureJobProfitabilityView(view: string): Promise<void> {
     await test.step(`Configure Job Profitability View to "${view}"`, async () => {
       const hasControl = await this.scrollUntilVisible(
