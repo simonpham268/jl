@@ -453,7 +453,6 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-
   async expandCostBreakdownByCategory(tab: 'Costs' | 'Details'): Promise<void> {
     await test.step('Expand Cost Breakdown by Category section', async () => {
       const loc = this.getProfitLocators(tab);

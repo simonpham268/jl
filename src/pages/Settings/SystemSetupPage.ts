@@ -215,6 +215,25 @@ export class SystemSetupPage extends BasePage {
     });
   }
 
+  async isPreserveUpliftDiscountChecked(): Promise<boolean> {
+    return await test.step('Check if Preserve Uplift/Discount checkbox is checked', async () => {
+      await this.page.waitForLoadState('domcontentloaded');
+      return await this.preserveUpliftDiscountCheckbox.isChecked();
+    });
+  }
+
+  async checkPreserveUpliftDiscount(checked = true): Promise<void> {
+    await test.step(`Ensure Preserve Uplift/Discount checkbox is ${checked ? 'checked' : 'unchecked'}`, async () => {
+      await this.page.waitForLoadState('domcontentloaded');
+      const isChecked = await this.preserveUpliftDiscountCheckbox.isChecked();
+      if (isChecked !== checked) {
+        await this.preserveUpliftDiscountCheckbox.evaluate((el: Element) =>
+          (el as HTMLInputElement).click(),
+        );
+      }
+    });
+  }
+
   async togglePreserveUpliftDiscount(): Promise<boolean> {
     return await test.step('Toggle Preserve Uplift/Discount checkbox', async () => {
       const isChecked = await this.preserveUpliftDiscountCheckbox.isChecked();
