@@ -12,6 +12,7 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
   readonly dropdownSorLibrary: Locator;
   readonly inputPriceRateSplitCost: Locator;
   readonly inputPriceRateSplitSell: Locator;
+  readonly inputDescription: Locator;
 
   constructor(page: Page) {
     super(page, CostType.SCHEDULE_OF_RATES);
@@ -20,6 +21,7 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
     this.dropdownSorLibrary = this.page.locator('//*[contains(text(),"Schedule of Rates Library")]/following-sibling::div//div[@role="combobox"]//input');
     this.inputPriceRateSplitCost = this.page.locator('//*[contains(text(),"Price Using Rate Split")]/following-sibling::div//input[contains(@name,"Cost")]');
     this.inputPriceRateSplitSell = this.page.locator('//*[contains(text(),"Price Using Rate Split")]/following-sibling::div//input[contains(@name,"Sell")]');
+    this.inputDescription = this.page.locator('[role="dialog"]').getByRole('textbox', { name: 'Description', exact: true });
   }
 
   async clickAddScheduleOfRates(): Promise<void> {
@@ -30,7 +32,7 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
     await test.step('Fill Add ScheduleOfRates Cost modal', async () => {
       // Select Schedule of Rates Library from dropdown
       await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorLibrary, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateLibrary);
-      
+
       // Select Schedule of Rates Item from dropdown
       await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorItem, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateItem);
 
@@ -49,11 +51,8 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
       await upliftInput.press('Tab');
 
       // Fill Description
-      const descriptionInput = this.page
-        .locator('[role="dialog"]')
-        .getByRole('textbox', { name: 'Description', exact: true });
-      await descriptionInput.clear();
-      await descriptionInput.fill(data.description);
+      await this.inputDescription.clear();
+      await this.inputDescription.fill(data.description);
     });
   }
 
