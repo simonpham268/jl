@@ -129,6 +129,14 @@ export class JobDetailsPage extends BasePage {
   };
 
   // ========================
+  // Locators - Costs Tab - Selling Rate
+  // ========================
+  readonly editSellingRateButton: Locator;
+  readonly editSellingRateModal: Locator;
+  readonly sellingRateCombobox: Locator;
+  readonly sellingRateModalSaveButton: Locator;
+
+  // ========================
   // Locators - Details Section
   // ========================
   readonly detailsHeading: Locator;
@@ -259,6 +267,13 @@ export class JobDetailsPage extends BasePage {
     this.contentLoadingOverlay = page.locator(
       'section.jl-content-wrap.loading',
     );
+
+    // Costs Tab - Selling Rate
+    this.editSellingRateButton = page.locator('//*[contains(text(),"Selling Rate")]/parent::div/following-sibling::button');
+    this.editSellingRateModal = page.getByRole('dialog');
+    this.sellingRateCombobox = this.editSellingRateModal.getByRole('combobox');
+    this.sellingRateModalSaveButton = this.editSellingRateModal.getByRole('button', { name: 'Save' });
+
     this.targetProfitMarginModal = page.locator('[data-margin-popover]').filter({ hasText: 'Variable Target Profit Margin' });
     this.targetProfitMarginPercentInput = this.targetProfitMarginModal.locator('.cp-popover-input-group').getByRole('spinbutton');
     this.targetProfitMarginModalSaveButton = this.targetProfitMarginModal.getByRole('button', { name: 'Save' });
@@ -1060,6 +1075,49 @@ export class JobDetailsPage extends BasePage {
     await test.step('Add cost', async () => {
       await this.switchToTab('Costs');
       await this.addCostButton.click();
+    });
+  }
+
+  /**
+   * Click the Edit icon next to the Selling Rate heading on the Costs tab
+   */
+  async clickEditSellingRate(): Promise<void> {
+    await test.step('Click Edit icon for Selling Rate', async () => {
+      await this.editSellingRateButton.click();
+      await this.editSellingRateModal.waitFor({ state: 'visible' });
+    });
+  }
+
+  /**
+   * Select a selling rate type from the dropdown inside the Edit Selling Rate modal
+   */
+  async selectSellingRateOption(option: string): Promise<void> {
+    await test.step(`Select Selling Rate option: ${option}`, async () => {
+      await this.sendKeyAndSelectItemOnDropdown(
+        this.sellingRateCombobox.getByRole('searchbox'),
+        this.page.locator('.jl__dropdown-option'),
+        option,
+      );
+    });
+  }
+
+  /**
+   * Return the Quick View row locator for a given cost type inside the Edit Selling Rate modal.
+   * Scoped to the Quick View section to avoid matching the combobox selected value.
+   */
+  getSellingRateQuickViewItem(costType: string): Locator {
+    return this.editSellingRateModal
+      .locator('p').filter({ hasText: 'Quick View' }).locator('..')
+      .getByText(costType, { exact: true }).locator('..');
+  }
+
+  /**
+   * Click Save inside the Edit Selling Rate modal
+   */
+  async saveSellingRateModal(): Promise<void> {
+    await test.step('Save Selling Rate modal', async () => {
+      await this.sellingRateModalSaveButton.click();
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
