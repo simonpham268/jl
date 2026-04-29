@@ -234,6 +234,12 @@ const TENANT_ID = process.env.AZURE_TENANT_ID ?? '';
 const CLIENT_ID = process.env.AZURE_CLIENT_ID ?? '';
 const CLIENT_SECRET = process.env.AZURE_CLIENT_SECRET ?? '';
 
+interface SpSiteConfig {
+  siteUrl: string;
+  library: string;
+  rootFolder?: string; // restrict crawl to this subfolder (e.g. "JOBLOGIC/Product Development/...")
+}
+
 let tokenCache: { token: string; expiresAt: number } | null = null;
 
 async function getToken(): Promise<string> {
@@ -319,36 +325,34 @@ async function extractText(fileName: string, buffer: ArrayBuffer): Promise<strin
   return new TextDecoder().decode(buffer);
 }
 
-export async function crawlSharePoint(db: ReturnType<typeof openDb>, forceReindex = false): Promise<number> {
-  if (!SITE_URL || !TENANT_ID || !CLIENT_ID || !CLIENT_SECRET) {
-    throw new Error('SharePoint env vars missing (SHAREPOINT_SITE_URL, AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET)');
-  }
+async function crawlSharePointSite(
+  db: ReturnType<typeof openDb>,
+  cfg: SpSiteConfig,
+  forceReindex: boolean,
+): Promise<number> {
+  const label = cfg.rootFolder ? `${cfg.library}/${cfg.rootFolder}` : cfg.library;
+  console.log(`[crawler] Site: ${cfg.siteUrl} | Library: ${label}`);
 
-  console.log(`[crawler] Crawling SharePoint${forceReindex ? ' (force reindex)' : ''}…`);
-
-  const { hostname, pathname } = new URL(SITE_URL);
+  const { hostname, pathname } = new URL(cfg.siteUrl);
   const site = await graphGet(`/sites/${hostname}:${pathname}`);
   const drives = await graphGet(`/sites/${site.id}/drives`);
-  const drive = drives.value.find((d: any) => d.name.toLowerCase() === LIBRARY.toLowerCase());
-  if (!drive) throw new Error(`Library "${LIBRARY}" not found`);
+  const drive = drives.value.find((d: any) => d.name.toLowerCase() === cfg.library.toLowerCase());
+  if (!drive) throw new Error(`Library "${cfg.library}" not found on ${cfg.siteUrl}`);
 
-  const files = await listFilesRecursive(drive.id);
-  // Supported file types: Word, Excel, PowerPoint, PDF, text files
-  // Exclude: apk, exe, zip, images, videos, etc.
+  const files = await listFilesRecursive(drive.id, cfg.rootFolder);
   const SUPPORTED = /\.(docx?|xlsx?|pptx?|pdf|txt|md|csv)$/i;
   const EXCLUDED = /\.(apk|exe|zip|rar|7z|tar|gz|jpg|jpeg|png|gif|bmp|svg|mp4|avi|mov|wmv|mp3|wav|dll|bin|iso)$/i;
   const supported = files.filter((f) => SUPPORTED.test(f.name) && !EXCLUDED.test(f.name));
 
   console.log(`[crawler] Found ${supported.length} supported files (of ${files.length} total)`);
 
-  let totalChunks = 0;
+  let siteChunks = 0;
 
   for (const file of supported) {
     const itemId: string = file.id;
     const modifiedAt: string = file.lastModifiedDateTime;
     const filePath = file._folderPath ? `${file._folderPath}/${file.name}` : file.name;
 
-    // Delta sync — skip unchanged files (unless force reindex)
     const existing = dbGetSpDoc(db, itemId);
     if (!forceReindex && existing?.modified_at === modifiedAt) {
       console.log(`[crawler] Skipped (unchanged): ${filePath}`);
@@ -364,8 +368,12 @@ export async function crawlSharePoint(db: ReturnType<typeof openDb>, forceReinde
       if (!res.ok) throw new Error(`Download failed: ${res.status}`);
 
       const buffer = await res.arrayBuffer();
-      const text = await extractText(file.name, buffer);
+      const rawText = await extractText(file.name, buffer);
       const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+
+      // Prepend file path so the file is always findable by name/JEC number,
+      // even when mammoth extracts very little text from table-heavy docs.
+      const text = `${filePath}\n\n${rawText}`;
 
       dbClearSourceRef(db, 'sharepoint', filePath);
       const chunks = chunkText(text, 'sharepoint', filePath, {
@@ -378,15 +386,46 @@ export async function crawlSharePoint(db: ReturnType<typeof openDb>, forceReinde
       dbInsertChunks(db, chunks);
       dbUpsertSpDoc(db, itemId, filePath, file.name, modifiedAt);
 
-      totalChunks += chunks.length;
+      siteChunks += chunks.length;
       console.log(`[crawler] Indexed: ${filePath} → ${chunks.length} chunks`);
     } catch (err) {
       console.warn(`[crawler] Failed ${filePath}:`, err instanceof Error ? err.message : err);
     }
   }
 
+  console.log(`[crawler] ${label} done: ${siteChunks} chunks`);
+  return siteChunks;
+}
+
+export async function crawlSharePoint(db: ReturnType<typeof openDb>, forceReindex = false): Promise<number> {
+  if (!SITE_URL || !TENANT_ID || !CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error('SharePoint env vars missing (SHAREPOINT_SITE_URL, AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET)');
+  }
+
+  console.log(`[crawler] Crawling SharePoint${forceReindex ? ' (force reindex)' : ''}…`);
+
+  const sites: SpSiteConfig[] = [
+    // Primary: BA specs
+    { siteUrl: SITE_URL, library: LIBRARY },
+    // Secondary sites from env (SHAREPOINT_SITE_URL_2, _3, ...)
+    ...([2, 3, 4] as const).flatMap((n) => {
+      const url = process.env[`SHAREPOINT_SITE_URL_${n}`];
+      if (!url) return [];
+      return [{
+        siteUrl: url,
+        library: process.env[`SHAREPOINT_LIBRARY_${n}`] ?? 'Documents',
+        rootFolder: process.env[`SHAREPOINT_FOLDER_${n}`],
+      }];
+    }),
+  ];
+
+  let totalChunks = 0;
+  for (const cfg of sites) {
+    totalChunks += await crawlSharePointSite(db, cfg, forceReindex);
+  }
+
   dbMarkIndexed(db, 'sharepoint', totalChunks);
-  console.log(`[crawler] SharePoint done: ${totalChunks} chunks`);
+  console.log(`[crawler] SharePoint done: ${totalChunks} chunks total across ${sites.length} site(s)`);
   return totalChunks;
 }
 

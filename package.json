@@ -14,7 +14,8 @@
     "allure": "npm run allure:generate && npm run allure:open",
     "install:browsers": "npx playwright install --with-deps",
     "import-suite": "npx tsx src/utils/jira/import-suite-filtered.ts",
-    "generate": "npx tsx src/utils/azured-devops/get.azure.tc.ts",
+    "crawl:tc": "npx tsx src/utils/azured-devops/get.azure.tc.ts",
+    "crawl:tc:suite": "npx tsx src/utils/azured-devops/azure.ts fetch-suite",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "lint:file": "eslint --ext .ts",
@@ -35,6 +36,8 @@
     "export:notion:force": "npx tsx mcp-servers/notion-exporter.ts --force",
     "export:notion:sp": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint",
     "export:notion:sp:force": "npx tsx mcp-servers/notion-exporter.ts --mode=sharepoint --force",
+    "crawl:tc:db": "npx tsx src/utils/azured-devops/sync-tc-db.ts",
+    "crawl:tc:db:vip": "npx tsx src/utils/azured-devops/sync-tc-db.ts --plan=3198 --suite=60480",
     "test:quick": "npx playwright test --reporter=line --project=chromium"
   },
   "keywords": [],

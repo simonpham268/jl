@@ -7,6 +7,7 @@ config({ path: resolve(process.cwd(), '.env.uat') });
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import mammoth from 'mammoth';
 import { crawlSharePoint } from './crawler.js';
 import { dbIsIndexed, dbMarkIndexed, dbSearch, openDb, type FtsRow } from './db.js';
 
@@ -68,6 +69,36 @@ async function graphGet(pathOrUrl: string): Promise<any> {
   return res.json();
 }
 
+async function graphPost(path: string, body: unknown): Promise<any> {
+  const token = await getAccessToken();
+  const url = path.startsWith('https://') ? path : `https://graph.microsoft.com/v1.0${path}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Graph API error (${res.status}): ${await res.text()}`);
+  return res.json();
+}
+
+// MS Graph Search API — searches across ALL SharePoint sites in the tenant, no hardcoding needed.
+// Returns items with composite ID format "driveId/itemId" for use with get_sharepoint_file_content.
+async function graphSearch(query: string, maxResults: number): Promise<Array<{
+  compositeId: string; name: string; webUrl: string; modified: string; summary: string;
+}>> {
+  const data = await graphPost('/search/query', {
+    requests: [{ entityTypes: ['driveItem'], query: { queryString: query }, from: 0, size: maxResults, region: 'GBR' }],
+  });
+  const hits: any[] = data.value?.[0]?.hitsContainers?.[0]?.hits ?? [];
+  return hits.map((h: any) => ({
+    compositeId: `${h.resource.parentReference?.driveId}/${h.resource.id}`,
+    name: h.resource.name,
+    webUrl: h.resource.webUrl ?? '',
+    modified: h.resource.lastModifiedDateTime ?? '',
+    summary: h.summary ?? '',
+  }));
+}
+
 let siteCache: { siteId: string; driveId: string } | null = null;
 
 async function getSiteAndDrive(): Promise<{ siteId: string; driveId: string }> {
@@ -76,9 +107,7 @@ async function getSiteAndDrive(): Promise<{ siteId: string; driveId: string }> {
   const site = await graphGet(`/sites/${hostname}:${sitePath}`);
   const drives = await graphGet(`/sites/${site.id}/drives`);
   const drive = drives.value.find((d: any) => d.name.toLowerCase() === LIBRARY.toLowerCase());
-  if (!drive) {
-    throw new Error(`Library "${LIBRARY}" not found. Available: ${drives.value.map((d: any) => d.name).join(', ')}`);
-  }
+  if (!drive) throw new Error(`Library "${LIBRARY}" not found. Available: ${drives.value.map((d: any) => d.name).join(', ')}`);
   siteCache = { siteId: site.id, driveId: drive.id };
   return siteCache;
 }
@@ -125,32 +154,27 @@ function formatSearchResults(rows: FtsRow[]): string {
 // ========================
 
 async function downloadFileContent(driveId: string, itemId: string) {
+  const token = await getAccessToken();
   const meta = await graphGet(`/drives/${driveId}/items/${itemId}`);
   const fileName: string = meta.name;
-  const isOfficeDoc = /\.(docx?|xlsx?|pptx?)$/i.test(fileName);
+
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/content`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) throw new Error(`Failed to download: ${res.status}`);
 
   let content: string;
-  if (isOfficeDoc) {
-    content = [
-      `[Office document: ${fileName}]`,
-      `Size: ${((meta.size ?? 0) / 1024).toFixed(1)}KB`,
-      `Modified: ${meta.lastModifiedDateTime}`,
-      `Web URL: ${meta.webUrl}`,
-      '',
-      'To read this document, open via the URL above, or run refresh_index to index it into the DB.',
-    ].join('\n');
+  if (/\.docx?$/i.test(fileName)) {
+    const buffer = await res.arrayBuffer();
+    const { value } = await mammoth.extractRawText({ buffer: Buffer.from(buffer) });
+    content = value.length > 100_000 ? `${value.substring(0, 100_000)}\n\n[Truncated at 100KB]` : value;
   } else {
-    const token = await getAccessToken();
-    const res = await fetch(
-      `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/content`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!res.ok) throw new Error(`Failed to download: ${res.status}`);
     const raw = await res.text();
     content = raw.length > 100_000 ? `${raw.substring(0, 100_000)}\n\n[Truncated at 100KB]` : raw;
   }
 
-  return { content: [{ type: 'text' as const, text: `File: ${fileName}\n${'='.repeat(40)}\n\n${content}` }] };
+  return { content: [{ type: 'text' as const, text: `File: ${fileName}\nURL: ${meta.webUrl}\n${'='.repeat(40)}\n\n${content}` }] };
 }
 
 // ========================
@@ -198,11 +222,11 @@ server.registerTool(
   }
 );
 
-// Tool: Search — DB-backed FTS when indexed, Graph API search as fallback
+// Tool: Search — DB-backed FTS when indexed, MS Graph Search API as fallback (searches entire tenant)
 server.registerTool(
   'search_sharepoint_docs',
   {
-    description: 'Search SharePoint documents by keyword. Uses full-text index when available (fast), falls back to Graph API search.',
+    description: 'Search SharePoint documents by keyword. Uses full-text index when available (fast), falls back to Microsoft Graph Search across all SharePoint sites.',
     inputSchema: {
       query: z.string().describe('Search keyword (file name, content, or metadata)'),
       maxResults: z.number().optional().describe('Maximum results (default: 10)'),
@@ -216,54 +240,72 @@ server.registerTool(
         return { content: [{ type: 'text', text: formatSearchResults(rows) }] };
       }
 
-      // Fallback: Graph API search
-      const { driveId } = await getSiteAndDrive();
-      const data = await graphGet(
-        `/drives/${driveId}/root/search(q='${encodeURIComponent(query)}')?$top=${maxResults}`
-      );
-      if (!data.value?.length) {
+      // Fallback: MS Graph Search API — searches ALL SharePoint sites in tenant, no site config needed
+      const hits = await graphSearch(query, maxResults);
+      if (!hits.length) {
         return { content: [{ type: 'text', text: `No documents found matching "${query}"` }] };
       }
-      const results = data.value.map((item: any) =>
-        `📄 ${item.name}\n   ID: ${item.id}\n   URL: ${item.webUrl}\n   Modified: ${item.lastModifiedDateTime}`
+      const results = hits.map((h) =>
+        `📄 ${h.name}\n   ID: ${h.compositeId}\n   URL: ${h.webUrl}\n   Modified: ${h.modified}${h.summary ? `\n   Preview: ${h.summary}` : ''}`
       ).join('\n\n');
-      return { content: [{ type: 'text', text: `Found ${data.value.length} results for "${query}":\n\n${results}\n\nTip: Run refresh_index to enable faster full-text search.` }] };
+      return { content: [{ type: 'text', text: `Found ${hits.length} results for "${query}":\n\n${results}\n\nTip: Use the ID above with get_sharepoint_file_content to read a file. Run refresh_index to enable faster full-text search.` }] };
     } catch (error) { return toolError(error); }
   }
 );
 
 // Tool: Get file content by item ID
+// Accepts either a plain itemId (uses primary configured library) or
+// a composite "driveId/itemId" returned by search_sharepoint_docs.
 server.registerTool(
   'get_sharepoint_file_content',
   {
-    description: 'Download and return the text content of a SharePoint file by item ID.',
+    description: 'Download and return the text content of a SharePoint file. Accepts item ID from list_sharepoint_files, or composite "driveId/itemId" from search_sharepoint_docs.',
     inputSchema: {
-      itemId: z.string().describe('Item ID from list_sharepoint_files or search results'),
+      itemId: z.string().describe('Item ID (plain) or composite "driveId/itemId" from search results'),
     },
   },
   async ({ itemId }) => {
     try {
+      if (itemId.includes('/')) {
+        const slashIdx = itemId.indexOf('/');
+        const driveId = itemId.slice(0, slashIdx);
+        const realItemId = itemId.slice(slashIdx + 1);
+        return await downloadFileContent(driveId, realItemId);
+      }
       const { driveId } = await getSiteAndDrive();
       return await downloadFileContent(driveId, itemId);
     } catch (error) { return toolError(error); }
   }
 );
 
-// Tool: Get file content by path
+// Tool: Get file content by path — searches entire tenant if not found in primary library
 server.registerTool(
   'get_sharepoint_file_by_path',
   {
-    description: 'Download and return the text content of a SharePoint file by its path (e.g. "Release Notes/2025/July.docx").',
+    description: 'Download and return the text content of a SharePoint file by filename or path. Searches all SharePoint sites if not found in the primary library.',
     inputSchema: {
-      filePath: z.string().describe('File path relative to library root'),
+      filePath: z.string().describe('File path relative to library root, or just a filename to search across all sites'),
     },
   },
   async ({ filePath }) => {
     try {
+      // Try primary library first
       const { driveId } = await getSiteAndDrive();
       const meta = await graphGet(`/drives/${driveId}/root:/${encodeFolderPath(filePath)}`);
       return await downloadFileContent(driveId, meta.id);
-    } catch (error) { return toolError(error); }
+    } catch {
+      // Not in primary library — use MS Graph Search to find it anywhere in the tenant
+      try {
+        const fileName = filePath.split('/').pop() ?? filePath;
+        const hits = await graphSearch(`filename:"${fileName}"`, 5);
+        if (!hits.length) return toolError(new Error(`File "${filePath}" not found in any SharePoint site.`));
+        const [first] = hits;
+        const slashIdx = first.compositeId.indexOf('/');
+        const driveId = first.compositeId.slice(0, slashIdx);
+        const itemId = first.compositeId.slice(slashIdx + 1);
+        return await downloadFileContent(driveId, itemId);
+      } catch (error) { return toolError(error); }
+    }
   }
 );
 

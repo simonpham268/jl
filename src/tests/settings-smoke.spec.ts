@@ -123,16 +123,16 @@ test.describe('Settings Smoke', () => {
     expect(isCheckedAfterSave).toBe(isOn);
   });
 
-   test('[TC_02_RQ4] @Smoke @Regression: [Settings > System Settings] Verify only one "Job Profitability View" option can be selected at a time', async () => {
-      const detailedRadio = systemSetupPage.getJobProfitabilityViewRadio('Detailed with Cost Breakdown View');
-      const summaryRadio = systemSetupPage.getJobProfitabilityViewRadio('Profit Summary View');
-  
-      await systemSetupPage.configureJobProfitabilityView('Detailed with Cost Breakdown View');
-      await expect(detailedRadio).toBeChecked();
-      await expect(summaryRadio).not.toBeChecked();
-  
-      await systemSetupPage.configureJobProfitabilityView('Profit Summary View');
-      await expect(summaryRadio).toBeChecked();
-      await expect(detailedRadio).not.toBeChecked();
-    });
+  test('[TC_02_RQ4] @Smoke @Regression: [Settings > System Settings] Verify only one "Job Profitability View" option can be selected at a time', async () => {
+    const detailedRadio = systemSetupPage.getJobProfitabilityViewRadio('Detailed with Cost Breakdown View');
+    const summaryRadio = systemSetupPage.getJobProfitabilityViewRadio('Profit Summary View');
+
+    await systemSetupPage.configureJobProfitabilityView('Detailed with Cost Breakdown View');
+    await expect(detailedRadio).toBeChecked();
+    await expect(summaryRadio).not.toBeChecked();
+
+    await systemSetupPage.configureJobProfitabilityView('Profit Summary View');
+    await expect(summaryRadio).toBeChecked();
+    await expect(detailedRadio).not.toBeChecked();
+  });
 });

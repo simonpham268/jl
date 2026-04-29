@@ -44,6 +44,76 @@ If a result looks relevant → call `get_notion_page(pageId)` or `get_sharepoint
 
 Look for: related features, impact analysis, known bugs, business rules from workflow IDs.
 
+## Step 3c: Fallback — Fetch Spec Directly from SharePoint (only if Step 3 returned no relevant results)
+
+If `search_sharepoint_docs` and `search_notion_specs` both returned no relevant content:
+
+```
+get_sharepoint_file_by_path("<spec_title>")
+```
+
+Use the spec title or file name extracted from the uploaded doc (e.g. `"Linaker - KFC Handyman Workflow"`).
+
+- This searches the primary SharePoint library first, then falls back to MS Graph Search across the entire tenant.
+- If found → read the returned content as additional spec context before generating TCs.
+- If not found → proceed to Step 3b with only the uploaded spec content.
+
+## Step 3b: Search Existing Test Cases in DB (MANDATORY — run customer + BAU in parallel)
+
+### BAU Core table map
+Map the spec's impacted modules to BAU table names before searching:
+
+| Module / area | BAU table name |
+|---------------|---------------|
+| Jobs, Log Job, Job details | `Jobs` |
+| PPM, Planned Maintenance | `PPM` |
+| Settings, System Setup, Permissions | `Settings` |
+| Customers | `Customers - Done` |
+| Sites | `Sites - Done` |
+| Assets | `Assets - Done` |
+| Engineers, Planner, Timesheets | `Engineers` |
+| Invoices | `Invoices` |
+| Quotes | `Quotes` |
+| Purchasing, PO | `Purchasing` |
+| Stock | `Stock` |
+| Reports | `Reports` |
+| Forms Logbook | `Forms Logbook` |
+| Refcom, F-Gas | `Refcom` |
+| Dashboard | `Dashboard` |
+| Notifications, Bell icon | `Notification` |
+| DocX templates | `DocX Gen` or `DocX Template` |
+| Login, Auth, 2FA | `Sign up, Log in and Forgot Password-Done` or `2FA_Login_New` |
+| Instant Messaging | `Instant Messaging (I'M)` |
+| My To-Do List | `My To-Do List` |
+| Vehicle Tracking | `Vehicle Tracking` |
+
+### Search calls (run ALL in parallel)
+
+```
+list_customers()                                              # confirm tables exist
+
+# VIP customer table (if customer identified)
+search_test_cases("<feature_keyword>", "<customer>")
+search_test_cases("<domain_term>", "<customer>")
+
+# BAU core tables (always — map impacted modules above)
+search_test_cases("<feature_keyword>", "<BAU_table>")         # e.g. "Jobs"
+search_test_cases("<domain_term>", "<BAU_table>")
+```
+
+If no VIP customer is identified, skip customer searches and only search BAU tables:
+```
+search_test_cases("<feature_keyword>", "<BAU_table>")
+search_test_cases("<domain_term>", "<BAU_table>")
+```
+
+### Use the results to:
+- **Avoid duplicates** — if an identical scenario already exists in BAU or VIP, skip it or reference it
+- **Align step style** — for VIP specs: match VIP customer style; for BAU specs: match BAU table style
+- **Understand standard behaviour** — BAU TCs show what the core feature already covers; only write new TCs for what's different or new in the spec
+- **Identify gaps** — BAU covers standard flow; VIP TCs cover bespoke; new TCs fill what neither covers
+- **Reuse preconditions** — copy exact precondition wording from similar existing TCs (BAU or VIP)
+
 ## Step 4: Generate Test Cases (15+ minimum)
 
 | Category | Description |

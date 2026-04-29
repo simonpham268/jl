@@ -309,6 +309,42 @@ npm run scan:mobile:active  # Mobile + active
 
 ---
 
+## Crawl Test Cases → SQLite (`tc.db`)
+
+Syncs test cases from Azure DevOps into `mcp-servers/data/tc.db`. Each suite at the chosen depth becomes a SQLite table; TCs are collected recursively from all leaf suites below it.
+
+The `tc.db` is used by the **`test-cases` MCP server** (`list_customers`, `search_test_cases`, `get_test_case`) which the `gen-tc` skill queries to avoid duplicates and align writing style.
+
+### Commands
+
+```bash
+# Generic — required params
+npm run crawl:tc:db -- --plan=<planId> --suite=<suiteId> [--index=<depth>]
+
+# VIP shortcut (plan=3198, suite=60480, index=1)
+npm run crawl:tc:db:vip
+```
+
+### `--index` param — which suite level becomes table names
+
+| `--index` | Suite level used as table name | Example |
+|-----------|-------------------------------|---------|
+| `1` (default) | Direct children of `--suite` | Scutum, RHT, NGB, Budweiser… |
+| `2` | Grandchildren (one level deeper) | Child suites inside Scutum |
+| `3` | Great-grandchildren | One level deeper again |
+
+```bash
+# index=1 (default): Scutum, RHT, NGB... → table names
+npm run crawl:tc:db -- --plan=3198 --suite=60480
+
+# index=2: children inside each child suite → table names
+npm run crawl:tc:db -- --plan=3198 --suite=60480 --index=2
+```
+
+Regardless of `--index`, TC collection below each table-level suite is always **fully recursive** (all nested leaf suites included).
+
+---
+
 ## MCP Servers & Knowledge Base
 
 MCP (Model Context Protocol) servers provide indexed knowledge to AI assistants for test case generation with context.

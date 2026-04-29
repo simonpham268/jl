@@ -61,8 +61,8 @@ export interface ChunkInput {
 // ========================
 
 export function dbSearch(db: Database.Database, query: string, source?: string, limit = 20): FtsRow[] {
-  // Escape special FTS5 characters
-  const safe = query.replace(/["*^]/g, ' ').trim();
+  // Escape special FTS5 characters — hyphen must also be replaced (it's a NOT operator in FTS5)
+  const safe = query.replace(/["*^\-]/g, ' ').trim();
   if (!safe) return [];
   try {
     if (source) {
