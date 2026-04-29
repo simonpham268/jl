@@ -262,7 +262,10 @@ export class SystemSetupPage extends BasePage {
         );
       }
       if (config.preserveUplift !== undefined) {
-        await this.preserveUpliftCheckbox.click();
+        const isChecked = await this.preserveUpliftCheckbox.isChecked();
+        if (config.preserveUplift !== isChecked) {
+          await this.preserveUpliftCheckbox.click();
+        }
       }
     });
   }
