@@ -28,6 +28,9 @@ yarn.lock
 .env.local
 .env.*.local
 
+# Claude Code (local settings only — not shared with team)
+.claude/settings.local.json
+
 # IDE/Editor
 *.swp
 *.swo

@@ -4,5 +4,15 @@
             "approve": true,
             "matchCommandLine": true
         }
-    }
+    },
+    "gitlens.currentLine.enabled": true,
+    "gitlens.currentLine.format": "${author}, ${agoOrDate}",
+    "gitlens.hovers.currentLine.over": "line",
+    "gitlens.blame.highlight.enabled": true,
+    "gitlens.codeLens.enabled": true,
+    "gitlens.codeLens.recentChange.enabled": true,
+    "gitlens.codeLens.recentChange.command": "gitlens.showQuickCommitDetails",
+    "gitlens.codeLens.authors.enabled": true,
+    "gitlens.codeLens.authors.command": "gitlens.showQuickCommitDetails",
+    "gitlens.codeLens.scopes": ["document", "containers", "blocks"]
 }

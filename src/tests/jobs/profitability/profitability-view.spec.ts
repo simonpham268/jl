@@ -55,6 +55,19 @@ test.describe('Profitability – Detail/Costs Tab', () => {
       });
     });
 
+    test('[TC_11_RQ4] @Smoke @Regression: [Profitability – Detail/Costs Tab] Verify Profitability sections are displayed when collapsed in Detailed view', async () => {
+      await forEachTab(jobDetailsPage, ['Details', 'Costs'], async (tab) => {
+        await jobDetailsPage.collapseProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect(loc.profitOverviewSection).toBeVisible();
+        await expect(loc.collapsedSummary).toBeVisible();
+        await expect(loc.collapsedSummary).toContainText('Quoted:');
+        await expect(loc.collapsedSummary).toContainText('Current:');
+        await expect(loc.collapsedSummary).toContainText('Actuals:');
+        await expect(loc.costBreakdownByCategorySection).toBeVisible();
+      });
+    });
+
     test('[TC_12_RQ4] @Smoke @Regression: [Profitability – Detail/Costs Tab] Verify "Profit Overview" section displays correct details when expanded', async () => {
       await forEachTab(jobDetailsPage, ['Details', 'Costs'], async (tab) => {
         await jobDetailsPage.expandProfitOverview(tab);

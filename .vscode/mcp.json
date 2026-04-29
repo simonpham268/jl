@@ -40,6 +40,16 @@
         "./mcp-servers/tsconfig.json",
         "./mcp-servers/notion-server.ts"
       ]
+    },
+    "test-cases": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "./mcp-servers/tsconfig.json",
+        "./mcp-servers/test-cases-server.ts"
+      ]
     }
   }
 }

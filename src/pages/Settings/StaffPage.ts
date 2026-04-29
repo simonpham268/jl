@@ -1,5 +1,10 @@
 import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
+import { requireEnv } from '../../utils/require.env';
+
+export type PermissionName =
+  | 'Visit - Upload Forms'
+  | 'Asset - Upload Forms';
 
 /**
  * Staff (Users) Page Object
@@ -37,6 +42,12 @@ export class StaffPage {
   readonly loadingIndicator: Locator;
   readonly noResultsMessage: Locator;
 
+  // User Detail - Role & Permissions
+  readonly editButton: Locator;
+  readonly roleSelected: Locator;
+  readonly permissionSearchInput: Locator;
+  readonly mobileTab: Locator;
+
   constructor(page: Page) {
     this.page = page;
 
@@ -67,20 +78,41 @@ export class StaffPage {
     this.dataTable = page.locator('table').first();
     this.loadingIndicator = page.locator('text=Loading Data... Please wait');
     this.noResultsMessage = page.locator('text=No matching results found');
+
+    // User Detail - Role & Permissions
+    this.editButton = page.getByRole('button', { name: /edit/i });
+    this.roleSelected = page.locator('.vs--single .vs__selected');
+    this.permissionSearchInput = page.getByRole('textbox', { name: 'Search permission' });
+    this.mobileTab = page.locator('h5.user-role').filter({ hasText: 'Mobile' });
   }
 
   // ========================
   // Private Helper Methods
   // ========================
 
-  /**
-   * Get row locator by name (dynamic locator)
-   */
   private getRowByName(name: string): Locator {
     return this.page.locator(`tr:has-text("${name}")`);
   }
 
   // Navigation
+  async navigateToAdminUser(): Promise<void> {
+    await test.step('Navigate to admin user', async () => {
+      const adminName = requireEnv('STAFF_ADMIN_NAME');
+      await this.navigateToStaff();
+      await this.searchAndWait(adminName);
+
+      const resultCount = await this.getRowCount();
+      if (resultCount === 0) {
+        await test.step('TODO: createAdminUserWithAdminRoleViaApi', async () => {
+          // Placeholder only: call API here to create admin user with Administrator role.
+        });
+        await this.searchAndWait(adminName);
+      }
+
+      await this.clickUserByName(adminName);
+    });
+  }
+
   async navigateToStaff(): Promise<void> {
     await test.step('Navigate to Staff page', async () => {
       await this.page.goto('/Staff');
@@ -225,7 +257,7 @@ export class StaffPage {
 
   async clickUserByName(name: string): Promise<void> {
     await test.step(`Click user "${name}"`, async () => {
-      await this.getRowByName(name).click();
+      await this.getRowByName(name).locator('td a').first().click();
     });
   }
 
@@ -244,5 +276,56 @@ export class StaffPage {
       await this.clickSearch();
       await this.waitForDataLoad();
     });
+  }
+
+  // ========================
+  // User Detail Methods
+  // ========================
+
+  private getPermissionRow(name: PermissionName): Locator {
+    return this.page.locator('.role-description').filter({ hasText: name }).locator('xpath=../..');
+  }
+
+  async navigateToUser(userId: number): Promise<void> {
+    await test.step(`Navigate to user detail (ID: ${userId})`, async () => {
+      await this.page.goto(`/Staff/Detail/${userId}?engineerOnly=false`);
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  async clickEdit(): Promise<void> {
+    await test.step('Click Edit button', async () => {
+      await this.editButton.click();
+      await this.page.waitForLoadState('networkidle');
+    });
+  }
+
+  async clickMobileTab(): Promise<void> {
+    await test.step('Click Mobile permissions tab', async () => {
+      await this.mobileTab.click();
+    });
+  }
+
+  async searchPermission(query: string): Promise<void> {
+    await test.step(`Search permission: "${query}"`, async () => {
+      await this.permissionSearchInput.clear();
+      await this.permissionSearchInput.fill(query);
+    });
+  }
+
+  getPermissionInRoleIcon(name: PermissionName): Locator {
+    return this.getPermissionRow(name).locator('.in-role-text.color-green');
+  }
+
+  getPermissionInheritRadio(name: PermissionName): Locator {
+    return this.getPermissionRow(name).locator('.r-bdr').nth(0).locator('input[type="radio"]');
+  }
+
+  getPermissionGrantRadio(name: PermissionName): Locator {
+    return this.getPermissionRow(name).locator('.r-bdr').nth(1).locator('input[type="radio"]');
+  }
+
+  getPermissionDenyRadio(name: PermissionName): Locator {
+    return this.getPermissionRow(name).locator('.col-xs-1.text-center:not(.r-bdr) input[type="radio"]');
   }
 }

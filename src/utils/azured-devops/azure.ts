@@ -1372,6 +1372,102 @@ export async function findSuiteIdByTestCase(planId: number, testCaseId: number):
   }
 }
 
+/**
+ * Fetch all test cases from child suites under a parent suite, saving all into a single markdown file.
+ * If the parent suite has no children, fetches TCs directly from it.
+ * @param planId - Azure DevOps Test Plan ID (e.g. 3198)
+ * @param parentSuiteId - Parent suite ID (e.g. 60480)
+ * @returns Promise<string> - Path to the generated combined markdown file
+ *
+ * Usage: npx tsx azure.ts fetch-suite 3198 60480
+ */
+export async function readTestCasesFromSuite(planId: number, parentSuiteId: number): Promise<string> {
+  console.log(`=== Fetching Test Cases from Plan ${planId}, Parent Suite ${parentSuiteId} ===\n`);
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${CONFIG.token}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+  if (CONFIG.cookie) headers['Cookie'] = CONFIG.cookie;
+
+  // 1. Get all suites in the plan, filter to direct children of parentSuiteId
+  const suitesUrl = `${CONFIG.baseUrl}/${CONFIG.project}/_apis/testplan/Plans/${planId}/suites?api-version=7.1`;
+  const suitesRes = await fetch(suitesUrl, { method: 'GET', headers });
+  if (!suitesRes.ok) throw new Error(`Failed to fetch suites: ${suitesRes.status} ${suitesRes.statusText}`);
+
+  const suitesData: any = await suitesRes.json();
+  const childSuites: any[] = (suitesData.value ?? []).filter((s: any) => s.parentSuite?.id === parentSuiteId);
+
+  console.log(`Found ${childSuites.length} child suites under suite ${parentSuiteId}`);
+
+  const suitesToProcess = childSuites.length > 0
+    ? childSuites
+    : [{ id: parentSuiteId, name: `Suite ${parentSuiteId}` }];
+
+  if (childSuites.length === 0) {
+    console.log(`No child suites — fetching TCs directly from suite ${parentSuiteId}\n`);
+  }
+
+  const sections: string[] = [];
+  let total = 0;
+  let errors = 0;
+
+  // 2. For each suite, fetch TCs and build markdown sections
+  for (const suite of suitesToProcess) {
+    console.log(`\nSuite: ${suite.name} (${suite.id})`);
+
+    const tcUrl = `${CONFIG.baseUrl}/${CONFIG.project}/_apis/testplan/Plans/${planId}/Suites/${suite.id}/TestCase?api-version=7.1`;
+    const tcRes = await fetch(tcUrl, { method: 'GET', headers });
+
+    if (!tcRes.ok) {
+      console.warn(`  Warning: could not fetch TCs for suite ${suite.id}: ${tcRes.status}`);
+      continue;
+    }
+
+    const tcData: any = await tcRes.json();
+    const testCases: any[] = tcData.value ?? [];
+    console.log(`  → ${testCases.length} test cases`);
+
+    for (const tc of testCases) {
+      const tcId = Number(tc.testCase?.id ?? tc.workItem?.id);
+      if (!tcId) continue;
+
+      try {
+        const wiUrl = `${CONFIG.baseUrl}/${CONFIG.project}/_apis/wit/workitems/${tcId}?api-version=7.1`;
+        const wiRes = await fetch(wiUrl, { method: 'GET', headers });
+        if (!wiRes.ok) throw new Error(`${wiRes.status} ${wiRes.statusText}`);
+
+        const workItem = await wiRes.json();
+        const testCase = parseWorkItem(workItem);
+        sections.push(generateMarkdownContent(testCase, tcId));
+        process.stdout.write('.');
+        total++;
+      } catch (err: any) {
+        process.stdout.write('x');
+        errors++;
+        console.error(`\n  Error TC${tcId}: ${err.message}`);
+      }
+
+      await new Promise(r => setTimeout(r, 150));
+    }
+    console.log();
+  }
+
+  // 3. Save all sections into a single file
+  const outputDir = path.join(__dirname, '../../../output');
+  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+
+  const outputFile = path.join(outputDir, `suite-${parentSuiteId}.md`);
+  fs.writeFileSync(outputFile, sections.join('\n\n---\n\n'), 'utf8');
+
+  console.log(`\n=== Done ===`);
+  console.log(`Saved:  ${total} test cases → ${outputFile}`);
+  if (errors) console.log(`Errors: ${errors}`);
+
+  return outputFile;
+}
+
 // Alias for backward compatibility
 export const getTestCaseFromApi = readTestCaseFromTestID;
 
@@ -1398,6 +1494,27 @@ if (require.main === module) {
         })
         .catch(error => {
           console.error('Query failed:', error?.message || error);
+          process.exit(1);
+        });
+    } else if (command === 'fetch-suite') {
+      // Command: npx tsx azure.ts fetch-suite <planId> <parentSuiteId>
+      // Example: npx tsx azure.ts fetch-suite 3198 60480
+      const planId = parseInt(args[1], 10);
+      const parentSuiteId = parseInt(args[2], 10);
+
+      if (isNaN(planId) || isNaN(parentSuiteId)) {
+        console.error('Error: Both planId and parentSuiteId must be valid numbers');
+        console.error('Usage: npx tsx azure.ts fetch-suite <planId> <parentSuiteId>');
+        console.error('Example: npx tsx azure.ts fetch-suite 3198 60480');
+        process.exit(1);
+      }
+
+      readTestCasesFromSuite(planId, parentSuiteId)
+        .then(file => {
+          console.log(`\nOutput: ${file}`);
+        })
+        .catch(error => {
+          console.error('fetch-suite failed:', error?.message || error);
           process.exit(1);
         });
     } else if (command === 'find-suite') {
@@ -1486,6 +1603,7 @@ if (require.main === module) {
     console.log('  npx tsx azure.ts "[TC7753]"');
     console.log('');
     console.log('Commands:');
+    console.log('  fetch-suite     - Fetch all TCs from child suites and generate markdown files');
     console.log('  query-by-tags   - Find test cases by tags');
     console.log('  find-suite      - Find which suite contains a test case');
     console.log('  <id> <status>   - Update test case status');
