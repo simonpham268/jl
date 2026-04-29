@@ -389,7 +389,8 @@ export class JobDetailsPage extends BasePage {
   getProfitLocators(tab: string) {
     const container = this.page.locator(this.profitTabSelectors[tab]);
     return {
-      profitOverviewSection: container.getByText('Profit Overview'),
+      profitOverviewSection: container.locator('.cp-section-header').filter({ hasText: 'Profit Overview' }),
+      collapsedSummary: container.locator('.cp-collapsed-summary'),
       quotedProfitabilitySection: container.getByText('Quoted Profitability'),
       profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
       profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
@@ -409,6 +410,19 @@ export class JobDetailsPage extends BasePage {
       profitPercentColumnHeader: container.locator('div.summary-item-title').getByText('Profit %'),
       profitMarginColumnHeader: container.locator('div.summary-item-title').getByText('Profit Margin'),
     };
+  }
+
+  async collapseProfitOverview(tab: 'Costs' | 'Details'): Promise<void> {
+    await test.step('Collapse Profit Overview section', async () => {
+      await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
+      const loc = this.getProfitLocators(tab);
+      const isExpanded =
+        (await loc.quotedProfitabilitySection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
+      if (!isExpanded) return;
+      await loc.profitOverviewSection.click();
+    });
   }
 
   async expandProfitOverview(tab: 'Costs' | 'Details'): Promise<void> {
@@ -438,7 +452,6 @@ export class JobDetailsPage extends BasePage {
       await this.getProfitLocators(tab).targetProfitMarginAddButton.click();
     });
   }
-
 
   async expandCostBreakdownByCategory(tab: 'Costs' | 'Details'): Promise<void> {
     await test.step('Expand Cost Breakdown by Category section', async () => {

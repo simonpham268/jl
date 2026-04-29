@@ -424,5 +424,4 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     const editSellPerHour = await subcontractorCostModal.getSellPerHour('Edit');
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
-
 });

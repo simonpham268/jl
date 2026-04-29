@@ -8,6 +8,10 @@ import {
 import { JLDropdownElements } from '../Commons/JLDropdownElements';
 import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
 
+type JobProfitabilityView =
+  | 'Detailed with Cost Breakdown View'
+  | 'Profit Summary View';
+
 /**
  * System Setup Page Object
  * URL: /Setting/SystemSetup
@@ -102,7 +106,15 @@ export class SystemSetupPage extends BasePage {
     });
   }
 
-  async configureJobProfitabilityView(view: string): Promise<void> {
+  getJobProfitabilityViewRadio(view: JobProfitabilityView): Locator {
+    return this.page
+      .locator('label')
+      .filter({ hasText: view })
+      .locator('input[name="JobProfitabilityViewType"]')
+      .first();
+  }
+
+  async configureJobProfitabilityView(view: JobProfitabilityView): Promise<void> {
     await test.step(`Configure Job Profitability View to "${view}"`, async () => {
       const hasControl = await this.scrollUntilVisible(
         this.jobProfitabilityViewLabel,
