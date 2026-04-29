@@ -7,7 +7,7 @@ export enum CostType {
   EXPENSES = 'Expenses',
   OTHER = 'Other',
   SUBCONTRACTOR = 'Subcontractor',
-  SCHEDULE_OF_RATES = 'ScheduleOfRate',
+  SCHEDULE_OF_RATES = 'ScheduleOfRates',
 }
 
 export enum PriceType {
@@ -31,4 +31,14 @@ export type MaterialCostModel = BaseCostModel;
 export type ExpensesCostModel = BaseCostModel;
 export type OtherCostModel = BaseCostModel;
 export type SubcontractorCostModel = BaseCostModel;
-export type ScheduleOfRatesCostModel = BaseCostModel;
+export interface PriceUsingRateSplit {
+  description: string;
+  cost: number;
+  sell: number;
+}
+
+export interface ScheduleOfRatesCostModel extends BaseCostModel {
+  scheduleOfRateLibrary: string;
+  scheduleOfRateItem: string;
+  priceUsingRateSplit?: PriceUsingRateSplit;
+}
