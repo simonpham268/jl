@@ -21,6 +21,8 @@ export type JobDetailTab =
   | 'Refcom Audit'
   | 'Job Forms';
 
+export type ProfitabilityTab = Extract<JobDetailTab, 'Details' | 'Costs'>;
+
 /**
  * Job status values
  */
@@ -123,7 +125,7 @@ export class JobDetailsPage extends BasePage {
   // ========================
   // Locators - Profit Overview Section (tab-scoped)
   // ========================
-  private readonly profitTabSelectors: Record<string, string> = {
+  private readonly profitTabSelectors: Record<ProfitabilityTab, string> = {
     Costs: '#CostDetails',
     Details: '#detailTab',
   };
@@ -394,6 +396,33 @@ export class JobDetailsPage extends BasePage {
     return redirectUrl;
   }
 
+  static async createJobAndGetId(
+    jobService: JobService,
+    data: CreateJobRequest,
+  ): Promise<{ redirectUrl: string; jobId: number }> {
+    const redirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, data);
+    const match = redirectUrl.match(/\/Job\/Detail\/(\d+)/);
+    if (!match) throw new Error(`Could not extract job ID from redirectUrl: ${redirectUrl}`);
+    return { redirectUrl, jobId: parseInt(match[1]) };
+  }
+
+  /**
+   * Execute a function for each tab in a tab array
+   * @param jobDetailsPage - JobDetailsPage instance
+   * @param tabs - Array of tab names to iterate over
+   * @param fn - Async function to execute for each tab
+   */
+  static async forEachTab<T extends JobDetailTab>(
+    jobDetailsPage: JobDetailsPage,
+    tabs: T[],
+    fn: (tab: T) => Promise<void>,
+  ): Promise<void> {
+    for (const tab of tabs) {
+      await jobDetailsPage.switchToTab(tab);
+      await fn(tab);
+    }
+  }
+
   async navigateToJob(redirectUrl: string): Promise<void> {
     await test.step(`Navigate to Job ${redirectUrl}`, async () => {
       await this.page.goto(redirectUrl);
@@ -401,7 +430,7 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  getProfitLocators(tab: string) {
+  getProfitLocators(tab: ProfitabilityTab) {
     const container = this.page.locator(this.profitTabSelectors[tab]);
     return {
       profitOverviewSection: container.locator('.cp-section-header').filter({ hasText: 'Profit Overview' }),
@@ -416,6 +445,24 @@ export class JobDetailsPage extends BasePage {
       costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
       costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
       targetProfitMarginAddButton: container.locator('button.cp-add-margin-btn'),
+      quotedCostValue: container
+        .getByText('Quoted Profitability', { exact: true })
+        .locator('..')
+        .getByText('- Quoted Cost')
+        .locator('..')
+        .locator(':last-child'),
+      quotedSellValue: container
+        .getByText('Quoted Profitability', { exact: true })
+        .locator('..')
+        .getByText('- Quoted Sell')
+        .locator('..')
+        .locator(':last-child'),
+      quotedProfitValue: container
+        .getByText('Quoted Profitability', { exact: true })
+        .locator('..')
+        .getByText('- Quoted Profit')
+        .locator('..')
+        .locator(':last-child'),
       // Profit Summary View — old profitability section
       profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
       quotedJobsLabel: container.locator('#quotedJobsTitle'),
@@ -427,7 +474,7 @@ export class JobDetailsPage extends BasePage {
     };
   }
 
-  async collapseProfitOverview(tab: 'Costs' | 'Details'): Promise<void> {
+  async collapseProfitOverview(tab: ProfitabilityTab): Promise<void> {
     await test.step('Collapse Profit Overview section', async () => {
       await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
       const loc = this.getProfitLocators(tab);
@@ -440,7 +487,7 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  async expandProfitOverview(tab: 'Costs' | 'Details'): Promise<void> {
+  async expandProfitOverview(tab: ProfitabilityTab): Promise<void> {
     await test.step('Expand Profit Overview section', async () => {
       await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
       const loc = this.getProfitLocators(tab);
@@ -453,7 +500,7 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  async expandProfitabilitySection(tab: 'Costs' | 'Details'): Promise<void> {
+  async expandProfitabilitySection(tab: ProfitabilityTab): Promise<void> {
     await test.step('Expand Profitability section', async () => {
       const loc = this.getProfitLocators(tab);
       const isExpanded = await loc.quotedJobsLabel.isVisible().catch(() => false);
@@ -462,19 +509,43 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  async clickAddVariableTargetProfitMargin(tab: 'Costs' | 'Details'): Promise<void> {
+  async clickAddVariableTargetProfitMargin(tab: ProfitabilityTab): Promise<void> {
     await test.step('Click + Add for Variable Target Profit Margin', async () => {
       await this.getProfitLocators(tab).targetProfitMarginAddButton.click();
     });
   }
 
-  async expandCostBreakdownByCategory(tab: 'Costs' | 'Details'): Promise<void> {
+  async expandCostBreakdownByCategory(tab: ProfitabilityTab): Promise<void> {
     await test.step('Expand Cost Breakdown by Category section', async () => {
       const loc = this.getProfitLocators(tab);
       const isExpanded = await loc.costBreakdownCategoryColumn.isVisible().catch(() => false);
       if (isExpanded) return;
       await loc.costBreakdownByCategorySection.click();
       await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  async getQuotedProfitValue(tab: ProfitabilityTab): Promise<{ profit: string }> {
+    return await test.step('Get Quoted Profitability values', async () => {
+      const loc = this.getProfitLocators(tab);
+      const profit = await loc.quotedProfitValue.textContent();
+      return { profit: (profit ?? '').trim() };
+    });
+  }
+
+  async getQuotedCostValue(tab: ProfitabilityTab): Promise<{ cost: string }> {
+    return await test.step('Get Quoted Cost value', async () => {
+      const loc = this.getProfitLocators(tab);
+      const cost = await loc.quotedCostValue.textContent();
+      return { cost: (cost ?? '').trim() };
+    });
+  }
+
+  async getQuotedSellValue(tab: ProfitabilityTab): Promise<{ sell: string }> {
+    return await test.step('Get Quoted Sell value', async () => {
+      const loc = this.getProfitLocators(tab);
+      const sell = await loc.quotedSellValue.textContent();
+      return { sell: (sell ?? '').trim() };
     });
   }
 

@@ -20,7 +20,9 @@ export interface BaseCostModel {
   description: string;
   costPerHour: number;
   priceType: PriceType;
-  upliftPercent: number;
+  upliftPercent?: number;
+  sellPerHour?: number;
+  taxRate?: string;
 }
 
 export type LabourCostModel = BaseCostModel;

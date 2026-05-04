@@ -1,6 +1,8 @@
 import { type Locator, type Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { BasePage } from '../BasePage';
+import type { QuoteService } from '../../api/services';
+import { createBasicApiQuoteData } from '../../data/apiData/quote.api.data';
 
 /**
  * Quote Detail Tab options
@@ -78,6 +80,8 @@ export class QuoteDetailPage extends BasePage {
   // Locators - Header Actions
   // ========================
   readonly upgradeButton: Locator;
+  readonly upgradeQuoteNextButton: Locator;
+  readonly upgradeQuoteSkipAndUpgradeButton: Locator;
   readonly rejectButton: Locator;
   readonly revertButton: Locator;
   readonly publishInPortalButton: Locator;
@@ -213,6 +217,8 @@ export class QuoteDetailPage extends BasePage {
 
     // Header Actions
     this.upgradeButton = page.locator('li').filter({ hasText: 'Upgrade' }).first();
+    this.upgradeQuoteNextButton = page.getByRole('button', { name: 'Next' });
+    this.upgradeQuoteSkipAndUpgradeButton = page.getByRole('button', { name: 'Skip & Upgrade' });
     this.rejectButton = page.locator('li').filter({ hasText: 'Reject' }).first()
       .or(page.getByRole('button', { name: /^reject$/i }));
     this.revertButton = page.getByRole('link', { name: /revert/i })
@@ -332,6 +338,39 @@ export class QuoteDetailPage extends BasePage {
   }
 
   // ========================
+  // Static Factories
+  // ========================
+
+  /**
+   * Create a quote via API and extract the quote ID
+   * @param quoteService - Quote service instance
+   * @returns Quote ID (string or number)
+   */
+  static async createQuoteAndGetId(
+    quoteService: QuoteService,
+  ): Promise<string | number> {
+    const res = await quoteService.createQuote(createBasicApiQuoteData());
+    const quoteId = res.body?.QuoteId ?? res.body?.AdditionalData?.QuoteId;
+    if (!quoteId) throw new Error('quoteId could not be created');
+    return quoteId;
+  }
+
+  static async upgradeToJobAndGetId(
+    page: Page,
+    quoteDetailPage: QuoteDetailPage,
+  ): Promise<number> {
+    await quoteDetailPage.switchToTab('Details');
+    await quoteDetailPage.clickUpgrade();
+    await quoteDetailPage.clickUpgradeQuoteNext();
+    await quoteDetailPage.clickUpgradeQuoteSkipAndUpgrade();
+    await page.reload();
+
+    const match = page.url().match(/\/Job\/Detail\/(\d+)/);
+    if (!match) throw new Error(`Expected job URL after upgrade, got: ${page.url()}`);
+    return parseInt(match[1], 10);
+  }
+
+  // ========================
   // Navigation
   // ========================
 
@@ -439,6 +478,24 @@ export class QuoteDetailPage extends BasePage {
   async clickUpgrade(): Promise<void> {
     await test.step('Click Upgrade button', async () => {
       await this.upgradeButton.click();
+    });
+  }
+
+  async clickUpgradeQuoteNext(): Promise<void> {
+    await test.step('Click Next on Upgrade Quote popup', async () => {
+      await this.upgradeQuoteNextButton.click();
+    });
+  }
+
+  async clickUpgradeQuoteSkipAndUpgrade(): Promise<void> {
+    await test.step('Click Skip & Upgrade on Upgrade Quote popup', async () => {
+      const upgradeTimeout = this.navigationTimeout;
+      await this.upgradeQuoteSkipAndUpgradeButton.click();
+      await this.loadingOverlay.waitFor({
+        state: 'detached',
+        timeout: upgradeTimeout,
+      });
+      await this.page.waitForURL(/\/Job\/Detail\/\d+/, { timeout: upgradeTimeout });
     });
   }
 
