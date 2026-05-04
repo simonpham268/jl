@@ -63,6 +63,10 @@ export interface CreateCustomerResponse {
     Message: string | null;
     WarningMessage: string | null;
     CustomerId?: string | number;
+    AdditionalData?: {
+        CustomerId?: string | number;
+        SiteId?: string | number;
+    };
 }
 
 export interface UpdateCustomerRequest extends Partial<CreateCustomerRequest> {

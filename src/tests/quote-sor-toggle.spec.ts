@@ -1,4 +1,4 @@
-﻿/** ID: 28951 28952 Tags: @Regression @SOR @Quote @Price */
+/** ID: 28951 28952 Tags: @Regression @SOR @Quote @Price */
 import { test, expect } from '../fixtures/combined.fixture';
 import { LoginPage } from '../pages/LoginPage';
 import { QuoteDetailPage } from '../pages/Quotes/QuoteDetailPage';

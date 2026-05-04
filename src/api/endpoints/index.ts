@@ -4,3 +4,4 @@ export * from './site.endpoints';
 export * from './asset.endpoints';
 export * from './quote.endpoints';
 export * from './ppm-quote.endpoints';
+export * from './setting.endpoints';

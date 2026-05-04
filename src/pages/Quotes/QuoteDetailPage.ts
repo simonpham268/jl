@@ -155,6 +155,38 @@ export class QuoteDetailPage extends BasePage {
   readonly sorFirstOption: Locator;
 
   // ========================
+  // Locators - Material Line Dialog (Add/Edit)
+  // ========================
+  readonly materialCostInput: (itemIndex: number) => Locator;
+  readonly materialUpliftInput: (itemIndex: number) => Locator;
+  readonly materialSellInput: (itemIndex: number) => Locator;
+  readonly materialFixedPriceOption: (itemIndex: number) => Locator;
+
+  // ========================
+  // Locators - Expense Line Dialog (Add/Edit)
+  // ========================
+  readonly expenseCostInput: (itemIndex: number) => Locator;
+  readonly expenseUpliftInput: (itemIndex: number) => Locator;
+  readonly expenseSellInput: (itemIndex: number) => Locator;
+  readonly expenseFixedPriceOption: (itemIndex: number) => Locator;
+
+  // ========================
+  // Locators - Subcontractor Line Dialog (Add/Edit)
+  // ========================
+  readonly subcontractorCostInput: (itemIndex: number) => Locator;
+  readonly subcontractorUpliftInput: (itemIndex: number) => Locator;
+  readonly subcontractorSellInput: (itemIndex: number) => Locator;
+  readonly subcontractorFixedPriceOption: (itemIndex: number) => Locator;
+
+  // ========================
+  // Locators - Schedule of Rates Line Dialog (Add/Edit)
+  // ========================
+  readonly sorItemSellValueInput: (itemIndex: number) => Locator;
+  readonly sorLineUpliftInput: (itemIndex: number) => Locator;
+  readonly sorLineDiscountInput: (itemIndex: number) => Locator;
+  readonly sorLineSellInput: (itemIndex: number) => Locator;
+
+  // ========================
   // Locators - Toast & Modal
   // ========================
   readonly toastMessage: Locator;
@@ -253,6 +285,30 @@ export class QuoteDetailPage extends BasePage {
       page.locator(`tr[class*="${domName}-Collapse"] td`).filter({ hasText: /^(YES|NO)$/ }).first();
     this.sorItemDropdownIcon = page.locator('.jl-select:has(input[name="jl-select-sorlibraryitem"]) .jl__open-indicator');
     this.sorFirstOption = page.getByRole('option').first();
+
+    // Material Line Dialog
+    this.materialCostInput = (n) => page.locator(`input[name="CostPerUnitMaterial-${n}"]`);
+    this.materialUpliftInput = (n) => page.locator(`input[name="UpliftMaterial-${n}"]`);
+    this.materialSellInput = (n) => page.locator(`input[name="SellPerUnitMaterial-${n}"]`);
+    this.materialFixedPriceOption = (n) => page.locator(`#contentMaterial-${n}`).getByText('Fixed Price');
+
+    // Expense Line Dialog
+    this.expenseCostInput = (n) => page.locator(`input[name="CostPerHourExpense-${n}"]`);
+    this.expenseUpliftInput = (n) => page.locator(`input[name="UpliftExpense-${n}"]`);
+    this.expenseSellInput = (n) => page.locator(`input[name="SellPerUnitExpense-${n}"]`);
+    this.expenseFixedPriceOption = (n) => page.locator(`label:has(input[name="PriceCalculationTypeExpense-${n}"][value="2"])`);
+
+    // Subcontractor Line Dialog
+    this.subcontractorCostInput = (n) => page.locator(`input[name="CostPerHourSubcontractor-${n}"]`);
+    this.subcontractorUpliftInput = (n) => page.locator(`input[name="UpliftSubcontractor-${n}"]`);
+    this.subcontractorSellInput = (n) => page.locator(`input[name="SellPerUnitSubcontractor-${n}"]`);
+    this.subcontractorFixedPriceOption = (n) => page.locator(`label:has(input[name="PriceCalculationTypeSubcontractor-${n}"][value="2"])`);
+
+    // Schedule of Rates Line Dialog
+    this.sorItemSellValueInput = (n) => page.locator(`input[name="ItemSellValueScheduleOfRates-${n}"]`);
+    this.sorLineUpliftInput = (n) => page.locator(`input[name="UpliftScheduleOfRates-${n}"]`);
+    this.sorLineDiscountInput = (n) => page.locator(`input[name="DiscountScheduleOfRates-${n}"]`);
+    this.sorLineSellInput = (n) => page.locator(`input[name="SellPerUnitScheduleOfRates-${n}"]`);
 
     // Toast & Modal
     this.toastMessage = page.locator('.toast, [class*="toast"], [role="alert"]');
@@ -900,6 +956,282 @@ export class QuoteDetailPage extends BasePage {
     return await test.step('Verify Schedule of Rates Cost Header is still Chargeable', async () => {
       const status = await this.getCostHeaderChargeableStatus('Schedule of Rates');
       return status === 'YES';
+    });
+  }
+
+  // ========================
+  // Material Line Dialog
+  // ========================
+
+  /**
+   * Add a material line with Fixed Price pricing type
+   * @param cost - Cost Per Unit value
+   * @param uplift - Uplift percentage (e.g., 10 for 10%)
+   */
+  async addMaterialLineFixedPrice(cost: number, uplift: number): Promise<void> {
+    await test.step(`Add material line: Cost=${cost}, Uplift=${uplift}%`, async () => {
+      const enableBtn = this.costHeaderEnableBtn('Material');
+      await enableBtn.waitFor({ state: 'visible', timeout: this.elementTimeout });
+      await enableBtn.click();
+      await this.materialCostInput(1).waitFor({ state: 'visible', timeout: 10000 });
+      await this.materialFixedPriceOption(1).click();
+      await this.materialCostInput(1).fill(String(cost));
+      await this.materialUpliftInput(1).fill(String(uplift));
+      await this.materialUpliftInput(1).press('Tab');
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      // Wait for form to close before returning (prevents race with next addMaterialLine call)
+      await this.materialCostInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  /**
+   * Reopen a saved material line by clicking its edit button
+   * @param lineIndex - 0-based index (0 = first line)
+   */
+  async reopenMaterialLine(lineIndex: number = 0): Promise<void> {
+    await test.step(`Reopen material line ${lineIndex}`, async () => {
+      const editBtn = this.page
+        .locator('tr[class*="Material-Collapse"] .jl-icon-orange.quotecost_add_edit')
+        .nth(lineIndex);
+      await editBtn.waitFor({ state: 'visible', timeout: 10000 });
+      await editBtn.click();
+      await this.materialCostInput(1).waitFor({ state: 'visible', timeout: 10000 });
+    });
+  }
+
+  /**
+   * Get Sell Per Unit value from the open material line dialog
+   * @param itemIndex - Item index in the dialog (default: 1)
+   */
+  async getMaterialLineSellPerUnit(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get material line Sell Per Unit', async () => {
+      await this.materialSellInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.materialSellInput(itemIndex).inputValue();
+    });
+  }
+
+  /**
+   * Get Uplift % value from the open material line dialog
+   * @param itemIndex - Item index in the dialog (default: 1)
+   */
+  async getMaterialLineUpliftPercentage(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get material line Uplift %', async () => {
+      await this.materialUpliftInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.materialUpliftInput(itemIndex).inputValue();
+    });
+  }
+
+  /** Close the currently-open material line panel by saving (no value changes) */
+  async saveMaterialLine(): Promise<void> {
+    await test.step('Close material line panel', async () => {
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      // Wait for panel/form to close before proceeding
+      await this.materialCostInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  async addExpenseLineFixedPrice(cost: number, uplift: number): Promise<void> {
+    await test.step(`Add expense line: Cost=${cost}, Uplift=${uplift}%`, async () => {
+      const enableBtn = this.costHeaderEnableBtn('Expenses');
+      await enableBtn.waitFor({ state: 'visible', timeout: this.elementTimeout });
+      await enableBtn.click();
+      await this.expenseCostInput(1).waitFor({ state: 'visible', timeout: 10000 });
+      await this.expenseFixedPriceOption(1).click();
+      // Wait for uplift field to appear after switching to Fixed Price
+      await this.expenseUpliftInput(1).waitFor({ state: 'visible', timeout: 5000 });
+      await this.expenseCostInput(1).fill(String(cost));
+      await this.expenseUpliftInput(1).fill(String(uplift));
+      await this.expenseUpliftInput(1).press('Tab');
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.expenseCostInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  async reopenExpenseLine(lineIndex: number = 0): Promise<void> {
+    await test.step(`Reopen expense line ${lineIndex}`, async () => {
+      const editBtn = this.page
+        .locator('tr[class*="Expense-Collapse"] .jl-icon-orange.quotecost_add_edit')
+        .nth(lineIndex);
+      await editBtn.waitFor({ state: 'visible', timeout: 10000 });
+      await editBtn.click();
+      await this.expenseCostInput(1).waitFor({ state: 'visible', timeout: 10000 });
+    });
+  }
+
+  async getExpenseLineSellPerUnit(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get expense line Sell Per Unit', async () => {
+      await this.expenseSellInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.expenseSellInput(itemIndex).inputValue();
+    });
+  }
+
+  async getExpenseLineUpliftPercentage(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get expense line Uplift %', async () => {
+      await this.expenseUpliftInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.expenseUpliftInput(itemIndex).inputValue();
+    });
+  }
+
+  async saveExpenseLine(): Promise<void> {
+    await test.step('Close expense line panel', async () => {
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.expenseCostInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  // ========================
+  // Subcontractor Line Dialog
+  // ========================
+
+  async addSubcontractorLineFixedPrice(cost: number, uplift: number): Promise<void> {
+    await test.step(`Add subcontractor line: Cost=${cost}, Uplift=${uplift}%`, async () => {
+      const enableBtn = this.costHeaderEnableBtn('Subcontractor');
+      await enableBtn.waitFor({ state: 'visible', timeout: this.elementTimeout });
+      await enableBtn.click();
+      await this.subcontractorCostInput(1).waitFor({ state: 'visible', timeout: 10000 });
+      await this.subcontractorFixedPriceOption(1).click();
+      // Wait for uplift field to appear after switching to Fixed Price
+      await this.subcontractorUpliftInput(1).waitFor({ state: 'visible', timeout: 5000 });
+      await this.subcontractorCostInput(1).fill(String(cost));
+      await this.subcontractorUpliftInput(1).fill(String(uplift));
+      await this.subcontractorUpliftInput(1).press('Tab');
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.subcontractorCostInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  async reopenSubcontractorLine(lineIndex: number = 0): Promise<void> {
+    await test.step(`Reopen subcontractor line ${lineIndex}`, async () => {
+      const editBtn = this.page
+        .locator('tr[class*="Subcontractor-Collapse"] .jl-icon-orange.quotecost_add_edit')
+        .nth(lineIndex);
+      await editBtn.waitFor({ state: 'visible', timeout: 10000 });
+      await editBtn.click();
+      await this.subcontractorCostInput(1).waitFor({ state: 'visible', timeout: 10000 });
+    });
+  }
+
+  async getSubcontractorLineSellPerUnit(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get subcontractor line Sell Per Unit', async () => {
+      await this.subcontractorSellInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.subcontractorSellInput(itemIndex).inputValue();
+    });
+  }
+
+  async getSubcontractorLineUpliftPercentage(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get subcontractor line Uplift %', async () => {
+      await this.subcontractorUpliftInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.subcontractorUpliftInput(itemIndex).inputValue();
+    });
+  }
+
+  async saveSubcontractorLine(): Promise<void> {
+    await test.step('Close subcontractor line panel', async () => {
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.subcontractorCostInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  // ========================
+  // Schedule of Rates Line Dialog
+  // ========================
+
+  /**
+   * Select the first available SOR item from the dropdown and enter the Item Sell Value.
+   * The ItemSellValue field only appears after a SOR item is selected.
+   */
+  private async selectFirstSorItemAndEnterSellValue(itemSellValue: number): Promise<void> {
+    await this.sorItemDropdownIcon.waitFor({ state: 'visible', timeout: 10000 });
+    await this.sorItemDropdownIcon.click();
+    await this.sorFirstOption.waitFor({ state: 'visible', timeout: 5000 });
+    await this.sorFirstOption.click();
+    await this.sorItemSellValueInput(1).waitFor({ state: 'visible', timeout: 10000 });
+    await this.sorItemSellValueInput(1).fill(String(itemSellValue));
+  }
+
+  /**
+   * Add a SOR line using Uplift %.
+   * @param itemSellValue - Item Library Sell Value (cost base)
+   * @param uplift - Uplift percentage (e.g. 10 for 10%)
+   */
+  async addSORLineWithUplift(itemSellValue: number, uplift: number): Promise<void> {
+    await test.step(`Add SOR line: ItemSellValue=${itemSellValue}, Uplift=${uplift}%`, async () => {
+      const enableBtn = this.costHeaderEnableBtn('Schedule of Rates');
+      await enableBtn.waitFor({ state: 'visible', timeout: this.elementTimeout });
+      await enableBtn.click();
+      await this.selectFirstSorItemAndEnterSellValue(itemSellValue);
+      await this.sorLineUpliftInput(1).waitFor({ state: 'visible', timeout: 5000 });
+      await this.sorLineUpliftInput(1).fill(String(uplift));
+      await this.sorLineUpliftInput(1).press('Tab');
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.sorItemSellValueInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  /**
+   * Add a SOR line using Discount %.
+   * @param itemSellValue - Item Library Sell Value (cost base)
+   * @param discount - Discount percentage (e.g. 10 for 10%)
+   */
+  async addSORLineWithDiscount(itemSellValue: number, discount: number): Promise<void> {
+    await test.step(`Add SOR line: ItemSellValue=${itemSellValue}, Discount=${discount}%`, async () => {
+      const enableBtn = this.costHeaderEnableBtn('Schedule of Rates');
+      await enableBtn.waitFor({ state: 'visible', timeout: this.elementTimeout });
+      await enableBtn.click();
+      await this.selectFirstSorItemAndEnterSellValue(itemSellValue);
+      await this.sorLineDiscountInput(1).waitFor({ state: 'visible', timeout: 5000 });
+      await this.sorLineDiscountInput(1).fill(String(discount));
+      await this.sorLineDiscountInput(1).press('Tab');
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.sorItemSellValueInput(1).waitFor({ state: 'hidden', timeout: 10000 });
+    });
+  }
+
+  async reopenSORLine(lineIndex: number = 0): Promise<void> {
+    await test.step(`Reopen SOR line ${lineIndex}`, async () => {
+      const editBtn = this.page
+        .locator('tr[class*="ScheduleOfRates-Collapse"] .jl-icon-orange.quotecost_add_edit')
+        .nth(lineIndex);
+      await editBtn.waitFor({ state: 'visible', timeout: 10000 });
+      await editBtn.click();
+      await this.sorItemSellValueInput(1).waitFor({ state: 'visible', timeout: 10000 });
+    });
+  }
+
+  async getSORLineSellPerUnit(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get SOR line Sell Per Unit', async () => {
+      await this.sorLineSellInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.sorLineSellInput(itemIndex).inputValue();
+    });
+  }
+
+  async getSORLineUpliftPercentage(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get SOR line Uplift %', async () => {
+      await this.sorLineUpliftInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.sorLineUpliftInput(itemIndex).inputValue();
+    });
+  }
+
+  async getSORLineDiscountPercentage(itemIndex: number = 1): Promise<string> {
+    return await test.step('Get SOR line Discount %', async () => {
+      await this.sorLineDiscountInput(itemIndex).waitFor({ state: 'visible', timeout: 5000 });
+      return await this.sorLineDiscountInput(itemIndex).inputValue();
+    });
+  }
+
+  async saveSORLine(): Promise<void> {
+    await test.step('Close SOR line panel', async () => {
+      await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+      await this.saveButton.click();
+      await this.sorItemSellValueInput(1).waitFor({ state: 'hidden', timeout: 10000 });
     });
   }
 }

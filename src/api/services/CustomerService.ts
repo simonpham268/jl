@@ -44,7 +44,7 @@ export class CustomerService {
   }
 
   async deleteCustomer(id: string | number): Promise<ApiResponse<void>> {
-    return this.client.delete<void>(CUSTOMER_ENDPOINTS.DELETE(id));
+    return this.client.post<void>(CUSTOMER_ENDPOINTS.DELETE(id), { form: { Id: id } });
   }
 
   async searchCustomers(searchTerm: string): Promise<ApiResponse<Customer[]>> {

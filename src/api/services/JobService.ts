@@ -68,4 +68,13 @@ export class JobService {
       params: { q: query }
     });
   }
+
+  async getDefaultJobTypeId(): Promise<number> {
+    type JobTypeResponse = { AdditionalData: { Data: Array<{ JobTypeAutoId: number; IsDefault: boolean }> } };
+    const res = await this.client.get<JobTypeResponse>(JOB_ENDPOINTS.GET_ALL_JOB_TYPES);
+    const data = res.body?.AdditionalData?.Data;
+    if (!data?.length) throw new Error(`Failed to fetch job types: ${JSON.stringify(res.body)}`);
+    const defaultType = data.find(t => t.IsDefault) ?? data[0];
+    return defaultType.JobTypeAutoId;
+  }
 }

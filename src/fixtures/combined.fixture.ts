@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
 import { ApiClient } from '../api/base/ApiClient';
-import { CustomerService, JobService, SiteService, AssetService, QuoteService, PPMQuoteService } from '../api/services';
+import { CustomerService, JobService, SiteService, AssetService, QuoteService, PPMQuoteService, SettingService } from '../api/services';
 import { findSuiteIdByTestCase, updateTestCaseStatus } from '../utils/azured-devops/azure';
 import { requireEnv } from '../utils/require.env';
 
@@ -106,6 +106,7 @@ interface CombinedFixtures {
     assetService: AssetService;
     quoteService: QuoteService;
     ppmQuoteService: PPMQuoteService;
+    settingService: SettingService;
 }
 
 // Extend base test with API fixtures + Azure DevOps integration
@@ -141,6 +142,10 @@ export const test = base.extend<CombinedFixtures>({
 
   ppmQuoteService: async ({ apiClient }, use) => {
     await use(new PPMQuoteService(apiClient));
+  },
+
+  settingService: async ({ apiClient }, use) => {
+    await use(new SettingService(apiClient));
   }
 });
 

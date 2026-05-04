@@ -64,4 +64,5 @@ export class QuoteService {
     if (siteId) params.siteId = String(siteId);
     return this.client.get<Quote[]>(QUOTE_ENDPOINTS.SEARCH, { params });
   }
+
 }
