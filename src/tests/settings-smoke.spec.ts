@@ -135,4 +135,30 @@ test.describe('Settings Smoke', () => {
     await expect(summaryRadio).toBeChecked();
     await expect(detailedRadio).not.toBeChecked();
   });
+
+  test('[TC_01_RQ4] @Smoke: System Setup - Verify "Job Profitability View" setting is displayed with two radio options in the Job Profitability section', async ({ page: _page }) => {
+    await sidebar.navigateTo('Settings');
+    await settingsPage.assertPageLoaded();
+    await settingsPage.clickSystemSetup();
+
+    // Scroll to and verify Job Profitability View label is displayed
+    const isSectionDisplayed = await systemSetupPage.isJobProfitabilityViewDisplayed();
+    console.log('Job Profitability View label displayed:', isSectionDisplayed);
+    expect(isSectionDisplayed).toBe(true);
+
+    // Verify Profit Summary View radio option is displayed
+    const isProfitSummaryDisplayed = await systemSetupPage.isProfitSummaryViewRadioDisplayed();
+    console.log('Profit Summary View radio displayed:', isProfitSummaryDisplayed);
+    expect(isProfitSummaryDisplayed).toBe(true);
+
+    // Verify Detailed with Cost Breakdown View radio option is displayed
+    const isDetailedViewDisplayed = await systemSetupPage.isDetailedCostBreakdownRadioDisplayed();
+    console.log('Detailed with Cost Breakdown View radio displayed:', isDetailedViewDisplayed);
+    expect(isDetailedViewDisplayed).toBe(true);
+
+    // Verify both radios share the same group name (only one can be selected at a time)
+    const areMutuallyExclusive = await systemSetupPage.areJobProfitabilityRadiosMutuallyExclusive();
+    console.log('Job Profitability View radios are mutually exclusive:', areMutuallyExclusive);
+    expect(areMutuallyExclusive).toBe(true);
+  });
 });
