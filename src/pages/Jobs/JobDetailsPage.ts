@@ -463,6 +463,12 @@ export class JobDetailsPage extends BasePage {
         .getByText('- Quoted Profit')
         .locator('..')
         .locator(':last-child'),
+      quotedProfitMarginValue: container
+        .getByText('Quoted Profitability', { exact: true })
+        .locator('..')
+        .getByText('- Profit Margin')
+        .locator('..')
+        .locator(':last-child'),
       // Profit Summary View — old profitability section
       profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
       quotedJobsLabel: container.locator('#quotedJobsTitle'),
@@ -530,6 +536,14 @@ export class JobDetailsPage extends BasePage {
       const loc = this.getProfitLocators(tab);
       const profit = await loc.quotedProfitValue.textContent();
       return { profit: (profit ?? '').trim() };
+    });
+  }
+
+  async getQuotedProfitMarginValue(tab: ProfitabilityTab): Promise<{ profitMargin: string }> {
+    return await test.step('Get Quoted Profit Margin value', async () => {
+      const loc = this.getProfitLocators(tab);
+      const profitMargin = await loc.quotedProfitMarginValue.textContent();
+      return { profitMargin: (profitMargin ?? '').trim() };
     });
   }
 

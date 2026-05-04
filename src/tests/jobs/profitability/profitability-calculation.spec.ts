@@ -4,15 +4,38 @@ import { JobDetailsPage } from '../../../pages/Jobs/JobDetailsPage';
 import type { ProfitabilityTab } from '../../../pages/Jobs/JobDetailsPage';
 import { SystemSetupPage } from '../../../pages/Settings/SystemSetupPage';
 import { QuoteDetailPage } from '../../../pages/Quotes/QuoteDetailPage';
-import { LabourCostModal, PriceType, type LabourCostModel } from '../../../modals/LabourCostModal';
-import { parseCurrencyValue } from '../../../utils/currency.util';
+import {
+  LabourCostModal,
+  PriceType,
+  type LabourCostModel,
+} from '../../../modals/LabourCostModal';
+import { parseCurrencyValue, CURRENCY_FORMAT } from '../../../utils/currency.util';
 
 function calculateExpectedQuotedCost(costs: readonly number[]): number {
   return -costs.reduce((sum, cost) => sum + cost, 0);
 }
 
-function calculateExpectedQuotedSell(sellPerHour: number): number {
-  return sellPerHour;
+function calculateExpectedQuotedSell(sells: readonly number[]): number {
+  return sells.reduce((sum, sell) => sum + sell, 0);
+}
+
+function calculateExpectedQuotedProfit(
+  sells: readonly number[],
+  costs: readonly number[],
+): number {
+  return (
+    calculateExpectedQuotedSell(sells) + calculateExpectedQuotedCost(costs)
+  );
+}
+
+function calculateExpectedProfitMargin(
+  sells: readonly number[],
+  costs: readonly number[],
+): number {
+  const totalSell = calculateExpectedQuotedSell(sells);
+  return totalSell === 0
+    ? 0
+    : (calculateExpectedQuotedProfit(sells, costs) / totalSell) * 100;
 }
 
 const profitabilityTabs: ProfitabilityTab[] = ['Details', 'Costs'];
@@ -30,14 +53,14 @@ const labourCostsValues: readonly LabourCostModel[] = [
     costPerHour: 200,
     priceType: PriceType.FIX_PRICE,
     sellPerHour: 0,
-    taxRate: 'S5 (5.00%)',
+    taxRate: 'No Tax',
   },
   {
     description: 'Labour 300',
     costPerHour: 300,
     priceType: PriceType.FIX_PRICE,
     sellPerHour: 0,
-    taxRate: 'S5 (5.00%)',
+    taxRate: 'No Tax',
   },
 ] as const;
 
@@ -69,29 +92,36 @@ test.describe('Detailed with Cost Breakdown View', () => {
         quoteDetailPage = new QuoteDetailPage(page);
         labourModal = new LabourCostModal(page, 'Quote');
 
-        quoteId = await QuoteDetailPage.createQuoteAndGetId(quoteService);
-        await quoteDetailPage.navigateTo(quoteId);
-        await quoteDetailPage.switchToTab('Prices');
-      });
+        if (!quoteId) {
+          quoteId = await QuoteDetailPage.createQuoteAndGetId(quoteService);
+          await quoteDetailPage.navigateTo(quoteId);
+          await quoteDetailPage.switchToTab('Prices');
 
-      test.afterEach(async ({ jobService, quoteService }) => {
-        if (jobId) await jobService.deleteJob(jobId);
-        if (quoteId) await quoteService.deleteQuote(quoteId);
+          await labourModal.addLabourCosts(labourCostsValues);
+          jobId = await QuoteDetailPage.upgradeToJobAndGetId(
+            page,
+            quoteDetailPage,
+          );
+        } else if (jobId) {
+          await jobDetailsPage.navigateToJob(`/Job/Detail/${jobId}`);
+        }
       });
 
       /** ID: TC_14_RQ4 Tags: Smoke, Regression */
-      test(
-        '[TC_14_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Quoted Costs calculation',
-        async ({ page }) => {
-          await labourModal.addLabourCosts(labourCostsValues);
-          jobId = await QuoteDetailPage.upgradeToJobAndGetId(page, quoteDetailPage);
-
-          await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
+      test('[TC_14_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Quoted Costs calculation', async ({
+        page,
+      }) => {
+        await JobDetailsPage.forEachTab(
+          jobDetailsPage,
+          profitabilityTabs,
+          async (tab) => {
             await jobDetailsPage.expandProfitOverview(tab);
             const loc = jobDetailsPage.getProfitLocators(tab);
             await expect(loc.quotedProfitabilitySection).toBeVisible();
 
-            const quotedCostValue = await jobDetailsPage.getQuotedCostValue(tab);
+            const quotedCostValue =
+              await jobDetailsPage.getQuotedCostValue(tab);
+            expect(quotedCostValue.cost).toMatch(CURRENCY_FORMAT);
             expect(quotedCostValue.cost).toContain('-');
             expect(parseCurrencyValue(quotedCostValue.cost)).toBeCloseTo(
               calculateExpectedQuotedCost(
@@ -99,30 +129,84 @@ test.describe('Detailed with Cost Breakdown View', () => {
               ),
               2,
             );
-          });
-        },
-      );
+          },
+        );
+      });
 
       /** ID: TC_15_RQ4 Tags: Smoke, Regression */
-      test(
-        '[TC_15_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Quoted Sell calculation',
-        async ({ page }) => {
-          await labourModal.addLabourCosts([labourCostsValues[0]]);
-          jobId = await QuoteDetailPage.upgradeToJobAndGetId(page, quoteDetailPage);
-
-          await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
+      test('[TC_15_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Quoted Sell calculation', async ({
+        page,
+      }) => {
+        await JobDetailsPage.forEachTab(
+          jobDetailsPage,
+          profitabilityTabs,
+          async (tab) => {
             await jobDetailsPage.expandProfitOverview(tab);
             const loc = jobDetailsPage.getProfitLocators(tab);
             await expect(loc.quotedProfitabilitySection).toBeVisible();
 
-            const quotedSellValue = await jobDetailsPage.getQuotedSellValue(tab);
+            const quotedSellValue =
+              await jobDetailsPage.getQuotedSellValue(tab);
+            expect(quotedSellValue.sell).toMatch(CURRENCY_FORMAT);
             expect(parseCurrencyValue(quotedSellValue.sell)).toBeCloseTo(
-              calculateExpectedQuotedSell(labourCostsValues[0].sellPerHour ?? 0),
+              calculateExpectedQuotedSell(
+                labourCostsValues.map((c) => c.sellPerHour ?? 0),
+              ),
               2,
             );
-          });
-        },
-      );
+          },
+        );
+      });
+      /** ID: TC_16_RQ4 Tags: Smoke, Regression */
+      test('[TC_16_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Quoted Profit calculation', async ({
+        page,
+      }) => {
+        await JobDetailsPage.forEachTab(
+          jobDetailsPage,
+          profitabilityTabs,
+          async (tab) => {
+            await jobDetailsPage.expandProfitOverview(tab);
+            const loc = jobDetailsPage.getProfitLocators(tab);
+            await expect(loc.quotedProfitabilitySection).toBeVisible();
+
+            const quotedProfitValue =
+              await jobDetailsPage.getQuotedProfitValue(tab);
+            expect(quotedProfitValue.profit).toMatch(CURRENCY_FORMAT);
+            expect(quotedProfitValue.profit).not.toContain('-');
+            expect(parseCurrencyValue(quotedProfitValue.profit)).toBeCloseTo(
+              calculateExpectedQuotedProfit(
+                labourCostsValues.map((c) => c.sellPerHour ?? 0),
+                labourCostsValues.map((c) => c.costPerHour),
+              ),
+              2,
+            );
+          },
+        );
+      });
+      /** ID: TC_17_RQ4 Tags: Smoke, Regression */
+      test('[TC_17_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Profit Margin calculation', async ({
+        page,
+      }) => {
+        await JobDetailsPage.forEachTab(
+          jobDetailsPage,
+          profitabilityTabs,
+          async (tab) => {
+            await jobDetailsPage.expandProfitOverview(tab);
+            const loc = jobDetailsPage.getProfitLocators(tab);
+            await expect(loc.quotedProfitabilitySection).toBeVisible();
+
+            const quotedProfitMarginValue = await jobDetailsPage.getQuotedProfitMarginValue(tab);
+            expect(quotedProfitMarginValue.profitMargin).toMatch(/\d+\.\d{2}%/);
+            expect(parseCurrencyValue(quotedProfitMarginValue.profitMargin)).toBeCloseTo(
+              calculateExpectedProfitMargin(
+                labourCostsValues.map((c) => c.sellPerHour ?? 0),
+                labourCostsValues.map((c) => c.costPerHour),
+              ),
+              2,
+            );
+          },
+        );
+      });
     }); // Quoted Profitability
   }); // Profit Overview
 }); // Detailed with Cost Breakdown View

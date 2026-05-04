@@ -350,8 +350,10 @@ export class QuoteDetailPage extends BasePage {
     quoteService: QuoteService,
   ): Promise<string | number> {
     const res = await quoteService.createQuote(createBasicApiQuoteData());
-    const quoteId = res.body?.QuoteId ?? res.body?.AdditionalData?.QuoteId;
-    if (!quoteId) throw new Error('quoteId could not be created');
+    const body = res.body as any;
+    const quoteId = body?.AdditionalData?.QuoteId ?? body?.QuoteId
+      ?? body?.redirectUrl?.match(/\/(\d+)$/)?.[1];
+    if (!quoteId) throw new Error(`quoteId could not be created. Response: ${JSON.stringify(res.body)}`);
     return quoteId;
   }
 
