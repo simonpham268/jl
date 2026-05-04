@@ -4,3 +4,4 @@ export * from './Site';
 export * from './Asset';
 export * from './Quote';
 export * from './PPMQuote';
+export * from './Setting';

@@ -7,5 +7,6 @@ export const JOB_ENDPOINTS = {
   SEARCH: '/api/Job/SearchJobs',
   ASSIGN: (id: string | number) => `/api/Job/AssignJob/${id}`,
   COMPLETE: (id: string | number) => `/api/Job/CompleteJob/${id}`,
-  CANCEL: (id: string | number) => `/api/Job/CancelJob/${id}`
+  CANCEL: (id: string | number) => `/api/Job/CancelJob/${id}`,
+  GET_ALL_JOB_TYPES: '/DocumentNumberingSetting/GetAllJobTypes',
 } as const;
