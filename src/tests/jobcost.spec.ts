@@ -73,7 +73,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      labourCostModel.costPerHour * (1 + labourCostModel.upliftPercent / 100),
+      labourCostModel.costPerHour * (1 + (labourCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${labourCostModel.costPerHour}, Uplift Percent: ${labourCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -119,7 +119,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      overtimeCostModel.costPerHour * (1 + overtimeCostModel.upliftPercent / 100),
+      overtimeCostModel.costPerHour * (1 + (overtimeCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${overtimeCostModel.costPerHour}, Uplift Percent: ${overtimeCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -165,7 +165,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      travelCostModel.costPerHour * (1 + travelCostModel.upliftPercent / 100),
+      travelCostModel.costPerHour * (1 + (travelCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${travelCostModel.costPerHour}, Uplift Percent: ${travelCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -213,7 +213,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      mileageCostModel.costPerHour * (1 + mileageCostModel.upliftPercent / 100),
+      mileageCostModel.costPerHour * (1 + (mileageCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${mileageCostModel.costPerHour}, Uplift Percent: ${mileageCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -261,7 +261,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      materialCostModel.costPerHour * (1 + materialCostModel.upliftPercent / 100),
+      materialCostModel.costPerHour * (1 + (materialCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${materialCostModel.costPerHour}, Uplift Percent: ${materialCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -309,7 +309,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      expensesCostModel.costPerHour * (1 + expensesCostModel.upliftPercent / 100),
+      expensesCostModel.costPerHour * (1 + (expensesCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${expensesCostModel.costPerHour}, Uplift Percent: ${expensesCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -357,7 +357,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      otherCostModel.costPerHour * (1 + otherCostModel.upliftPercent / 100),
+      otherCostModel.costPerHour * (1 + (otherCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${otherCostModel.costPerHour}, Uplift Percent: ${otherCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
@@ -405,7 +405,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     };
 
     const expectedSellPerHour = roundTo2Decimals(
-      subcontractorCostModel.costPerHour * (1 + subcontractorCostModel.upliftPercent / 100),
+      subcontractorCostModel.costPerHour * (1 + (subcontractorCostModel.upliftPercent ?? 0) / 100),
       roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING
     ).toFixed(2);
     console.log(`Test data - Cost Per Hour: ${subcontractorCostModel.costPerHour}, Uplift Percent: ${subcontractorCostModel.upliftPercent}, Expected Sell Per Hour: ${expectedSellPerHour}`);
