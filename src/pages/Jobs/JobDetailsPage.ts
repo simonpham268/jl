@@ -7,33 +7,14 @@ import type { CreateJobRequest } from '../../api/models';
 /**
  * Job Details tabs
  */
-export type JobDetailTab =
-  | 'Details'
-  | 'Contacts'
-  | 'Assets'
-  | 'Tasks'
-  | 'Costs'
-  | 'Visits'
-  | 'Subcontractor'
-  | 'SOR Items'
-  | 'History'
-  | 'Info'
-  | 'Refcom Audit'
-  | 'Job Forms';
+export type JobDetailTab = 'Details' | 'Contacts' | 'Assets' | 'Tasks' | 'Costs' | 'Visits' | 'Subcontractor' | 'SOR Items' | 'History' | 'Info' | 'Refcom Audit' | 'Job Forms';
 
 export type ProfitabilityTab = Extract<JobDetailTab, 'Details' | 'Costs'>;
 
 /**
  * Job status values
  */
-export type JobStatus =
-  | 'New Job'
-  | 'In Progress'
-  | 'On Hold'
-  | 'Completed'
-  | 'Cancelled'
-  | 'Awaiting Parts'
-  | 'Requires Revisit';
+export type JobStatus = 'New Job' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled' | 'Awaiting Parts' | 'Requires Revisit';
 
 /**
  * Job summary information
@@ -199,9 +180,7 @@ export class JobDetailsPage extends BasePage {
     // Header
     this.pageTitle = page.locator('h3').first();
     this.jobNumberText = page.locator('h3').locator('text=/M\\d+/');
-    this.jobStatusBadge = page
-      .locator('h3')
-      .locator('[class*="badge"], [class*="status"]');
+    this.jobStatusBadge = page.locator('h3').locator('[class*="badge"], [class*="status"]');
     this.jobsBackLink = page.getByRole('link', { name: 'Jobs' });
 
     // Header Actions
@@ -209,21 +188,11 @@ export class JobDetailsPage extends BasePage {
     this.logRelatedWorkButton = page.getByRole('button', {
       name: 'Log Related Work',
     });
-    this.logRelatedWorkDropdown = page
-      .locator('button:has-text("Log Related Work")')
-      .locator('..')
-      .locator('button')
-      .last();
+    this.logRelatedWorkDropdown = page.locator('button:has-text("Log Related Work")').locator('..').locator('button').last();
     this.addInvoiceButton = page.getByText('Add Invoice');
     this.shareButton = page.getByRole('button', { name: 'Share' });
-    this.shareDropdown = page
-      .locator('button:has-text("Share")')
-      .locator('..')
-      .locator('button')
-      .last();
-    this.moreOptionsButton = page
-      .locator('[class*="more-options"], [class*="dropdown"]')
-      .last();
+    this.shareDropdown = page.locator('button:has-text("Share")').locator('..').locator('button').last();
+    this.moreOptionsButton = page.locator('[class*="more-options"], [class*="dropdown"]').last();
 
     // Dialog/Modal Buttons
     this.completeDialogButton = page.getByRole('button', { name: 'Complete' });
@@ -231,9 +200,7 @@ export class JobDetailsPage extends BasePage {
     this.deleteJobOption = page.getByText('Delete Job');
 
     // Tab Actions
-    this.activeTab = page
-      .locator('[aria-selected="true"], [class*="active"]')
-      .first();
+    this.activeTab = page.locator('[aria-selected="true"], [class*="active"]').first();
     this.jobStatusLabel = page.locator('.job-status:not(.hidden)').first();
     this.addTaskButton = page.getByRole('button', { name: /Add Task/i });
     this.addCostButton = page.getByRole('button', { name: /Add Cost/i });
@@ -266,9 +233,7 @@ export class JobDetailsPage extends BasePage {
       exact: true,
     });
     this.actualProfitToDate = page.locator('text*=Actual Profit to Date');
-    this.contentLoadingOverlay = page.locator(
-      'section.jl-content-wrap.loading',
-    );
+    this.contentLoadingOverlay = page.locator('section.jl-content-wrap.loading');
 
     // Costs Tab - Selling Rate
     this.editSellingRateButton = page.locator('//*[contains(text(),"Selling Rate")]/parent::div/following-sibling::button');
@@ -287,91 +252,37 @@ export class JobDetailsPage extends BasePage {
     this.saveButton = page.getByRole('button', { name: 'Save' });
 
     // Job Details Fields
-    this.statusCombobox = page
-      .locator('text=Status')
-      .locator('..')
-      .locator('[role="combobox"]');
-    this.jobTypeCombobox = page
-      .locator('text=Job Type *')
-      .locator('..')
-      .locator('[role="combobox"]');
-    this.jobCategoryCombobox = page
-      .locator('text=Job Category')
-      .locator('..')
-      .locator('[role="combobox"]');
-    this.descriptionTextbox = page
-      .locator('text=Description*')
-      .locator('..')
-      .locator('input[type="text"], textarea');
+    this.statusCombobox = page.locator('text=Status').locator('..').locator('[role="combobox"]');
+    this.jobTypeCombobox = page.locator('text=Job Type *').locator('..').locator('[role="combobox"]');
+    this.jobCategoryCombobox = page.locator('text=Job Category').locator('..').locator('[role="combobox"]');
+    this.descriptionTextbox = page.locator('text=Description*').locator('..').locator('input[type="text"], textarea');
     this.jobNumberField = page.locator('text=Job Number').locator('..');
     this.loggedByField = page.locator('text=Logged By').locator('..');
-    this.tagsDropdown = page
-      .locator('text=Tag(s)')
-      .locator('..')
-      .locator('[class*="multiselect"]');
-    this.dateLoggedInput = page
-      .locator('text=Date Logged *')
-      .locator('..')
-      .locator('input[type="text"]');
-    this.dateCompleteInput = page
-      .locator('text=Date Complete')
-      .locator('..')
-      .locator('input[type="text"]');
+    this.tagsDropdown = page.locator('text=Tag(s)').locator('..').locator('[class*="multiselect"]');
+    this.dateLoggedInput = page.locator('text=Date Logged *').locator('..').locator('input[type="text"]');
+    this.dateCompleteInput = page.locator('text=Date Complete').locator('..').locator('input[type="text"]');
     this.recurJobCheckbox = page.getByText('Recur Job');
 
     // Additional Job Details
-    this.primaryJobTradeCombobox = page
-      .locator('text=Primary Job Trade')
-      .locator('..')
-      .locator('[role="combobox"]');
-    this.secondaryJobTradesDropdown = page
-      .locator('text=Secondary Job Trade(s)')
-      .locator('..')
-      .locator('[class*="multiselect"]');
-    this.preferredAppointmentDateInput = page
-      .locator('text=Preferred Appointment Date')
-      .locator('..')
-      .locator('input');
-    this.customerOrderNumberInput = page
-      .locator('text=Customer Order Number')
-      .locator('..')
-      .locator('input');
-    this.referenceNumberInput = page
-      .locator('text=Reference Number')
-      .locator('..')
-      .locator('input');
-    this.jobOwnerCombobox = page
-      .locator('text=Job Owner *')
-      .locator('..')
-      .locator('[role="combobox"]');
-    this.nextContactDateInput = page
-      .locator('text=Next Contact Date')
-      .locator('..')
-      .locator('input');
+    this.primaryJobTradeCombobox = page.locator('text=Primary Job Trade').locator('..').locator('[role="combobox"]');
+    this.secondaryJobTradesDropdown = page.locator('text=Secondary Job Trade(s)').locator('..').locator('[class*="multiselect"]');
+    this.preferredAppointmentDateInput = page.locator('text=Preferred Appointment Date').locator('..').locator('input');
+    this.customerOrderNumberInput = page.locator('text=Customer Order Number').locator('..').locator('input');
+    this.referenceNumberInput = page.locator('text=Reference Number').locator('..').locator('input');
+    this.jobOwnerCombobox = page.locator('text=Job Owner *').locator('..').locator('[role="combobox"]');
+    this.nextContactDateInput = page.locator('text=Next Contact Date').locator('..').locator('input');
     this.reqApprovalCheckbox = page.getByText('Req. Approval');
 
     // Job KPIs Section
     this.jobKpisHeading = page.locator('h4:has-text("Job KPIs")');
-    this.priorityLevelCombobox = page
-      .locator('text=Priority Level')
-      .locator('..')
-      .locator('[role="combobox"]');
-    this.completionFromDateLoggedCheckbox = page.getByText(
-      'Completion Time from Date Logged',
-    );
-    this.completionFromEngineerOnsiteCheckbox = page.getByText(
-      'Completion Time from Engineer Onsite',
-    );
-    this.targetCompletionDateInput = page
-      .locator('text=Target Completion Date')
-      .locator('..')
-      .locator('input');
+    this.priorityLevelCombobox = page.locator('text=Priority Level').locator('..').locator('[role="combobox"]');
+    this.completionFromDateLoggedCheckbox = page.getByText('Completion Time from Date Logged');
+    this.completionFromEngineerOnsiteCheckbox = page.getByText('Completion Time from Engineer Onsite');
+    this.targetCompletionDateInput = page.locator('text=Target Completion Date').locator('..').locator('input');
 
     // Fault Code Section
     this.faultCodeHeading = page.locator('h4:has-text("Fault Code")');
-    this.noFaultCodeMessage = page.locator(
-      'text*=No fault code library is assigned',
-    );
+    this.noFaultCodeMessage = page.locator('text*=No fault code library is assigned');
 
     // AI Summarise
     this.summariseButton = page.getByRole('button', { name: 'Summarise' });
@@ -382,13 +293,15 @@ export class JobDetailsPage extends BasePage {
   // Navigation
   // ========================
 
-  /**
-   * Navigate to Job Details page by ID
-   */
-  static async createJobAndGetRedirectUrl(
-    jobService: JobService,
-    data: CreateJobRequest,
-  ): Promise<string> {
+  async navigateToJob(redirectUrl: string): Promise<void> {
+    await test.step(`Navigate to Job ${redirectUrl}`, async () => {
+      await this.page.goto(redirectUrl);
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  // Navigate to Job Details page by ID
+  static async createJobAndGetRedirectUrl(jobService: JobService, data: CreateJobRequest): Promise<string> {
     const response = await jobService.createJob(data);
     if (!response.body) throw new Error('No response body from job creation');
     const redirectUrl = response.body.redirectUrl;
@@ -396,10 +309,7 @@ export class JobDetailsPage extends BasePage {
     return redirectUrl;
   }
 
-  static async createJobAndGetId(
-    jobService: JobService,
-    data: CreateJobRequest,
-  ): Promise<{ redirectUrl: string; jobId: number }> {
+  static async createJobAndGetId(jobService: JobService, data: CreateJobRequest): Promise<{ redirectUrl: string; jobId: number }> {
     const redirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, data);
     const match = redirectUrl.match(/\/Job\/Detail\/(\d+)/);
     if (!match) throw new Error(`Could not extract job ID from redirectUrl: ${redirectUrl}`);
@@ -412,155 +322,11 @@ export class JobDetailsPage extends BasePage {
    * @param tabs - Array of tab names to iterate over
    * @param fn - Async function to execute for each tab
    */
-  static async forEachTab<T extends JobDetailTab>(
-    jobDetailsPage: JobDetailsPage,
-    tabs: T[],
-    fn: (tab: T) => Promise<void>,
-  ): Promise<void> {
+  static async forEachTab<T extends JobDetailTab>(jobDetailsPage: JobDetailsPage, tabs: T[], fn: (tab: T) => Promise<void>): Promise<void> {
     for (const tab of tabs) {
       await jobDetailsPage.switchToTab(tab);
       await fn(tab);
     }
-  }
-
-  async navigateToJob(redirectUrl: string): Promise<void> {
-    await test.step(`Navigate to Job ${redirectUrl}`, async () => {
-      await this.page.goto(redirectUrl);
-      await this.page.waitForLoadState('domcontentloaded');
-    });
-  }
-
-  getProfitLocators(tab: ProfitabilityTab) {
-    const container = this.page.locator(this.profitTabSelectors[tab]);
-    return {
-      profitOverviewSection: container.locator('.cp-section-header').filter({ hasText: 'Profit Overview' }),
-      collapsedSummary: container.locator('.cp-collapsed-summary'),
-      quotedProfitabilitySection: container.getByText('Quoted Profitability'),
-      profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
-      profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
-      costBreakdownByCategorySection: container.getByText('Cost breakdown by category', { exact: true }),
-      costBreakdownCategoryColumn: container.getByRole('columnheader', { name: 'Category' }),
-      costBreakdownQuotedColumn: container.getByRole('columnheader', { name: 'Quoted' }),
-      costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
-      costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
-      costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
-      targetProfitMarginAddButton: container.locator('button.cp-add-margin-btn'),
-      quotedCostValue: container
-        .getByText('Quoted Profitability', { exact: true })
-        .locator('..')
-        .getByText('- Quoted Cost')
-        .locator('..')
-        .locator(':last-child'),
-      quotedSellValue: container
-        .getByText('Quoted Profitability', { exact: true })
-        .locator('..')
-        .getByText('- Quoted Sell')
-        .locator('..')
-        .locator(':last-child'),
-      quotedProfitValue: container
-        .getByText('Quoted Profitability', { exact: true })
-        .locator('..')
-        .getByText('- Quoted Profit')
-        .locator('..')
-        .locator(':last-child'),
-      quotedProfitMarginValue: container
-        .getByText('Quoted Profitability', { exact: true })
-        .locator('..')
-        .getByText('- Profit Margin')
-        .locator('..')
-        .locator(':last-child'),
-      // Profit Summary View — old profitability section
-      profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
-      quotedJobsLabel: container.locator('#quotedJobsTitle'),
-      costLabel: container.locator('#costTitle'),
-      sellLabel: container.locator('#sellTitle'),
-      profitColumnHeader: container.locator('div.summary-item-title').getByText('Profit', { exact: true }),
-      profitPercentColumnHeader: container.locator('div.summary-item-title').getByText('Profit %'),
-      profitMarginColumnHeader: container.locator('div.summary-item-title').getByText('Profit Margin'),
-    };
-  }
-
-  async collapseProfitOverview(tab: ProfitabilityTab): Promise<void> {
-    await test.step('Collapse Profit Overview section', async () => {
-      await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
-      const loc = this.getProfitLocators(tab);
-      const isExpanded =
-        (await loc.quotedProfitabilitySection.isVisible().catch(() => false)) ||
-        (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
-        (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
-      if (!isExpanded) return;
-      await loc.profitOverviewSection.click();
-    });
-  }
-
-  async expandProfitOverview(tab: ProfitabilityTab): Promise<void> {
-    await test.step('Expand Profit Overview section', async () => {
-      await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
-      const loc = this.getProfitLocators(tab);
-      const isExpanded =
-        (await loc.quotedProfitabilitySection.isVisible().catch(() => false)) ||
-        (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
-        (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
-      if (isExpanded) return;
-      await loc.profitOverviewSection.click();
-    });
-  }
-
-  async expandProfitabilitySection(tab: ProfitabilityTab): Promise<void> {
-    await test.step('Expand Profitability section', async () => {
-      const loc = this.getProfitLocators(tab);
-      const isExpanded = await loc.quotedJobsLabel.isVisible().catch(() => false);
-      if (isExpanded) return;
-      await loc.profitSectionExpandButton.click();
-    });
-  }
-
-  async clickAddVariableTargetProfitMargin(tab: ProfitabilityTab): Promise<void> {
-    await test.step('Click + Add for Variable Target Profit Margin', async () => {
-      await this.getProfitLocators(tab).targetProfitMarginAddButton.click();
-    });
-  }
-
-  async expandCostBreakdownByCategory(tab: ProfitabilityTab): Promise<void> {
-    await test.step('Expand Cost Breakdown by Category section', async () => {
-      const loc = this.getProfitLocators(tab);
-      const isExpanded = await loc.costBreakdownCategoryColumn.isVisible().catch(() => false);
-      if (isExpanded) return;
-      await loc.costBreakdownByCategorySection.click();
-      await this.page.waitForLoadState('domcontentloaded');
-    });
-  }
-
-  async getQuotedProfitValue(tab: ProfitabilityTab): Promise<{ profit: string }> {
-    return await test.step('Get Quoted Profitability values', async () => {
-      const loc = this.getProfitLocators(tab);
-      const profit = await loc.quotedProfitValue.textContent();
-      return { profit: (profit ?? '').trim() };
-    });
-  }
-
-  async getQuotedProfitMarginValue(tab: ProfitabilityTab): Promise<{ profitMargin: string }> {
-    return await test.step('Get Quoted Profit Margin value', async () => {
-      const loc = this.getProfitLocators(tab);
-      const profitMargin = await loc.quotedProfitMarginValue.textContent();
-      return { profitMargin: (profitMargin ?? '').trim() };
-    });
-  }
-
-  async getQuotedCostValue(tab: ProfitabilityTab): Promise<{ cost: string }> {
-    return await test.step('Get Quoted Cost value', async () => {
-      const loc = this.getProfitLocators(tab);
-      const cost = await loc.quotedCostValue.textContent();
-      return { cost: (cost ?? '').trim() };
-    });
-  }
-
-  async getQuotedSellValue(tab: ProfitabilityTab): Promise<{ sell: string }> {
-    return await test.step('Get Quoted Sell value', async () => {
-      const loc = this.getProfitLocators(tab);
-      const sell = await loc.quotedSellValue.textContent();
-      return { sell: (sell ?? '').trim() };
-    });
   }
 
   /**
@@ -675,9 +441,7 @@ export class JobDetailsPage extends BasePage {
         try {
           cancelVisitsElement = this.page.locator(selector).first();
           if (await cancelVisitsElement.isVisible({ timeout: 1000 })) {
-            console.log(
-              `Found "Cancel open visits" using selector: ${selector}`,
-            );
+            console.log(`Found "Cancel open visits" using selector: ${selector}`);
             break;
           }
         } catch (e) {
@@ -688,19 +452,14 @@ export class JobDetailsPage extends BasePage {
 
       if (cancelVisitsElement && (await cancelVisitsElement.isVisible())) {
         await cancelVisitsElement.click();
-        console.log(
-          'Clicked "Cancel open visits" - waiting for Complete button to enable',
-        );
+        console.log('Clicked "Cancel open visits" - waiting for Complete button to enable');
 
         // Wait for the Complete button to be enabled
         await this.waitForCompleteButtonEnabled();
       }
     } catch (error) {
       // If cancel visits option is not found, continue anyway
-      console.warn(
-        'Cancel open visits option not found or not clickable:',
-        (error as Error).message,
-      );
+      console.warn('Cancel open visits option not found or not clickable:', (error as Error).message);
     }
   }
 
@@ -716,9 +475,7 @@ export class JobDetailsPage extends BasePage {
     // Wait for button to be enabled (disabled attribute removed)
     await this.page.waitForFunction(
       () => {
-        const button = document.querySelector(
-          'button:has-text("Complete")',
-        ) as HTMLButtonElement;
+        const button = document.querySelector('button:has-text("Complete")') as HTMLButtonElement;
         return button && !button.disabled;
       },
       { timeout: 5000 },
@@ -776,14 +533,8 @@ export class JobDetailsPage extends BasePage {
       // Wait for status to be visible and not "New Job" (indicating completion)
       await this.page.waitForFunction(
         () => {
-          const statusLabel = document.querySelector(
-            '.job-status:not(.hidden)',
-          );
-          return (
-            statusLabel &&
-            statusLabel.textContent &&
-            statusLabel.textContent.trim() !== 'New Job'
-          );
+          const statusLabel = document.querySelector('.job-status:not(.hidden)');
+          return statusLabel && statusLabel.textContent && statusLabel.textContent.trim() !== 'New Job';
         },
         { timeout: 10000 },
       );
@@ -795,9 +546,7 @@ export class JobDetailsPage extends BasePage {
 
       const titleText = (await this.pageTitle.textContent()) || '';
       const jobNumberPattern = /M\d+\s+(.+)/;
-      const textToSearch = titleText.includes('/')
-        ? titleText.split('/')[1]?.trim() || ''
-        : titleText;
+      const textToSearch = titleText.includes('/') ? titleText.split('/')[1]?.trim() || '' : titleText;
       const match = textToSearch.match(jobNumberPattern);
       const statusText = match?.[1]?.trim() || '';
       return statusText.split(/\s+/).pop() || '';
@@ -858,12 +607,7 @@ export class JobDetailsPage extends BasePage {
       // Wait for page to update after job completion
       await this.page.waitForTimeout(1000);
 
-      const [jobNumber, status, customer, site] = await Promise.all([
-        this.getJobNumber(),
-        this.getJobStatus(),
-        this.getCustomerName(),
-        this.getSiteName(),
-      ]);
+      const [jobNumber, status, customer, site] = await Promise.all([this.getJobNumber(), this.getJobStatus(), this.getCustomerName(), this.getSiteName()]);
 
       return { jobNumber, status, customer, site };
     });
@@ -1178,11 +922,7 @@ export class JobDetailsPage extends BasePage {
    */
   async selectSellingRateOption(option: string): Promise<void> {
     await test.step(`Select Selling Rate option: ${option}`, async () => {
-      await this.sendKeyAndSelectItemOnDropdown(
-        this.sellingRateCombobox.getByRole('searchbox'),
-        this.page.locator('.jl__dropdown-option'),
-        option,
-      );
+      await this.sendKeyAndSelectItemOnDropdown(this.sellingRateCombobox.getByRole('searchbox'), this.page.locator('.jl__dropdown-option'), option);
     });
   }
 
@@ -1191,9 +931,7 @@ export class JobDetailsPage extends BasePage {
    * Scoped to the Quick View section to avoid matching the combobox selected value.
    */
   getSellingRateQuickViewItem(costType: string): Locator {
-    return this.editSellingRateModal
-      .locator('p').filter({ hasText: 'Quick View' }).locator('..')
-      .getByText(costType, { exact: true }).locator('..');
+    return this.editSellingRateModal.locator('p').filter({ hasText: 'Quick View' }).locator('..').getByText(costType, { exact: true }).locator('..');
   }
 
   /**
@@ -1322,5 +1060,143 @@ export class JobDetailsPage extends BasePage {
         await this.confirmButton.click();
       }
     });
+  }
+
+  // ========================
+  // PROFITABILITY – DETAIL/COSTS TAB
+  // ========================
+
+  getProfitLocators(tab: ProfitabilityTab) {
+    const container = this.page.locator(this.profitTabSelectors[tab]);
+    return {
+      profitOverviewSection: container.locator('.cp-section-header').filter({ hasText: 'Profit Overview' }),
+      collapsedSummary: container.locator('.cp-collapsed-summary'),
+      quotedProfitabilitySection: container.getByText('Quoted Profitability'),
+      profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
+      profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
+      costBreakdownByCategorySection: container.getByText('Cost breakdown by category', { exact: true }),
+      costBreakdownCategoryColumn: container.getByRole('columnheader', { name: 'Category' }),
+      costBreakdownQuotedColumn: container.getByRole('columnheader', { name: 'Quoted' }),
+      costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
+      costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
+      costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
+      targetProfitMarginAddButton: container.locator('button.cp-add-margin-btn'),
+      quotedCostValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Cost').locator('..').locator(':last-child'),
+      quotedSellValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Sell').locator('..').locator(':last-child'),
+      quotedProfitValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Profit').locator('..').locator(':last-child'),
+      quotedProfitMarginValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Profit Margin').locator('..').locator(':last-child'),
+      // Profit Summary View — old profitability section
+      profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
+      quotedJobsLabel: container.locator('#quotedJobsTitle'),
+      costLabel: container.locator('#costTitle'),
+      sellLabel: container.locator('#sellTitle'),
+      profitColumnHeader: container.locator('div.summary-item-title').getByText('Profit', { exact: true }),
+      profitPercentColumnHeader: container.locator('div.summary-item-title').getByText('Profit %'),
+      profitMarginColumnHeader: container.locator('div.summary-item-title').getByText('Profit Margin'),
+    };
+  }
+
+  async collapseProfitOverview(tab: ProfitabilityTab): Promise<void> {
+    await test.step('Collapse Profit Overview section', async () => {
+      await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
+      const loc = this.getProfitLocators(tab);
+      const isExpanded =
+        (await loc.quotedProfitabilitySection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
+      if (!isExpanded) return;
+      await loc.profitOverviewSection.click();
+    });
+  }
+
+  async expandProfitOverview(tab: ProfitabilityTab): Promise<void> {
+    await test.step('Expand Profit Overview section', async () => {
+      await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
+      const loc = this.getProfitLocators(tab);
+      const isExpanded =
+        (await loc.quotedProfitabilitySection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityIncludeWIPSection.isVisible().catch(() => false)) ||
+        (await loc.profitabilityActualsOnlySection.isVisible().catch(() => false));
+      if (isExpanded) return;
+      await loc.profitOverviewSection.click();
+    });
+  }
+
+  async expandProfitabilitySection(tab: ProfitabilityTab): Promise<void> {
+    await test.step('Expand Profitability section', async () => {
+      const loc = this.getProfitLocators(tab);
+      const isExpanded = await loc.quotedJobsLabel.isVisible().catch(() => false);
+      if (isExpanded) return;
+      await loc.profitSectionExpandButton.click();
+    });
+  }
+
+  async clickAddVariableTargetProfitMargin(tab: ProfitabilityTab): Promise<void> {
+    await test.step('Click + Add for Variable Target Profit Margin', async () => {
+      await this.getProfitLocators(tab).targetProfitMarginAddButton.click();
+    });
+  }
+
+  async expandCostBreakdownByCategory(tab: ProfitabilityTab): Promise<void> {
+    await test.step('Expand Cost Breakdown by Category section', async () => {
+      const loc = this.getProfitLocators(tab);
+      const isExpanded = await loc.costBreakdownCategoryColumn.isVisible().catch(() => false);
+      if (isExpanded) return;
+      await loc.costBreakdownByCategorySection.click();
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  /**
+   * Quoted Profitability
+   */
+
+  async getQuotedProfitValue(tab: ProfitabilityTab): Promise<{ profit: string }> {
+    return await test.step('Get Quoted Profitability values', async () => {
+      const loc = this.getProfitLocators(tab);
+      const profit = await loc.quotedProfitValue.textContent();
+      return { profit: (profit ?? '').trim() };
+    });
+  }
+
+  async getQuotedProfitMarginValue(tab: ProfitabilityTab): Promise<{ profitMargin: string }> {
+    return await test.step('Get Quoted Profit Margin value', async () => {
+      const loc = this.getProfitLocators(tab);
+      const profitMargin = await loc.quotedProfitMarginValue.textContent();
+      return { profitMargin: (profitMargin ?? '').trim() };
+    });
+  }
+
+  async getQuotedCostValue(tab: ProfitabilityTab): Promise<{ cost: string }> {
+    return await test.step('Get Quoted Cost value', async () => {
+      const loc = this.getProfitLocators(tab);
+      const cost = await loc.quotedCostValue.textContent();
+      return { cost: (cost ?? '').trim() };
+    });
+  }
+
+  async getQuotedSellValue(tab: ProfitabilityTab): Promise<{ sell: string }> {
+    return await test.step('Get Quoted Sell value', async () => {
+      const loc = this.getProfitLocators(tab);
+      const sell = await loc.quotedSellValue.textContent();
+      return { sell: (sell ?? '').trim() };
+    });
+  }
+
+  static calculateExpectedQuotedCost(costs: readonly number[]): number {
+    return -costs.reduce((sum, cost) => sum + cost, 0);
+  }
+
+  static calculateExpectedQuotedSell(sells: readonly number[]): number {
+    return sells.reduce((sum, sell) => sum + sell, 0);
+  }
+
+  static calculateExpectedQuotedProfit(sells: readonly number[], costs: readonly number[]): number {
+    return JobDetailsPage.calculateExpectedQuotedSell(sells) + JobDetailsPage.calculateExpectedQuotedCost(costs);
+  }
+
+  static calculateExpectedProfitMargin(sells: readonly number[], costs: readonly number[]): number {
+    const totalSell = JobDetailsPage.calculateExpectedQuotedSell(sells);
+    return totalSell === 0 ? 0 : (JobDetailsPage.calculateExpectedQuotedProfit(sells, costs) / totalSell) * 100;
   }
 }
