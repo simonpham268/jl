@@ -17,6 +17,7 @@ export abstract class BaseCostModal extends BasePage {
   readonly modalSaveButton: Locator;
   readonly closeModalButton: Locator;
   readonly discardButton: Locator;
+  readonly modalSwitchContainer: Locator;
 
   constructor(page: Page, protected readonly costType: CostType, protected readonly domName: string = costType) {
     super(page);
@@ -30,6 +31,7 @@ export abstract class BaseCostModal extends BasePage {
     this.modalSaveButton = page.locator('div[style*="display: block;"] .modal-footer .flex button.jl-custom-btn.jl-button-green'); // TODO: verify in DOM
     this.closeModalButton = page.getByRole('dialog').getByRole('button', { name: 'Close' });
     this.discardButton = page.getByRole('button', { name: 'Discard' });
+    this.modalSwitchContainer = page.locator('#modalSwitchContainer');
   }
 
   getUpliftPercentInput(mode: ModalMode): Locator {
@@ -105,7 +107,7 @@ export abstract class BaseCostModal extends BasePage {
     await test.step(`Close ${this.costType} cost modal and discard changes`, async () => {
       await this.closeModalButton.click();
       await this.discardButton.click();
-      await this.page.locator('#modalSwitchContainer').waitFor({ state: 'hidden', timeout: 10000 });
+      await this.modalSwitchContainer.waitFor({ state: 'hidden', timeout: 10000 });
     });
   }
 
