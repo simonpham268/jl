@@ -1200,11 +1200,11 @@ export class JobDetailsPage extends BasePage {
     return totalSell === 0 ? 0 : (JobDetailsPage.calculateExpectedQuotedProfit(sells, costs) / totalSell) * 100;
   }
 
-    /**
+  /**
    * Cost breakdown by category
    */
 
-      getCostBreakdownCategoryRow(tab: ProfitabilityTab, categoryName: string) {
+  getCostBreakdownCategoryRow(tab: ProfitabilityTab, categoryName: string) {
     const container = this.page.locator(this.profitTabSelectors[tab]);
     return container.locator('td.cp-breakdown-td-cat', { hasText: categoryName });
   }
