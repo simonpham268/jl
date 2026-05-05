@@ -48,6 +48,10 @@ export abstract class BaseCostModal extends BasePage {
     return this.page.locator(`//input[contains(@name,'Uplift${this.domName}-${mode}')]`); // TODO: verify in DOM
   }
 
+  getDiscountPercentInput(mode: ModalMode): Locator {
+    return this.page.locator(`//input[contains(@name,'Discount${this.domName}-${mode}')]`);
+  }
+
   getSellPerHourInput(mode: ModalMode): Locator {
     return this.page.locator(`//input[contains(@name,'SellPerUnit${this.domName}-${mode}')]`); // TODO: verify in DOM
   }
@@ -107,6 +111,12 @@ export abstract class BaseCostModal extends BasePage {
   async getUpliftPercent(mode: ModalMode = 'Edit'): Promise<string> {
     return await test.step('Get Uplift % value', async () => {
       return await this.getUpliftPercentInput(mode).inputValue();
+    });
+  }
+
+  async getDiscountPercent(mode: ModalMode = 'Edit'): Promise<string> {
+    return await test.step('Get Discount % value', async () => {
+      return await this.getDiscountPercentInput(mode).inputValue();
     });
   }
 
