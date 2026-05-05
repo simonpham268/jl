@@ -15,6 +15,8 @@ export abstract class BaseCostModal extends BasePage {
   readonly estimatedRadio: Locator;
   readonly descriptionInput: Locator;
   readonly modalSaveButton: Locator;
+  readonly closeModalButton: Locator;
+  readonly discardButton: Locator;
 
   constructor(page: Page, protected readonly costType: CostType, protected readonly domName: string = costType) {
     super(page);
@@ -26,6 +28,8 @@ export abstract class BaseCostModal extends BasePage {
     this.estimatedRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Estimated')]`); // TODO: verify in DOM
     this.descriptionInput = page.locator(`//textarea[contains(@name,'Description${domName}-Add')]`); // TODO: verify in DOM
     this.modalSaveButton = page.locator('div[style*="display: block;"] .modal-footer .flex button.jl-custom-btn.jl-button-green'); // TODO: verify in DOM
+    this.closeModalButton = page.getByRole('dialog').getByRole('button', { name: 'Close' });
+    this.discardButton = page.getByRole('button', { name: 'Discard' });
   }
 
   getUpliftPercentInput(mode: ModalMode): Locator {
@@ -94,6 +98,14 @@ export abstract class BaseCostModal extends BasePage {
     await test.step(`Save ${this.costType} cost modal`, async () => {
       await this.modalSaveButton.click();
       await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  async closeModalAndDiscard(): Promise<void> {
+    await test.step(`Close ${this.costType} cost modal and discard changes`, async () => {
+      await this.closeModalButton.click();
+      await this.discardButton.click();
+      await this.page.locator('#modalSwitchContainer').waitFor({ state: 'hidden', timeout: 10000 });
     });
   }
 

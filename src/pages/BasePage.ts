@@ -182,6 +182,8 @@ export class BasePage {
     const rawMatch = textSelected ?? text;
     const matchText =
       rawMatch.length < 30 ? rawMatch : rawMatch.substring(0, 30);
+
+    await optionItemSelector.first().waitFor({ state: 'visible', timeout: 10000 });
     const optionLocator = optionItemSelector.filter({ hasText: matchText });
 
     try {
