@@ -42,14 +42,22 @@ export class SystemSetupPage extends BasePage {
   readonly preserveUpliftDiscountHelpText: Locator;
   readonly preserveUpliftDiscountVisual: Locator;
 
-  // Job Profitability View radio group
+  // Job Profitability View
   readonly jobProfitabilityViewLabel: Locator;
+  readonly profitSummaryViewRadio: Locator;
+  readonly profitSummaryViewRadioVisual: Locator;
+  readonly detailedCostBreakdownRadio: Locator;
+  readonly detailedCostBreakdownRadioVisual: Locator;
 
   constructor(page: Page) {
     super(page);
 
     // Job Profitability View
     this.jobProfitabilityViewLabel = page.getByText('Job Profitability View');
+    this.profitSummaryViewRadio = page.locator('input[name="JobProfitabilityViewType"][value="1"]');
+    this.profitSummaryViewRadioVisual = page.locator('.jl-radio:has(input[name="JobProfitabilityViewType"][value="1"]) span.my-shape');
+    this.detailedCostBreakdownRadio = page.locator('input[name="JobProfitabilityViewType"][value="2"]');
+    this.detailedCostBreakdownRadioVisual = page.locator('.jl-radio:has(input[name="JobProfitabilityViewType"][value="2"]) span.my-shape');
 
     // Rounding Type
     this.roundingTypeCombobox = page.locator('#jlRoundingType__combobox');
@@ -293,6 +301,59 @@ export class SystemSetupPage extends BasePage {
     await test.step('Click Edit button', async () => {
       await this.editButton.waitFor({ state: 'visible', timeout: 5000 });
       await this.editButton.click();
+    });
+  }
+
+  async isJobProfitabilityViewDisplayed(): Promise<boolean> {
+    return await test.step('Check if Job Profitability View label is displayed', async () => {
+      await this.jobProfitabilityViewLabel.scrollIntoViewIfNeeded();
+      return await this.jobProfitabilityViewLabel.isVisible();
+    });
+  }
+
+  async isProfitSummaryViewRadioDisplayed(): Promise<boolean> {
+    return await test.step('Check if Profit Summary View radio is displayed', async () => {
+      return await this.profitSummaryViewRadioVisual.isVisible();
+    });
+  }
+
+  async isDetailedCostBreakdownRadioDisplayed(): Promise<boolean> {
+    return await test.step('Check if Detailed with Cost Breakdown View radio is displayed', async () => {
+      return await this.detailedCostBreakdownRadioVisual.isVisible();
+    });
+  }
+
+  async areJobProfitabilityRadiosMutuallyExclusive(): Promise<boolean> {
+    return await test.step('Verify both Job Profitability View radios share the same group name', async () => {
+      const name1 = await this.profitSummaryViewRadio.getAttribute('name');
+      const name2 = await this.detailedCostBreakdownRadio.getAttribute('name');
+      return name1 === name2 && name1 === 'JobProfitabilityViewType';
+    });
+  }
+
+  async selectProfitSummaryViewRadio(): Promise<void> {
+    await test.step('Select Profit Summary View radio', async () => {
+      await this.profitSummaryViewRadioVisual.scrollIntoViewIfNeeded();
+      await this.profitSummaryViewRadio.evaluate((el: Element) => (el as HTMLInputElement).click());
+    });
+  }
+
+  async selectDetailedCostBreakdownRadio(): Promise<void> {
+    await test.step('Select Detailed with Cost Breakdown View radio', async () => {
+      await this.detailedCostBreakdownRadioVisual.scrollIntoViewIfNeeded();
+      await this.detailedCostBreakdownRadio.evaluate((el: Element) => (el as HTMLInputElement).click());
+    });
+  }
+
+  async isProfitSummaryViewRadioChecked(): Promise<boolean> {
+    return await test.step('Check if Profit Summary View radio is checked', async () => {
+      return await this.profitSummaryViewRadio.isChecked();
+    });
+  }
+
+  async isDetailedCostBreakdownRadioChecked(): Promise<boolean> {
+    return await test.step('Check if Detailed with Cost Breakdown View radio is checked', async () => {
+      return await this.detailedCostBreakdownRadio.isChecked();
     });
   }
 }
