@@ -25,13 +25,13 @@ export abstract class BaseCostModal extends BasePage {
     protected readonly costType: CostType,
     protected readonly domName: string = costType,
     nameSuffix: string = domName,
-    costFieldName: string = `CostPerHour${nameSuffix}`,
+    costFieldName: string = 'CostPer',
   ) {
     super(page);
 
-    this.addButton = page.locator(`a.quotecost_add:has(i[data-original-title="Add ${domName}"])`);
+    this.addButton = page.locator(`a.quotecost_add:has(i[data-original-title="Add ${domName}"]), #Add-${domName}`);
     this.modalDialog = page.locator('[role="dialog"]');
-    this.costPerHourInput = page.locator(`input[name*="${costFieldName}"]`);
+    this.costPerHourInput = page.locator(`input[name*="${costFieldName}"][name*="${nameSuffix}"]`);
     // Radio buttons: click span.my-shape (visible custom radio) inside the label wrapping the hidden input
     this.fixPriceRadio = page.locator(`label:has(input[name*="PriceCalculationType${nameSuffix}"][value="2"]) span.my-shape`);
     this.actualRadio = page.locator(`label:has(input[name*="PriceCalculationType${nameSuffix}"][value="1"]) span.my-shape`);
