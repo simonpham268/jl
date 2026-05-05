@@ -13,19 +13,35 @@ export abstract class BaseCostModal extends BasePage {
   readonly fixPriceRadio: Locator;
   readonly actualRadio: Locator;
   readonly estimatedRadio: Locator;
+  readonly taxRateDropdownToggle: Locator;
+  readonly taxRateListbox: Locator;
+  readonly taxRateOptions: Locator;
+  readonly sellPerHourInput: Locator;
   readonly descriptionInput: Locator;
   readonly modalSaveButton: Locator;
 
-  constructor(page: Page, protected readonly costType: CostType, protected readonly domName: string = costType) {
+  constructor(
+    page: Page,
+    protected readonly costType: CostType,
+    protected readonly domName: string = costType,
+    nameSuffix: string = domName,
+    costFieldName: string = `CostPerHour${nameSuffix}`,
+  ) {
     super(page);
-    this.addButton = page.locator(`#Add-${domName}`);
-    this.modalDialog = page.locator('[role="dialog"]'); // TODO: verify in DOM
-    this.costPerHourInput = page.locator(`//input[contains(@name,'CostPerUnit${domName}-Add')]`); // TODO: verify in DOM
-    this.fixPriceRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Fixed Price')]`); // TODO: verify in DOM
-    this.actualRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Actual')]`); // TODO: verify in DOM
-    this.estimatedRadio = page.locator(`//input[contains(@name,'PriceCalculationType${domName}-Add')]/following-sibling::span[contains(text(),'Estimated')]`); // TODO: verify in DOM
-    this.descriptionInput = page.locator(`//textarea[contains(@name,'Description${domName}-Add')]`); // TODO: verify in DOM
-    this.modalSaveButton = page.locator('div[style*="display: block;"] .modal-footer .flex button.jl-custom-btn.jl-button-green'); // TODO: verify in DOM
+
+    this.addButton = page.locator(`a.quotecost_add:has(i[data-original-title="Add ${domName}"])`);
+    this.modalDialog = page.locator('[role="dialog"]');
+    this.costPerHourInput = page.locator(`input[name*="${costFieldName}"]`);
+    // Radio buttons: click span.my-shape (visible custom radio) inside the label wrapping the hidden input
+    this.fixPriceRadio = page.locator(`label:has(input[name*="PriceCalculationType${nameSuffix}"][value="2"]) span.my-shape`);
+    this.actualRadio = page.locator(`label:has(input[name*="PriceCalculationType${nameSuffix}"][value="1"]) span.my-shape`);
+    this.estimatedRadio = page.locator(`label:has(input[name*="PriceCalculationType${nameSuffix}"][value="0"]) span.my-shape`);
+    this.taxRateDropdownToggle = this.modalDialog.locator('#jlTaxCodeId__combobox');
+    this.taxRateListbox = page.locator('#jlTaxCodeId__listbox');
+    this.taxRateOptions = this.taxRateListbox.locator('.jl__dropdown-option');
+    this.sellPerHourInput = page.locator(`input[name*="SellPerUnit${nameSuffix}"]`);
+    this.descriptionInput = page.locator(`textarea[name*="Description${nameSuffix}"]`);
+    this.modalSaveButton = page.locator('div[style*="display: block;"] .modal-footer .flex button.jl-custom-btn.jl-button-green');
   }
 
   getUpliftPercentInput(mode: ModalMode): Locator {
@@ -41,7 +57,7 @@ export abstract class BaseCostModal extends BasePage {
   }
 
   getEditButton(dynamicText: string): Locator {
-    return this.page.locator(`//button[@id='Edit${dynamicText}']`); // TODO: verify in DOM
+    return this.page.locator(`//button[@id='Edit${dynamicText}']`);
   }
 
   protected async clickAdd(): Promise<void> {
@@ -62,9 +78,23 @@ export abstract class BaseCostModal extends BasePage {
       } else if (data.priceType === PriceType.ESTIMATED) {
         await this.estimatedRadio.check();
       }
-      const upliftInput = this.getUpliftPercentInput('Add');
-      await upliftInput.clear();
-      await upliftInput.fill(String(data.upliftPercent));
+      if (data.upliftPercent !== undefined) {
+        await this.getUpliftPercentInput('Add').clear();
+        await this.getUpliftPercentInput('Add').fill(String(data.upliftPercent));
+      }
+
+      if (data.sellPerHour !== undefined) {
+        await this.sellPerHourInput.clear();
+        await this.sellPerHourInput.fill(String(data.sellPerHour));
+      }
+
+      if (data.taxRate !== undefined) {
+        await this.taxRateDropdownToggle.click();
+        await this.taxRateOptions
+          .filter({ hasText: data.taxRate })
+          .first()
+          .click();
+      }
 
       await this.descriptionInput.scrollIntoViewIfNeeded();
       await this.descriptionInput.fill(data.description);
