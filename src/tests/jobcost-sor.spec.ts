@@ -356,4 +356,206 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     const actualDiscount = await sorCostModal.getDiscountPercent('Edit');
     expect(parseFloat(actualDiscount)).toBe(discountPercent);
   });
+
+  /** ID: TC_18_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_18_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is recalculated from rounded Sell value when "Preserve Entered Uplift/Discount Percentage" setting is off', async ({ jobService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: false,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(createBasicApiJobData());
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSell = parseFloat((Math.random() * 50 + 5).toFixed(2));
+    const discountPercent = Math.floor(Math.random() * 30) + 1;
+    const description = `SOR ${Date.now()}`;
+
+    await sorCostModal.fillSorModalPriceAndDiscount(
+      {
+        scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+        scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+        priceRateSell,
+      },
+      discountPercent,
+    );
+
+    const expectedSellPerHour = roundTo2Decimals(
+      priceRateSell * (1 - discountPercent / 100),
+      roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING,
+    ).toFixed(2);
+
+    const actualSellPerHourAdd = await sorCostModal.getSellPerHour('Add');
+    expect(actualSellPerHourAdd).toBe(expectedSellPerHour);
+
+    await sorCostModal.fillDescription(description);
+    await sorCostModal.saveModal();
+
+    await sorCostModal.clickEditScheduleOfRatesRecord(description);
+
+    const editSellPerHour = await sorCostModal.getSellPerHour('Edit');
+    expect(editSellPerHour).toBe(expectedSellPerHour);
+
+    const roundedSell = parseFloat(expectedSellPerHour);
+    const expectedRecalculatedDiscount = roundTo2Decimals(
+      ((priceRateSell - roundedSell) / priceRateSell) * 100,
+      roundingConfig.roundingOption ?? ROUNDING_OPTION.NO_ROUNDING,
+    ).toFixed(2);
+
+    const actualDiscount = await sorCostModal.getDiscountPercent('Edit');
+    expect(parseFloat(actualDiscount)).toBe(parseFloat(expectedRecalculatedDiscount));
+  });
+
+  /** ID: TC_21_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_21_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is correctly calculated from entered Sell value', async ({ jobService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: false,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(createBasicApiJobData());
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSell = parseFloat((Math.random() * 40 + 10).toFixed(2));
+    const sellPerUnit = parseFloat((Math.random() * (priceRateSell - 1) + 0.5).toFixed(2));
+    console.log('price rate sell: ' + priceRateSell);
+    console.log('sell Per Unit: ' + sellPerUnit);
+
+    await sorCostModal.fillSorModalBySellPerUnit(
+      {
+        scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+        scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+        priceRateSell,
+      },
+      sellPerUnit,
+    );
+
+    const expectedDiscount = (
+      ((priceRateSell - sellPerUnit) / priceRateSell) * 100
+    ).toFixed(2);
+    console.log('expected discount: ' + expectedDiscount);
+
+    const actualDiscount = await sorCostModal.getDiscountPercent('Add');
+    expect(parseFloat(actualDiscount)).toBe(parseFloat(expectedDiscount));
+  });
+
+  /** ID: TC_36_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_36_RQ2 @Smoke [Job > Schedule of Rates] Preserve entered uplift and discount percentages', async ({ jobService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: true,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(createBasicApiJobData());
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSellUplift = parseFloat((Math.random() * 50 + 5).toFixed(2));
+    const upliftPercent = Math.floor(Math.random() * 20) + 1;
+    const descriptionUplift = `SOR Test Uplift ${Date.now()}`;
+
+    const sorUpliftModel: ScheduleOfRatesCostModel = {
+      description: descriptionUplift,
+      costPerHour: priceRateSellUplift,
+      priceType: PriceType.FIX_PRICE,
+      upliftPercent,
+      scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+      scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+      priceUsingRateSplit: {
+        description: '',
+        cost: 0,
+        sell: priceRateSellUplift,
+      },
+    };
+
+    await sorCostModal.fillAddScheduleOfRatesCostModal(sorUpliftModel);
+    const expectedSellPerHourUplift = await sorCostModal.getSellPerHour('Add');
+    await sorCostModal.saveModal();
+
+    await sorCostModal.clickEditScheduleOfRatesRecord(descriptionUplift);
+
+    const editSellPerHourUplift = await sorCostModal.getSellPerHour('Edit');
+    expect(editSellPerHourUplift).toBe(expectedSellPerHourUplift);
+
+    const actualUplift = await sorCostModal.getUpliftPercent('Edit');
+    expect(parseFloat(actualUplift)).toBe(upliftPercent);
+
+    await sorCostModal.closeModalAndDiscard();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSellDiscount = parseFloat((Math.random() * 50 + 5).toFixed(2));
+    const discountPercent = Math.floor(Math.random() * 20) + 1;
+    const descriptionDiscount = `SOR Test Discount ${Date.now()}`;
+
+    await sorCostModal.fillSorModalPriceAndDiscount(
+      {
+        scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+        scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+        priceRateSell: priceRateSellDiscount,
+      },
+      discountPercent,
+    );
+    const expectedSellPerHourDiscount = await sorCostModal.getSellPerHour('Add');
+    await sorCostModal.fillDescription(descriptionDiscount);
+    await sorCostModal.saveModal();
+
+    await sorCostModal.clickEditScheduleOfRatesRecord(descriptionDiscount);
+
+    const editSellPerHourDiscount = await sorCostModal.getSellPerHour('Edit');
+    expect(editSellPerHourDiscount).toBe(expectedSellPerHourDiscount);
+
+    const actualDiscount2 = await sorCostModal.getDiscountPercent('Edit');
+    expect(parseFloat(actualDiscount2)).toBe(discountPercent);
+  });
 });

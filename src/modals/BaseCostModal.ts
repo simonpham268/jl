@@ -19,6 +19,9 @@ export abstract class BaseCostModal extends BasePage {
   readonly sellPerHourInput: Locator;
   readonly descriptionInput: Locator;
   readonly modalSaveButton: Locator;
+  readonly closeModalButton: Locator;
+  readonly discardButton: Locator;
+  readonly modalSwitchContainer: Locator;
 
   constructor(
     page: Page,
@@ -42,6 +45,9 @@ export abstract class BaseCostModal extends BasePage {
     this.sellPerHourInput = page.locator(`input[name*="SellPerUnit${nameSuffix}"]`);
     this.descriptionInput = page.locator(`textarea[name*="Description${nameSuffix}"]`);
     this.modalSaveButton = page.locator('div[style*="display: block;"] .modal-footer .flex button.jl-custom-btn.jl-button-green');
+    this.closeModalButton = page.getByRole('dialog').getByRole('button', { name: 'Close' });
+    this.discardButton = page.getByRole('button', { name: 'Discard' });
+    this.modalSwitchContainer = page.locator('#modalSwitchContainer');
   }
 
   getUpliftPercentInput(mode: ModalMode): Locator {
@@ -124,6 +130,14 @@ export abstract class BaseCostModal extends BasePage {
     await test.step(`Save ${this.costType} cost modal`, async () => {
       await this.modalSaveButton.click();
       await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  async closeModalAndDiscard(): Promise<void> {
+    await test.step(`Close ${this.costType} cost modal and discard changes`, async () => {
+      await this.closeModalButton.click();
+      await this.discardButton.click();
+      await this.modalSwitchContainer.waitFor({ state: 'hidden', timeout: 10000 });
     });
   }
 
