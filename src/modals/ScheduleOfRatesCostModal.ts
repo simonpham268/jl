@@ -56,6 +56,48 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
     });
   }
 
+  async fillSorModalBySellPerUnit(
+    data: { scheduleOfRateLibrary: string; scheduleOfRateItem: string; priceRateSell: number },
+    sellPerUnit: number,
+  ): Promise<void> {
+    await test.step('Fill Add SOR Cost modal by Sell Per Unit', async () => {
+      await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorLibrary, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateLibrary);
+      await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorItem, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateItem);
+      await this.inputPriceRateSplitCost.clear();
+      await this.inputPriceRateSplitCost.fill('0');
+      await this.inputPriceRateSplitSell.clear();
+      await this.inputPriceRateSplitSell.fill(String(data.priceRateSell));
+      const sellInput = this.getSellPerHourInput('Add');
+      await sellInput.clear();
+      await sellInput.fill(String(sellPerUnit));
+    });
+  }
+
+  async fillSorModalPriceAndDiscount(
+    data: { scheduleOfRateLibrary: string; scheduleOfRateItem: string; priceRateSell: number },
+    discount: number,
+  ): Promise<void> {
+    await test.step('Fill Add SOR modal for discount verification', async () => {
+      await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorLibrary, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateLibrary);
+      await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorItem, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateItem);
+      await this.inputPriceRateSplitCost.clear();
+      await this.inputPriceRateSplitCost.fill('0');
+      await this.inputPriceRateSplitSell.clear();
+      await this.inputPriceRateSplitSell.fill(String(data.priceRateSell));
+      const discountInput = this.getDiscountPercentInput('Add');
+      await discountInput.clear();
+      await discountInput.fill(String(discount));
+      await discountInput.press('Tab');
+    });
+  }
+
+  async fillDescription(description: string): Promise<void> {
+    await test.step(`Fill description: ${description}`, async () => {
+      await this.inputDescription.clear();
+      await this.inputDescription.fill(description);
+    });
+  }
+
   async clickEditScheduleOfRatesRecord(description: string): Promise<void> {
     return this.clickEditRecord(description);
   }
