@@ -7,7 +7,7 @@ import type { RoundingSettingModel } from '../models/RoundingSettingModel';
 import { ROUNDING_OPTION, ROUNDING_DURATION } from '../constants/RoundingConst';
 import { ScheduleOfRatesCostModal } from '../modals/ScheduleOfRatesCostModal';
 import { PriceType, type ScheduleOfRatesCostModel } from '../models/CostModel';
-import { createBasicApiJobData } from '../data/apiData/job.api.data';
+import { createJobTestData } from '../data/apiData/job.api.data';
 import { roundTo2Decimals } from '../utils/RoundingUtils';
 import { ROUTE } from '../constants/RouteConst';
 import { requireEnv } from '../utils/require.env';
@@ -26,7 +26,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await loginPage.goToBaseURL();
   });
 
-  test('TC_08_RQ2 @Smoke [Job > Costs / SOR Items] Verify Sell value is correctly calculated and rounded when Uplift % is entered', async ({ jobService }) => {
+  test('TC_08_RQ2 @Smoke [Job > Costs / SOR Items] Verify Sell value is correctly calculated and rounded when Uplift % is entered', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -38,7 +38,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -84,7 +84,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_09_RQ2 @Smoke [Job > Costs / SOR Items] Verify Uplift % value is preserved after saving when "Preserve Entered Uplift/Discount Percentage" setting is on', async ({ jobService }) => {
+  test('TC_09_RQ2 @Smoke [Job > Costs / SOR Items] Verify Uplift % value is preserved after saving when "Preserve Entered Uplift/Discount Percentage" setting is on', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -96,7 +96,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -204,7 +204,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 

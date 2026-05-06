@@ -1,9 +1,9 @@
 import { test, expect } from '../../../fixtures/combined.fixture';
 import { LoginPage } from '../../../pages/LoginPage';
 import { JobDetailsPage } from '../../../pages/Jobs/JobDetailsPage';
-import type { JobDetailTab } from '../../../pages/Jobs/JobDetailsPage';
+import type { JobDetailTab, ProfitabilityTab } from '../../../pages/Jobs/JobDetailsPage';
 import { SystemSetupPage } from '../../../pages/Settings/SystemSetupPage';
-import { createBasicApiJobData } from '../../../data/apiData/job.api.data';
+import { createJobTestData } from '../../../data/apiData/job.api.data';
 
 const COST_BREAKDOWN_CATEGORIES = ['Labour', 'Overtime', 'Travel', 'Mileage', 'Material', 'Expenses', 'Call-out', 'Other', 'Subcontractor', 'Schedule of Rates'] as const;
 
@@ -19,7 +19,7 @@ let jobDetailsPage: JobDetailsPage;
 let systemSetupPage: SystemSetupPage;
 let redirectUrl: string;
 
-test.beforeEach(async ({ page, jobService }) => {
+test.beforeEach(async ({ page, jobService, customerService }) => {
   loginPage = new LoginPage(page);
   systemSetupPage = new SystemSetupPage(page);
   jobDetailsPage = new JobDetailsPage(page);
@@ -28,7 +28,8 @@ test.beforeEach(async ({ page, jobService }) => {
   await systemSetupPage.navigateToSystemSetup();
 
   if (!redirectUrl) {
-    redirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, createBasicApiJobData());
+    const jobData = await createJobTestData(jobService, customerService);
+    redirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
   }
 });
 
@@ -83,6 +84,75 @@ test.describe('Detailed with Cost Breakdown View', () => {
         await expect(jobDetailsPage.targetProfitMarginPercentInput).toBeVisible();
         await expect(jobDetailsPage.targetProfitMarginModalSaveButton).toBeVisible();
       });
+    });
+
+    test('[TC_28_RQ4] @Regression: [Profitability – Detail/Costs Tab] Variable Target Profit Margin – Validate valid and invalid inputs', async ({ page }) => {
+      test.setTimeout(120_000);
+      const tab = 'Details' as const;
+      await jobDetailsPage.expandProfitOverview(tab);
+      const loc = jobDetailsPage.getProfitLocators(tab);
+
+      // Valid input: enter 20, save → toast success + display value
+      await jobDetailsPage.clickAddVariableTargetProfitMargin(tab);
+      await expect.soft(jobDetailsPage.targetProfitMarginModal).toBeVisible();
+      await jobDetailsPage.targetProfitMarginPercentInput.fill('20');
+      await jobDetailsPage.targetProfitMarginModalSaveButton.click();
+      await expect.soft(jobDetailsPage.toastSuccessMessage).toContainText('Target margin saved successfully');
+      await expect.soft(jobDetailsPage.targetProfitMarginModal).toBeHidden();
+      await expect.soft(loc.targetProfitMarginDisplayValue).toContainText('20.00%');
+
+      // Invalid inputs
+      const invalidCases: Array<{ value: string; expectRangeError: boolean; expectMessage?: string }> = [
+        { value: '-1', expectRangeError: true },
+        { value: '101', expectRangeError: true },
+        { value: '1e3', expectRangeError: true },
+        { value: 'e', expectRangeError: false, expectMessage: 'Please enter a valid numeric value' },
+        { value: '1e', expectRangeError: false, expectMessage: 'Please enter a valid numeric value' },
+        { value: '', expectRangeError: false, expectMessage: 'Please enter a valid numeric value' },
+      ];
+
+      for (const { value, expectRangeError, expectMessage } of invalidCases) {
+        await test.step(`Test invalid input: "${value || '(empty)'}"`, async () => {
+          if (!await jobDetailsPage.targetProfitMarginModal.isVisible()) {
+            await jobDetailsPage.clickAddVariableTargetProfitMargin(tab);
+            await expect.soft(jobDetailsPage.targetProfitMarginModal).toBeVisible();
+          }
+          await jobDetailsPage.targetProfitMarginPercentInput.fill('');
+          if (value) await jobDetailsPage.targetProfitMarginPercentInput.pressSequentially(value);
+          await jobDetailsPage.targetProfitMarginModalSaveButton.click();
+          await expect.soft(jobDetailsPage.toastErrorMessage).toBeVisible();
+          if (expectRangeError) {
+            await expect.soft(jobDetailsPage.toastErrorMessage).toContainText('Target margin must be between 0% and 100%');
+          }
+          if (expectMessage) {
+            await expect.soft(jobDetailsPage.toastErrorMessage).toContainText(expectMessage);
+          }
+          await page.locator('#toast-container .toast-error').waitFor({ state: 'detached', timeout: 10000 }).catch(() => {});
+        });
+      }
+    });
+
+    /** ID: TC_32_RQ4 Tags: Regression */
+    test('[TC_32_RQ4] @Regression: [Profitability – Detail/Costs Tab] Actuals Only – Verify Invoiced (Customer) = £0.00 when no invoice exists', async () => {
+      test.setTimeout(60_000);
+
+      // Verify Approved Invoices in History → Invoice tab = £0.00
+      await jobDetailsPage.navigateToInvoiceHistoryTab();
+      await expect.soft(jobDetailsPage.approvedInvoicesAmount).toContainText('£0.00');
+
+      // Verify Invoiced (Customer) = £0.00 on both tabs
+      const verifyInvoicedCustomer = async (tab: ProfitabilityTab) => {
+        await jobDetailsPage.navigateToJob(redirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityActualsOnlySection).toBeVisible();
+        await expect.soft(loc.actualsInvoicedCustomer).toBeVisible();
+        await expect.soft(loc.actualsInvoicedCustomer).toContainText('£0.00');
+      };
+
+      await verifyInvoicedCustomer('Costs');
+      await verifyInvoicedCustomer('Details');
     });
   });
 
