@@ -2,9 +2,15 @@ import type { Page, Locator } from '@playwright/test';
 import { test } from '@playwright/test';
 import { requireEnv } from '../../utils/require.env';
 
-export type PermissionName =
-  | 'Visit - Upload Forms'
-  | 'Asset - Upload Forms';
+export type PermissionName = 'Visit - Upload Forms' | 'Asset - Upload Forms';
+
+export const NON_ADMIN_ROLES = ['Engineer', 'Costing User', 'Job Desk User'] as const;
+export type NonAdminRole = (typeof NON_ADMIN_ROLES)[number];
+const NON_ADMIN_ROLE_ENV_VARS: Record<NonAdminRole, string> = {
+  Engineer: 'STAFF_ENGINEER_NAME',
+  'Costing User': 'STAFF_COSTING_USER_NAME',
+  'Job Desk User': 'STAFF_JOB_DESK_USER_NAME',
+};
 
 /**
  * Staff (Users) Page Object
@@ -94,7 +100,16 @@ export class StaffPage {
     return this.page.locator(`tr:has-text("${name}")`);
   }
 
+  // ========================
   // Navigation
+  // ========================
+  async navigateToStaff(): Promise<void> {
+    await test.step('Navigate to Staff page', async () => {
+      await this.page.goto('/Staff');
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
   async navigateToAdminUser(): Promise<void> {
     await test.step('Navigate to admin user', async () => {
       const adminName = requireEnv('STAFF_ADMIN_NAME');
@@ -113,10 +128,21 @@ export class StaffPage {
     });
   }
 
-  async navigateToStaff(): Promise<void> {
-    await test.step('Navigate to Staff page', async () => {
-      await this.page.goto('/Staff');
-      await this.page.waitForLoadState('domcontentloaded');
+  async navigateToNonAdminUser(role: NonAdminRole): Promise<void> {
+    await test.step(`Navigate to ${role} user`, async () => {
+      const name = requireEnv(NON_ADMIN_ROLE_ENV_VARS[role]);
+      await this.navigateToStaff();
+      await this.searchAndWait(name);
+
+      const resultCount = await this.getRowCount();
+      if (resultCount === 0) {
+        await test.step('TODO: createAdminUserWithAdminRoleViaApi', async () => {
+          // Placeholder only: call API here to create admin user with Administrator role.
+        });
+        await this.searchAndWait(name);
+      }
+
+      await this.clickUserByName(name);
     });
   }
 
@@ -262,10 +288,7 @@ export class StaffPage {
   }
 
   // Filter Application
-  async applyFilters(options: {
-    query?: string;
-    includeInactive?: boolean;
-  }): Promise<void> {
+  async applyFilters(options: { query?: string; includeInactive?: boolean }): Promise<void> {
     await test.step('Apply Staff filters', async () => {
       if (options.query) {
         await this.search(options.query);
@@ -296,7 +319,7 @@ export class StaffPage {
   async clickEdit(): Promise<void> {
     await test.step('Click Edit button', async () => {
       await this.editButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 
@@ -315,6 +338,10 @@ export class StaffPage {
 
   getPermissionInRoleIcon(name: PermissionName): Locator {
     return this.getPermissionRow(name).locator('.in-role-text.color-green');
+  }
+
+  getPermissionOffIcon(name: PermissionName): Locator {
+    return this.getPermissionRow(name).locator('.in-role-text.color-red');
   }
 
   getPermissionInheritRadio(name: PermissionName): Locator {

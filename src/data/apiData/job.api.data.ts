@@ -3,7 +3,6 @@
  * For creating Job API request payloads
  */
 
-import { requireEnv } from '../../utils/require.env';
 import { formatDateLogged } from '../../utils/date.util';
 
 // ========================
@@ -11,28 +10,48 @@ import { formatDateLogged } from '../../utils/date.util';
 // ========================
 
 /**
- * Basic job data for API preconditions using environment variables
+ * Creates test job data by resolving customerId, siteId, jobTypeId dynamically via services.
+ * Use this in specs instead of createBasicApiJobData().
  */
-export function createBasicApiJobData(): any {
+export async function createJobTestData(
+  jobService: { getDefaultJobTypeId: () => Promise<number> },
+  customerService: { createCustomer: (d: { Name: string }) => Promise<{ body: { AdditionalData?: { CustomerId?: string | number; SiteId?: string | number } } | null }> },
+): Promise<ReturnType<typeof createBasicApiJobData>> {
+  const [jobTypeId, customerRes] = await Promise.all([
+    jobService.getDefaultJobTypeId(),
+    customerService.createCustomer({ Name: `Test Customer ${Date.now()}` }),
+  ]);
+  const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+  const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+  if (!customerId || !siteId) throw new Error(`Failed to create test customer/site: ${JSON.stringify(customerRes.body)}`);
+  return createBasicApiJobData(customerId, siteId, jobTypeId);
+}
+
+/**
+ * Basic job data for API preconditions.
+ * customerId and siteId come from CustomerService.createCustomer response.
+ * jobTypeId comes from JobService.getDefaultJobTypeId().
+ */
+export function createBasicApiJobData(customerId: number, siteId: number, jobTypeId: number | string): any {
   return {
-    JobCustomerId: parseInt(requireEnv('CUSTOMER_ID')),
-    JobSiteId: parseInt(requireEnv('SITE_ID')),
+    JobCustomerId: customerId,
+    JobSiteId: siteId,
     Description: `Job ${Date.now()}`,
-    JobTypeId: requireEnv('JOB_TYPE_ID'),
-    AssignedToUserId: parseInt(requireEnv('ASSIGNED_USER_ID')),
-    DateLogged: formatDateLogged()
+    JobTypeId: jobTypeId,
+    AssignedToUserId: parseInt(process.env.ASSIGNED_USER_ID ?? '2'),
+    DateLogged: formatDateLogged(),
+    RedirectToDetailPage: true,
   };
 }
 
 /**
  * Create API job data with custom description
  */
-export function createApiJobData(description: string, customFields: any = {}): any {
-  const basicData = createBasicApiJobData();
+export function createApiJobData(customerId: number, siteId: number, jobTypeId: number | string, description: string, customFields: any = {}): any {
   return {
-    ...basicData,
+    ...createBasicApiJobData(customerId, siteId, jobTypeId),
     Description: description,
-    ...customFields
+    ...customFields,
   };
 }
 
@@ -46,19 +65,18 @@ export function createApiJobData(description: string, customFields: any = {}): a
 export class ApiJobDataBuilder {
   private data: any;
 
-  constructor() {
+  constructor(customerId: number, siteId: number, jobTypeId: number | string) {
     this.data = {
-      JobCustomerId: parseInt(requireEnv('CUSTOMER_ID')),
-      JobSiteId: parseInt(requireEnv('SITE_ID')),
+      JobCustomerId: customerId,
+      JobSiteId: siteId,
       Description: `Job ${Date.now()}`,
-      JobTypeId: requireEnv('JOB_TYPE_ID'),
-      AssignedToUserId: parseInt(requireEnv('ASSIGNED_USER_ID')),
-      DateLogged: formatDateLogged()
+      JobTypeId: jobTypeId,
+      DateLogged: formatDateLogged(),
     };
   }
 
-  static create(): ApiJobDataBuilder {
-    return new ApiJobDataBuilder();
+  static create(customerId: number, siteId: number, jobTypeId: number | string): ApiJobDataBuilder {
+    return new ApiJobDataBuilder(customerId, siteId, jobTypeId);
   }
 
   description(value: string): ApiJobDataBuilder {

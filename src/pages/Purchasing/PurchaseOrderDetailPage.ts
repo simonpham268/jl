@@ -7,7 +7,7 @@ import { BasePage } from '../BasePage';
  */
 export type PurchaseOrderDetailTab =
   | 'Details'
-  | 'Line Items'
+  | 'Items'
   | 'Delivery'
   | 'History'
   | 'Info';
@@ -110,6 +110,26 @@ export class PurchaseOrderDetailPage extends BasePage {
   readonly grandTotal: Locator;
 
   // ========================
+  // Locators - Items Tab (Supplier PO Summary)
+  // ========================
+  readonly addItemButton: Locator;
+  readonly addSubcontractorItemButton: Locator;
+  readonly addItemCostInput: Locator;
+  readonly addItemDescriptionInput: Locator;
+  readonly addItemModalSaveButton: Locator;
+  readonly addSubcontractorItemModalSaveButton: Locator;
+
+  // ========================
+  // Locators - Items Tab (Subcontractor PO Summary)
+  // ========================
+  readonly estimatedValueInput: Locator;
+  readonly materialDescriptionInput: Locator;
+  readonly tableActionsButton: Locator;
+  readonly deliverLineButton: Locator;
+  readonly completeLineButton: Locator;
+  readonly actionModalSaveButton: Locator;
+
+  // ========================
   // Locators - Delivery Section
   // ========================
   readonly deliveryStatusDropdown: Locator;
@@ -135,7 +155,7 @@ export class PurchaseOrderDetailPage extends BasePage {
 
     // Tabs
     this.detailsTab = page.getByRole('link', { name: 'Details', exact: true });
-    this.lineItemsTab = page.getByRole('link', { name: 'Line Items' });
+    this.lineItemsTab = page.locator('a[href="#itemTab"]');
     this.deliveryTab = page.getByRole('link', { name: 'Delivery', exact: true });
     this.historyButton = page.getByRole('button', { name: 'History' });
     this.infoButton = page.getByRole('button', { name: 'Info' });
@@ -183,6 +203,20 @@ export class PurchaseOrderDetailPage extends BasePage {
     this.confirmModal = page.locator('.modal.show, .modal[style*="display: block"]');
     this.confirmYesButton = this.confirmModal.getByRole('button', { name: /yes|confirm|ok/i });
     this.confirmNoButton = this.confirmModal.getByRole('button', { name: /no|cancel/i });
+
+    // Items Tab (PO Summary page)
+    this.addItemButton = page.locator('[data-builder-target-parent="tab-items-action"] button').filter({ hasText: 'Add Item' });
+    this.addSubcontractorItemButton = page.locator('[data-builder-target-parent="subcontractor-po-items-section-action"] a').filter({ hasText: 'Add Item' });
+    this.estimatedValueInput = page.locator('#Cost_PerUnit');
+    this.materialDescriptionInput = page.locator('textarea#materialDescription');
+    this.tableActionsButton = page.locator('button.jl-icon-blue:has(i.jl-dots-vertical)');
+    this.deliverLineButton = page.locator('a[role="button"]').filter({ hasText: 'Deliver' });
+    this.completeLineButton = page.locator('button.line-deliver');
+    this.actionModalSaveButton = page.locator('button.jl-custom-btn.jl-button-green.jl-button-save');
+    this.addItemCostInput = page.locator('input[name="Cost1"]');
+    this.addItemDescriptionInput = page.locator('textarea#Description1');
+    this.addItemModalSaveButton = page.locator('button.jl-custom-btn.jl-button-green.ml12').nth(1);
+    this.addSubcontractorItemModalSaveButton = page.locator('#btnSave');
   }
 
   // ========================
@@ -265,7 +299,7 @@ export class PurchaseOrderDetailPage extends BasePage {
     await test.step(`Switch to ${tab} tab`, async () => {
       const tabMap: Record<PurchaseOrderDetailTab, Locator> = {
         'Details': this.detailsTab,
-        'Line Items': this.lineItemsTab,
+        'Items': this.lineItemsTab,
         'Delivery': this.deliveryTab,
         'History': this.historyButton,
         'Info': this.infoButton,
@@ -283,7 +317,7 @@ export class PurchaseOrderDetailPage extends BasePage {
   async isTabActive(tab: PurchaseOrderDetailTab): Promise<boolean> {
     const tabMap: Record<PurchaseOrderDetailTab, Locator> = {
       'Details': this.detailsTab,
-      'Line Items': this.lineItemsTab,
+      'Items': this.lineItemsTab,
       'Delivery': this.deliveryTab,
       'History': this.historyButton,
       'Info': this.infoButton,

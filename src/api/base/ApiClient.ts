@@ -65,7 +65,8 @@ export class ApiClient {
     // Set CSRF token
     if (authData.__requestverificationtoken) {
       this.headers['__requestverificationtoken'] = authData.__requestverificationtoken;
-    }    return this;
+    }
+    return this;
   }
 
   // Build cookie string from essential cookies only
@@ -81,10 +82,10 @@ export class ApiClient {
 
       if (!existing || domainMatches) {
         const value = this.sanitizeCookieValue(cookie.value);
-
         cookieMap.set(cookie.name, value);
       }
-    }    return Array.from(cookieMap.entries())
+    }
+    return Array.from(cookieMap.entries())
       .map(([name, value]) => `${name}=${value}`)
       .join('; ');
   }
@@ -108,7 +109,6 @@ export class ApiClient {
   private isDomainMatch(cookieDomain: string, baseUrlDomain: string): boolean {
     if (!cookieDomain) return false;
     const normalized = cookieDomain.replace(/^\./, '');
-
     return baseUrlDomain.includes(normalized) || normalized.includes(baseUrlDomain);
   }
 
@@ -194,6 +194,17 @@ export class ApiClient {
     return this.parseResponse<T>(response);
   }
 
+  async getText(endpoint: string, options?: {
+        params?: Record<string, string>;
+        headers?: Record<string, string>;
+    }): Promise<{ status: number; text: string }> {
+    const response = await this.request.get(this.url(endpoint), {
+      params: options?.params,
+      headers: this.mergeHeaders(options?.headers),
+    });
+    return { status: response.status(), text: await response.text() };
+  }
+
   async delete<T>(endpoint: string, options?: {
         headers?: Record<string, string>;
     }): Promise<ApiResponse<T>> {
@@ -219,8 +230,9 @@ export class ApiClient {
     try {
       body = await response.json() as T;
     } catch {
-      // Response might not be JSON
-    }    return {
+       // Response might not be JSON
+    }
+    return {
       status: response.status(),
       statusText: response.statusText(),
       headers: response.headers(),

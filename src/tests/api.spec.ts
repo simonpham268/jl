@@ -7,8 +7,7 @@ import {
 } from '../data/apiData/customer.api.data';
 import {
   ApiJobDataBuilder,
-  createApiJobData,
-  createBasicApiJobData
+  createJobTestData,
 } from '../data/apiData/job.api.data';
 import {
   createBasicApiPPMQuoteData
@@ -22,8 +21,8 @@ import {
 import { test } from '../fixtures/combined.fixture';
 
 test.describe('try with api call', () => {
-  test('[TC107379] create job', async ({ jobService }) => {
-    const response = await jobService.createJob(createBasicApiJobData());
+  test('[TC107379] create job', async ({ jobService, customerService }) => {
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     console.log('Response:', JSON.stringify(response, null, 2));
   });
 
@@ -56,21 +55,23 @@ test.describe('try with api call', () => {
   // Advanced API Data Examples
   // ========================
 
-  test('[TC107380] create job with custom fields', async ({ jobService }) => {
-    // Method 1: Using customFields parameter
-    const jobWithFields = createApiJobData('Priority Maintenance', {
+  test('[TC107380] create job with custom fields', async ({ jobService, customerService }) => {
+    const base = await createJobTestData(jobService, customerService);
+    const jobWithFields = {
+      ...base,
+      Description: 'Priority Maintenance',
       Priority: 'High',
       CustomerOrderNumber: 'PO-2026-001',
-      ReferenceNumber: 'REF-12345'
-    });
+      ReferenceNumber: 'REF-12345',
+    };
 
     const response = await jobService.createJob(jobWithFields);
     console.log('Job with custom fields:', JSON.stringify(response, null, 2));
   });
 
-  test('[TC107381] create complex job with builder', async ({ jobService }) => {
-    // Method 2: Using Fluent API Builder
-    const complexJob = ApiJobDataBuilder.create()
+  test('[TC107381] create complex job with builder', async ({ jobService, customerService }) => {
+    const base = await createJobTestData(jobService, customerService);
+    const complexJob = ApiJobDataBuilder.create(base.JobCustomerId, base.JobSiteId, base.JobTypeId)
       .description('Emergency HVAC Repair')
       .priority('Critical')
       .customerOrderNumber('EMERGENCY-789')

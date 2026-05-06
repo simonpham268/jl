@@ -14,7 +14,7 @@ import { ExpensesCostModal } from '../modals/ExpensesCostModal';
 import { OtherCostModal } from '../modals/OtherCostModal';
 import { SubcontractorCostModal } from '../modals/SubcontractorCostModal';
 import { PriceType, type LabourCostModel, type OvertimeCostModel, type MileageCostModel, type TravelCostModel, type MaterialCostModel, type ExpensesCostModel, type OtherCostModel, type SubcontractorCostModel, type ScheduleOfRatesCostModel } from '../models/CostModel';
-import { createBasicApiJobData } from '../data/apiData/job.api.data';
+import { createJobTestData } from '../data/apiData/job.api.data';
 import { roundTo2Decimals } from '../utils/RoundingUtils';
 import { ROUTE } from '../constants/RouteConst';
 
@@ -45,7 +45,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await loginPage.goToBaseURL();
   });
 
-  test('TC_28_RQ2 @Smoke : [Jobs > Labour] Preserve entered uplift percentage of Labour when  uplift is authoritative', async ({ jobService }) => {
+  test('TC_28_RQ2 @Smoke : [Jobs > Labour] Preserve entered uplift percentage of Labour when  uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
     const roundingConfig: RoundingSettingModel = {
@@ -57,7 +57,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.clickSave();
 
     // Temporarily use API to create job
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -92,7 +92,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_29_RQ2 @Smoke : [Jobs > Overtime] Preserve entered uplift percentage of Overtime when uplift is authoritative', async ({ jobService }) => {
+  test('TC_29_RQ2 @Smoke : [Jobs > Overtime] Preserve entered uplift percentage of Overtime when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
     const roundingConfig: RoundingSettingModel = {
@@ -103,7 +103,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -137,7 +137,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_30_RQ2 @Smoke : [Jobs > Travel] Preserve entered uplift percentage of Travel when uplift is authoritative', async ({ jobService }) => {
+  test('TC_30_RQ2 @Smoke : [Jobs > Travel] Preserve entered uplift percentage of Travel when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -149,7 +149,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -185,7 +185,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_31_RQ2 @Smoke : [Jobs > Mileage] Preserve entered uplift percentage of Mileage when uplift is authoritative', async ({ jobService }) => {
+  test('TC_31_RQ2 @Smoke : [Jobs > Mileage] Preserve entered uplift percentage of Mileage when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -197,7 +197,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -233,7 +233,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_32_RQ2 @Smoke : [Jobs > Material] Preserve entered uplift percentage of Material when uplift is authoritative', async ({ jobService }) => {
+  test('TC_32_RQ2 @Smoke : [Jobs > Material] Preserve entered uplift percentage of Material when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -245,7 +245,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -281,7 +281,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_33_RQ2 @Smoke : [Jobs > Expenses] Preserve entered uplift percentage of Expenses when uplift is authoritative', async ({ jobService }) => {
+  test('TC_33_RQ2 @Smoke : [Jobs > Expenses] Preserve entered uplift percentage of Expenses when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -293,7 +293,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -329,7 +329,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_34_RQ2 @Smoke : [Jobs > Other] Preserve entered uplift percentage of Other when uplift is authoritative', async ({ jobService }) => {
+  test('TC_34_RQ2 @Smoke : [Jobs > Other] Preserve entered uplift percentage of Other when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -341,7 +341,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -377,7 +377,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     expect(editSellPerHour).toBe(expectedSellPerHour);
   });
 
-  test('TC_35_RQ2 @Smoke : [Jobs > Subcontractor] Preserve entered uplift percentage of Subcontractor when uplift is authoritative', async ({ jobService }) => {
+  test('TC_35_RQ2 @Smoke : [Jobs > Subcontractor] Preserve entered uplift percentage of Subcontractor when uplift is authoritative', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -389,7 +389,7 @@ test.describe('[Jobs > Labour] Preserve entered uplift percentage', () => {
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 

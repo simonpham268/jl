@@ -102,6 +102,17 @@ export class JobDetailsPage extends BasePage {
   readonly targetProfitMarginModal: Locator;
   readonly targetProfitMarginPercentInput: Locator;
   readonly targetProfitMarginModalSaveButton: Locator;
+  readonly toastSuccessMessage: Locator;
+  readonly toastErrorMessage: Locator;
+
+  // ========================
+  // Locators - History Dropdown (Purchase Order sub-tabs)
+  // ========================
+  readonly historyDropdownButton: Locator;
+  readonly supplierPurchaseOrdersTabLink: Locator;
+  readonly subcontractorPurchaseOrdersTabLink: Locator;
+  readonly historyInvoiceTabLink: Locator;
+  readonly approvedInvoicesAmount: Locator;
 
   // ========================
   // Locators - Profit Overview Section (tab-scoped)
@@ -244,6 +255,15 @@ export class JobDetailsPage extends BasePage {
     this.targetProfitMarginModal = page.locator('[data-margin-popover]').filter({ hasText: 'Variable Target Profit Margin' });
     this.targetProfitMarginPercentInput = this.targetProfitMarginModal.locator('.cp-popover-input-group').getByRole('spinbutton');
     this.targetProfitMarginModalSaveButton = this.targetProfitMarginModal.getByRole('button', { name: 'Save' });
+    this.toastSuccessMessage = page.locator('#toast-container .toast-success .toast-message');
+    this.toastErrorMessage = page.locator('#toast-container .toast-error .toast-message');
+
+    // History Dropdown - Purchase Order sub-tabs
+    this.historyDropdownButton = page.locator('#job-menu-historyDropdown');
+    this.supplierPurchaseOrdersTabLink = page.locator('#job-menu-historyPurchaseOrderTab');
+    this.subcontractorPurchaseOrdersTabLink = page.locator('[data-toggle="tab"]').filter({ hasText: 'Subcontractor Purchase Orders' });
+    this.historyInvoiceTabLink = page.locator('#job-menu-historyInvoiceTab');
+    this.approvedInvoicesAmount = page.locator('b').filter({ hasText: 'Approved Invoices' }).locator('xpath=..').locator('span.ml12');
 
     // Details Section
     this.detailsHeading = page.locator('h4:has-text("Details")');
@@ -293,6 +313,20 @@ export class JobDetailsPage extends BasePage {
   // Navigation
   // ========================
 
+  /**
+   * Navigate to Job Details page by ID
+   */
+  static async createJobAndGetRedirectUrl(
+    jobService: JobService,
+    data: CreateJobRequest,
+  ): Promise<string> {
+    const response = await jobService.createJob(data);
+    if (!response.body) throw new Error('No response body from job creation');
+    const redirectUrl = response.body.redirectUrl;
+    if (!redirectUrl) throw new Error('Missing redirectUrl from job creation');
+    return redirectUrl;
+  }
+
   async navigateToJob(redirectUrl: string): Promise<void> {
     await test.step(`Navigate to Job ${redirectUrl}`, async () => {
       await this.page.goto(redirectUrl);
@@ -300,13 +334,56 @@ export class JobDetailsPage extends BasePage {
     });
   }
 
-  // Navigate to Job Details page by ID
-  static async createJobAndGetRedirectUrl(jobService: JobService, data: CreateJobRequest): Promise<string> {
-    const response = await jobService.createJob(data);
-    if (!response.body) throw new Error('No response body from job creation');
-    const redirectUrl = response.body.redirectUrl;
-    if (!redirectUrl) throw new Error('Missing redirectUrl from job creation');
-    return redirectUrl;
+  getProfitLocators(tab: ProfitabilityTab) {
+    const container = this.page.locator(this.profitTabSelectors[tab]);
+    return {
+      profitOverviewSection: container.locator('.cp-section-header').filter({ hasText: 'Profit Overview' }),
+      collapsedSummary: container.locator('.cp-collapsed-summary'),
+      quotedProfitabilitySection: container.getByText('Quoted Profitability'),
+      profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
+      profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
+      costBreakdownByCategorySection: container.getByText('Cost breakdown by category', { exact: true }),
+      costBreakdownCategoryColumn: container.getByRole('columnheader', { name: 'Category' }),
+      costBreakdownQuotedColumn: container.getByRole('columnheader', { name: 'Quoted' }),
+      costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
+      costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
+      costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
+      targetProfitMarginAddButton: container.locator('button.cp-add-margin-btn'),
+      targetProfitMarginDisplayValue: container.locator('.cp-margin-display-value'),
+      quotedCostValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Cost').locator('..').locator(':last-child'),
+      quotedSellValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Sell').locator('..').locator(':last-child'),
+      quotedProfitValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Profit').locator('..').locator(':last-child'),
+      quotedProfitMarginValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Profit Margin').locator('..').locator(':last-child'),
+      // Job Profitability Include WIP sub-locators
+      ...(() => {
+        const wipSection = container.locator('.ph-6-md').filter({ hasText: 'Job Profitability Include WIP' });
+        return {
+          wipTotalJobSell: wipSection.locator('p.summary-item-record').filter({ hasText: 'Total Job Sell (Including Quote Sell)' }).locator('span.text-nowrap'),
+          wipCurrentProfit: wipSection.locator('p.summary-item-record').filter({ hasText: 'Current Profit' }).locator('span.text-nowrap'),
+          wipProfitMargin: wipSection.locator('p.summary-item-record').filter({ hasText: '- Profit Margin' }).locator('span.text-nowrap'),
+          wipRemainingCost: wipSection.locator('.cp-remaining-cost-col span.text-nowrap').first(),
+          wipRemainingCostPercent: wipSection.locator('.cp-remaining-cost-secondary'),
+        };
+      })(),
+      // Job Profitability Actuals Only sub-locators
+      ...(() => {
+        const actualsSection = container.locator('.pl-12-md').filter({ hasText: 'Job Profitability Actuals Only' });
+        return {
+          actualsActualCosts: actualsSection.locator('p.summary-item-record').filter({ hasText: 'Actual Costs' }).locator('span.text-nowrap'),
+          actualsSupplierInvoiceAdjustments: actualsSection.locator('p.summary-item-record').filter({ hasText: 'Supplier Invoice Adjustments' }).locator('span.text-nowrap'),
+          actualsInvoicedCustomer: actualsSection.locator('p.summary-item-record').filter({ hasText: 'Invoiced (Customer)' }).locator('span.text-nowrap'),
+          actualsUninvoiced: actualsSection.locator('p.summary-item-record').filter({ hasText: '- Uninvoiced' }).locator('span.text-nowrap'),
+        };
+      })(),
+      // Profit Summary View — old profitability section
+      profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
+      quotedJobsLabel: container.locator('#quotedJobsTitle'),
+      costLabel: container.locator('#costTitle'),
+      sellLabel: container.locator('#sellTitle'),
+      profitColumnHeader: container.locator('div.summary-item-title').getByText('Profit', { exact: true }),
+      profitPercentColumnHeader: container.locator('div.summary-item-title').getByText('Profit %'),
+      profitMarginColumnHeader: container.locator('div.summary-item-title').getByText('Profit Margin'),
+    };
   }
 
   static async createJobAndGetId(jobService: JobService, data: CreateJobRequest): Promise<{ redirectUrl: string; jobId: number }> {
@@ -328,6 +405,31 @@ export class JobDetailsPage extends BasePage {
       await fn(tab);
     }
   }
+
+  async navigateToSupplierPurchaseOrders(): Promise<void> {
+    await test.step('Navigate to Supplier Purchase Orders tab via History dropdown', async () => {
+      await this.historyDropdownButton.click();
+      await this.supplierPurchaseOrdersTabLink.click();
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  async navigateToSubcontractorPurchaseOrders(): Promise<void> {
+    await test.step('Navigate to Subcontractor Purchase Orders tab via History dropdown', async () => {
+      await this.historyDropdownButton.click();
+      await this.subcontractorPurchaseOrdersTabLink.click();
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
+  async navigateToInvoiceHistoryTab(): Promise<void> {
+    await test.step('Navigate to Invoice tab via History dropdown', async () => {
+      await this.historyDropdownButton.click();
+      await this.historyInvoiceTabLink.click();
+      await this.page.waitForLoadState('domcontentloaded');
+    });
+  }
+
 
   /**
    * Navigate back to Jobs list
@@ -1066,36 +1168,6 @@ export class JobDetailsPage extends BasePage {
   // PROFITABILITY – DETAIL/COSTS TAB
   // ========================
 
-  getProfitLocators(tab: ProfitabilityTab) {
-    const container = this.page.locator(this.profitTabSelectors[tab]);
-    return {
-      profitOverviewSection: container.locator('.cp-section-header').filter({ hasText: 'Profit Overview' }),
-      collapsedSummary: container.locator('.cp-collapsed-summary'),
-      quotedProfitabilitySection: container.getByText('Quoted Profitability'),
-      profitabilityIncludeWIPSection: container.getByText('Job Profitability Include WIP'),
-      profitabilityActualsOnlySection: container.getByText('Job Profitability Actuals Only'),
-      costBreakdownByCategorySection: container.getByText('Cost breakdown by category', { exact: true }),
-      costBreakdownCategoryColumn: container.getByRole('columnheader', { name: 'Category' }),
-      costBreakdownQuotedColumn: container.getByRole('columnheader', { name: 'Quoted' }),
-      costBreakdownPOCommittedColumn: container.getByRole('columnheader', { name: 'PO Committed' }),
-      costBreakdownActualColumn: container.getByRole('columnheader', { name: 'Actual' }),
-      costBreakdownUnallocatedCostColumn: container.getByRole('columnheader', { name: 'Unallocated Cost' }),
-      targetProfitMarginAddButton: container.locator('button.cp-add-margin-btn'),
-      quotedCostValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Cost').locator('..').locator(':last-child'),
-      quotedSellValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Sell').locator('..').locator(':last-child'),
-      quotedProfitValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Quoted Profit').locator('..').locator(':last-child'),
-      quotedProfitMarginValue: container.getByText('Quoted Profitability', { exact: true }).locator('..').getByText('- Profit Margin').locator('..').locator(':last-child'),
-      // Profit Summary View — old profitability section
-      profitSectionExpandButton: container.locator('.summary-title-wrapper').filter({ hasText: 'Profitability' }).locator('button.jl-icon-blue'),
-      quotedJobsLabel: container.locator('#quotedJobsTitle'),
-      costLabel: container.locator('#costTitle'),
-      sellLabel: container.locator('#sellTitle'),
-      profitColumnHeader: container.locator('div.summary-item-title').getByText('Profit', { exact: true }),
-      profitPercentColumnHeader: container.locator('div.summary-item-title').getByText('Profit %'),
-      profitMarginColumnHeader: container.locator('div.summary-item-title').getByText('Profit Margin'),
-    };
-  }
-
   async collapseProfitOverview(tab: ProfitabilityTab): Promise<void> {
     await test.step('Collapse Profit Overview section', async () => {
       await this.contentLoadingOverlay.waitFor({ state: 'hidden', timeout: 30000 });
@@ -1133,7 +1205,12 @@ export class JobDetailsPage extends BasePage {
 
   async clickAddVariableTargetProfitMargin(tab: ProfitabilityTab): Promise<void> {
     await test.step('Click + Add for Variable Target Profit Margin', async () => {
-      await this.getProfitLocators(tab).targetProfitMarginAddButton.click();
+      const loc = this.getProfitLocators(tab);
+      if (await loc.targetProfitMarginAddButton.isVisible()) {
+        await loc.targetProfitMarginAddButton.click();
+      } else {
+        await loc.targetProfitMarginDisplayValue.click();
+      }
     });
   }
 
