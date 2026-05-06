@@ -1,22 +1,26 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
+import { HomePage } from '../pages/HomePage';
 import { Sidebar } from '../pages/Sidebar';
 import { SettingsPage } from '../pages/Settings/SettingsPage';
 import { SystemSetupPage } from '../pages/Settings/SystemSetupPage';
 import type { RoundingSettingModel } from '../models/RoundingSettingModel';
 import { ROUNDING_OPTION, ROUNDING_DURATION } from '../constants/RoundingConst';
+import { requireEnv } from '../utils/require.env';
 
 /**
  * Settings Smoke Test
  */
 test.describe('Settings Smoke', () => {
   let loginPage: LoginPage;
+  let homePage: HomePage;
   let sidebar: Sidebar;
   let settingsPage: SettingsPage;
   let systemSetupPage: SystemSetupPage;
 
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
+    homePage = new HomePage(page);
     sidebar = new Sidebar(page);
     settingsPage = new SettingsPage(page);
     systemSetupPage = new SystemSetupPage(page);
@@ -134,6 +138,20 @@ test.describe('Settings Smoke', () => {
     await systemSetupPage.configureJobProfitabilityView('Profit Summary View');
     await expect(summaryRadio).toBeChecked();
     await expect(detailedRadio).not.toBeChecked();
+  });
+
+  /** ID: TC_04_RQ2 Tags: @Smoke @Regression @Settings */
+  test('[TC_04_RQ2] @Smoke: System Setup - Verify "Preserve Entered Uplift/Discount Percentage" is OFF by default for new user', async ({ page }) => {
+    await homePage.logoff();
+    try {
+      await loginPage.login(requireEnv('USR_DEFAULT'), requireEnv('PWS_DEFAULT'));
+      await systemSetupPage.navigateToSystemSetup();
+
+      const isChecked = await systemSetupPage.isPreserveUpliftDiscountChecked();
+      expect(isChecked).toBe(false);
+    } finally {
+      await homePage.logoff().catch(() => {});
+    }
   });
 
   test('[TC_01_RQ4] @Smoke: System Setup - Verify "Job Profitability View" setting is displayed with two radio options in the Job Profitability section', async ({ page: _page }) => {
