@@ -612,6 +612,57 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     expect(parseFloat(actualDiscount2)).toBe(expectedDiscount2);
   });
 
+  /** ID: TC_12_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_12_RQ2 @Smoke [Job > Costs / SOR Items] Verify Sell value is rounded correctly for .005 edge case (round half up)', async ({ jobService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: false,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(createBasicApiJobData());
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const sellValue = 16.75;
+    const upliftPercent = 10;
+    const expectedSellPerHour = '18.43';
+
+    const sorCostModel: ScheduleOfRatesCostModel = {
+      description: `SOR ${Date.now()}`,
+      costPerHour: sellValue,
+      priceType: PriceType.FIX_PRICE,
+      upliftPercent,
+      scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+      scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+      priceUsingRateSplit: {
+        description: '',
+        cost: 0,
+        sell: sellValue,
+      },
+    };
+
+    await sorCostModal.fillAddScheduleOfRatesCostModal(sorCostModel);
+
+    const actualSellPerHour = await sorCostModal.getSellPerHour('Add');
+    expect(actualSellPerHour).toBe(expectedSellPerHour);
+  });
+
   /** ID: TC_15_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
   test('TC_15_RQ2 @Smoke [Job > Costs / SOR Items] Verify previously entered Uplift % is overridden and recalculated when Sell value is updated', async ({ jobService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
