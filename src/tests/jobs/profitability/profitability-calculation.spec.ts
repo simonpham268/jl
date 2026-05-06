@@ -8,12 +8,18 @@ import { LabourCostModal, PriceType, type LabourCostModel } from '../../../modal
 import { parseCurrencyValue, CURRENCY_FORMAT } from '../../../utils/currency.util';
 
 const profitabilityTabs: ProfitabilityTab[] = ['Details', 'Costs'];
+const EXPECTED_PROFIT_MARGIN_ROUNDING = 39.94;
 
-const labourCostsValues: readonly LabourCostModel[] = [
-  { description: 'Labour 100', costPerHour: 100, priceType: PriceType.FIX_PRICE, sellPerHour: 1000, taxRate: 'S5 (5.00%)' },
-  { description: 'Labour 200', costPerHour: 200, priceType: PriceType.FIX_PRICE, sellPerHour: 0, taxRate: 'No Tax' },
-  { description: 'Labour 300', costPerHour: 300, priceType: PriceType.FIX_PRICE, sellPerHour: 0, taxRate: 'No Tax' },
-] as const;
+const labourCostsValues = {
+  calculation: [
+    { description: 'costPerHour 100', costPerHour: 100, priceType: PriceType.FIX_PRICE, sellPerHour: 1000, taxRate: 'S5 (5.00%)' },
+    { description: 'costPerHour 200', costPerHour: 200, priceType: PriceType.FIX_PRICE, sellPerHour: 0, taxRate: 'No Tax' },
+    { description: 'costPerHour 300', costPerHour: 300, priceType: PriceType.FIX_PRICE, sellPerHour: 0, taxRate: 'No Tax' },
+  ],
+  rounding: [
+    { description: 'sellPerHour 333', costPerHour: 200, priceType: PriceType.FIX_PRICE, sellPerHour: 333, taxRate: 'No Tax' },
+  ],
+} as const satisfies Record<string, readonly LabourCostModel[]>;
 
 test.describe('Detailed with Cost Breakdown View', () => {
   let loginPage: LoginPage;
@@ -30,23 +36,25 @@ test.describe('Detailed with Cost Breakdown View', () => {
     await systemSetupPage.configureJobProfitabilityView('Detailed with Cost Breakdown View');
   });
 
-  test.describe('Profit Overview', () => {
-    test.describe('Quoted Profitability', () => {
+  test.describe('Profit Overview - Quoted Profitability', () => {
+    let quoteDetailPage: QuoteDetailPage;
+    let labourModal: LabourCostModal;
+
+    test.beforeEach(async ({ page }) => {
+      quoteDetailPage = new QuoteDetailPage(page);
+      labourModal = new LabourCostModal(page, 'Quote');
+    });
+
+    test.describe('Calculation', () => {
       let jobId: number | undefined;
       let quoteId: string | number | undefined;
-      let quoteDetailPage: QuoteDetailPage;
-      let labourModal: LabourCostModal;
 
       test.beforeEach(async ({ page, quoteService }) => {
-        quoteDetailPage = new QuoteDetailPage(page);
-        labourModal = new LabourCostModal(page, 'Quote');
-
         if (!quoteId) {
           quoteId = await QuoteDetailPage.createQuoteAndGetId(quoteService);
           await quoteDetailPage.navigateTo(quoteId);
           await quoteDetailPage.switchToTab('Prices');
-
-          await labourModal.addLabourCosts(labourCostsValues);
+          await labourModal.addLabourCosts(labourCostsValues.calculation);
           jobId = await QuoteDetailPage.upgradeToJobAndGetId(page, quoteDetailPage);
         } else if (jobId) {
           await jobDetailsPage.navigateToJob(`/Job/Detail/${jobId}`);
@@ -63,7 +71,7 @@ test.describe('Detailed with Cost Breakdown View', () => {
           const quotedCostValue = await jobDetailsPage.getQuotedCostValue(tab);
           expect(quotedCostValue.cost).toMatch(CURRENCY_FORMAT);
           expect(quotedCostValue.cost).toContain('-');
-          expect(parseCurrencyValue(quotedCostValue.cost)).toBeCloseTo(JobDetailsPage.calculateExpectedQuotedCost(labourCostsValues.map((cost) => cost.costPerHour)), 2);
+          expect(parseCurrencyValue(quotedCostValue.cost)).toBeCloseTo(JobDetailsPage.calculateExpectedQuotedCost(labourCostsValues.calculation.map((cost) => cost.costPerHour)), 2);
         });
       });
 
@@ -76,9 +84,10 @@ test.describe('Detailed with Cost Breakdown View', () => {
 
           const quotedSellValue = await jobDetailsPage.getQuotedSellValue(tab);
           expect(quotedSellValue.sell).toMatch(CURRENCY_FORMAT);
-          expect(parseCurrencyValue(quotedSellValue.sell)).toBeCloseTo(JobDetailsPage.calculateExpectedQuotedSell(labourCostsValues.map((c) => c.sellPerHour ?? 0)), 2);
+          expect(parseCurrencyValue(quotedSellValue.sell)).toBeCloseTo(JobDetailsPage.calculateExpectedQuotedSell(labourCostsValues.calculation.map((c) => c.sellPerHour ?? 0)), 2);
         });
       });
+
       /** ID: TC_16_RQ4 Tags: Smoke, Regression */
       test('[TC_16_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Quoted Profit calculation', async ({ page }) => {
         await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
@@ -91,13 +100,14 @@ test.describe('Detailed with Cost Breakdown View', () => {
           expect(quotedProfitValue.profit).not.toContain('-');
           expect(parseCurrencyValue(quotedProfitValue.profit)).toBeCloseTo(
             JobDetailsPage.calculateExpectedQuotedProfit(
-              labourCostsValues.map((c) => c.sellPerHour ?? 0),
-              labourCostsValues.map((c) => c.costPerHour),
+              labourCostsValues.calculation.map((c) => c.sellPerHour ?? 0),
+              labourCostsValues.calculation.map((c) => c.costPerHour),
             ),
             2,
           );
         });
       });
+
       /** ID: TC_17_RQ4 Tags: Smoke, Regression */
       test('[TC_17_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Profit Margin calculation', async ({ page }) => {
         await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
@@ -109,13 +119,43 @@ test.describe('Detailed with Cost Breakdown View', () => {
           expect(quotedProfitMarginValue.profitMargin).toMatch(/\d+\.\d{2}%/);
           expect(parseCurrencyValue(quotedProfitMarginValue.profitMargin)).toBeCloseTo(
             JobDetailsPage.calculateExpectedProfitMargin(
-              labourCostsValues.map((c) => c.sellPerHour ?? 0),
-              labourCostsValues.map((c) => c.costPerHour),
+              labourCostsValues.calculation.map((c) => c.sellPerHour ?? 0),
+              labourCostsValues.calculation.map((c) => c.costPerHour),
             ),
             2,
           );
         });
       });
-    }); // Quoted Profitability
-  }); // Profit Overview
+    }); // Calculation
+
+    test.describe('Rounding', () => {
+      let jobId: number | undefined;
+      let quoteId: string | number | undefined;
+
+      test.beforeEach(async ({ page, quoteService }) => {
+        if (!quoteId) {
+          quoteId = await QuoteDetailPage.createQuoteAndGetId(quoteService);
+          await quoteDetailPage.navigateTo(quoteId);
+          await quoteDetailPage.switchToTab('Prices');
+          await labourModal.addLabourCosts(labourCostsValues.rounding);
+          jobId = await QuoteDetailPage.upgradeToJobAndGetId(page, quoteDetailPage);
+        } else if (jobId) {
+          await jobDetailsPage.navigateToJob(`/Job/Detail/${jobId}`);
+        }
+      });
+
+      /** ID: TC_18_RQ4 Tags: Regression */
+      test('[TC_18_RQ4] @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify rounding of Profit Margin', async () => {
+        await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
+          await jobDetailsPage.expandProfitOverview(tab);
+          const loc = jobDetailsPage.getProfitLocators(tab);
+          await expect(loc.quotedProfitabilitySection).toBeVisible();
+
+          const quotedProfitMarginValue = await jobDetailsPage.getQuotedProfitMarginValue(tab);
+          expect(quotedProfitMarginValue.profitMargin).toMatch(/\d+\.\d{2}%/);
+          expect(parseCurrencyValue(quotedProfitMarginValue.profitMargin)).toBeCloseTo(EXPECTED_PROFIT_MARGIN_ROUNDING, 2);
+        });
+      });
+    }); // Profit Margin Rounding
+  }); // Profit Overview - Quoted Profitability
 }); // Detailed with Cost Breakdown View

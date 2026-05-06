@@ -1199,4 +1199,17 @@ export class JobDetailsPage extends BasePage {
     const totalSell = JobDetailsPage.calculateExpectedQuotedSell(sells);
     return totalSell === 0 ? 0 : (JobDetailsPage.calculateExpectedQuotedProfit(sells, costs) / totalSell) * 100;
   }
+
+  /**
+   * Cost breakdown by category
+   */
+
+  getCostBreakdownCategoryRow(tab: ProfitabilityTab, categoryName: string) {
+    const container = this.page.locator(this.profitTabSelectors[tab]);
+    return container.locator('td.cp-breakdown-td-cat', { hasText: categoryName });
+  }
+
+  getCostBreakdownValueCells(tab: ProfitabilityTab, categoryName: string) {
+    return this.getCostBreakdownCategoryRow(tab, categoryName).locator('xpath=..').locator('td.cp-breakdown-td');
+  }
 }
