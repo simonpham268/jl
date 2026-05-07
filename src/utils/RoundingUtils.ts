@@ -1,7 +1,7 @@
 import { ROUNDING_OPTION } from '../constants/RoundingConst';
 
 export function roundTo2Decimals(value: number, roundingType: string): number {
-  const shifted = parseFloat(value.toFixed(10)) * 100;
+  const shifted = parseFloat((value * 100).toFixed(6));
   switch (roundingType) {
   case ROUNDING_OPTION.ROUND_UP:
     return Math.ceil(shifted) / 100;
