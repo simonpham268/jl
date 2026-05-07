@@ -87,7 +87,6 @@ test.describe('Detailed with Cost Breakdown View', () => {
     });
 
     test('[TC_28_RQ4] @Regression: [Profitability – Detail/Costs Tab] Variable Target Profit Margin – Validate valid and invalid inputs', async ({ page }) => {
-      test.setTimeout(120_000);
       const tab = 'Details' as const;
       await jobDetailsPage.expandProfitOverview(tab);
       const loc = jobDetailsPage.getProfitLocators(tab);
@@ -134,7 +133,6 @@ test.describe('Detailed with Cost Breakdown View', () => {
 
     /** ID: TC_32_RQ4 Tags: Regression */
     test('[TC_32_RQ4] @Regression: [Profitability – Detail/Costs Tab] Actuals Only – Verify Invoiced (Customer) = £0.00 when no invoice exists', async () => {
-      test.setTimeout(60_000);
 
       // Verify Approved Invoices in History → Invoice tab = £0.00
       await jobDetailsPage.navigateToInvoiceHistoryTab();

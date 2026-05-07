@@ -2,6 +2,7 @@ export const PURCHASE_ORDER_ENDPOINTS = {
   CREATE: '/PurchaseOrder/Create',
   ADD_ITEM: '/api/PurchaseOrder/InsertPOItems',
   DELIVER_LINE: '/PurchaseOrder/SaveDeliveryDate',
+  RESOLVE: '/PurchaseOrder/ResolvePurchaseOrder',
 } as const;
 
 export const SUPPLIER_ENDPOINTS = {

@@ -373,6 +373,8 @@ export class JobDetailsPage extends BasePage {
           actualsSupplierInvoiceAdjustments: actualsSection.locator('p.summary-item-record').filter({ hasText: 'Supplier Invoice Adjustments' }).locator('span.text-nowrap'),
           actualsInvoicedCustomer: actualsSection.locator('p.summary-item-record').filter({ hasText: 'Invoiced (Customer)' }).locator('span.text-nowrap'),
           actualsUninvoiced: actualsSection.locator('p.summary-item-record').filter({ hasText: '- Uninvoiced' }).locator('span.text-nowrap'),
+          actualsProfit: actualsSection.locator('p.summary-item-record').filter({ hasText: 'Profit' }).locator('span.text-nowrap.fw700'),
+          actualsProfitPercent: actualsSection.locator('p.summary-item-record').filter({ hasText: '- Profit % based on Actuals' }).locator('span.text-nowrap'),
         };
       })(),
       // Profit Summary View — old profitability section

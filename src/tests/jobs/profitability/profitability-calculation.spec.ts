@@ -261,19 +261,25 @@ test.describe('Detailed with Cost Breakdown View', () => {
 
       const jobNumericId = redirectUrl.split('/').pop()!;
 
-      // Supplier PO: create → add item (25) → deliver → invoice
+      // Supplier PO: create → add item (0) → deliver → invoice → resolve
       const supplierId = await purchaseOrderService.getFirstSupplierId();
       const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
-      await purchaseOrderService.addLineItem(poId, supplierId, 25, `Invoice Item ${Date.now()}`);
+      await purchaseOrderService.addLineItem(poId, supplierId, 0, `Invoice Item ${Date.now()}`);
       await purchaseOrderService.deliverLine(poId);
       await invoiceService.createSupplierPOInvoice(poId, 25);
+      await purchaseOrderService.resolvePurchaseOrder(poId);
 
-      // Subcontractor PO: create → add item (25) → complete → invoice
+      // Subcontractor PO: create → add item (25) + (50) → complete → invoice → delete line 25 → resolve
       const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
       const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
-      await subcontractorPOService.addItem(subPoId, subcontractorId, 25, `Sub Invoice Item ${Date.now()}`);
+      await subcontractorPOService.addItem(subPoId, subcontractorId, 25, `Sub Invoice Item 25 ${Date.now()}`);
+      await subcontractorPOService.addItem(subPoId, subcontractorId, 50, `Sub Invoice Item 50 ${Date.now()}`);
       await subcontractorPOService.completeLine(subPoId);
-      await invoiceService.createSubcontractorPOInvoice(subPoId, 25);
+      const subInvoiceId = await invoiceService.createSubcontractorPOInvoice(subPoId, 25);
+      const subLines = await invoiceService.getSubInvoiceLines(subInvoiceId);
+      const line50 = subLines.find(l => l.pricePerUnit === 50);
+      if (line50) await invoiceService.deleteSubcontractorInvoiceLine(line50.id, subInvoiceId);
+      await subcontractorPOService.resolvePurchaseOrder(subPoId);
 
       // Verify Supplier Invoice Adjustments = -£50.00 on both tabs
       await jobDetailsPage.navigateToJob(redirectUrl);
@@ -352,4 +358,147 @@ test.describe('Detailed with Cost Breakdown View', () => {
       await verifyInvoicedCustomer('Details');
     });
   }); // Invoiced Customer Calculations
+
+  test.describe('Actuals Profit Calculation', () => {
+    let profitRedirectUrl: string;
+
+    test.beforeEach(async ({ page, jobService, customerService, purchaseOrderService, subcontractorPOService, invoiceService }) => {
+      const subcontractorCostModal = new SubcontractorCostModal(page);
+
+      const [jobTypeId, customerRes] = await Promise.all([
+        jobService.getDefaultJobTypeId(),
+        customerService.createCustomer({ Name: `Test Profit Job ${Date.now()}` }),
+      ]);
+      const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+      const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+      if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+      const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+      profitRedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+      console.log(`[Job] ${profitRedirectUrl}`);
+
+      // Actual Costs setup (UI): Add Subcontractor cost — Cost Per Hour = 2000
+      await jobDetailsPage.navigateToJob(profitRedirectUrl);
+      await jobDetailsPage.switchToTab('Costs');
+      await subcontractorCostModal.clickAddSubcontractor();
+      await subcontractorCostModal.costPerHourInput.fill('2000');
+      await subcontractorCostModal.saveModal();
+
+      const jobNumericId = profitRedirectUrl.split('/').pop()!;
+
+      // Actual Costs setup (API): Supplier PO → add item (3000) → deliver
+      const supplierId = await purchaseOrderService.getFirstSupplierId();
+      const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId, supplierId, 3000, `PO Item ${Date.now()}`);
+      await purchaseOrderService.deliverLine(poId);
+
+      // Actual Costs setup (API): Subcontractor PO → add item (652.10) → complete
+      const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
+      const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+      await subcontractorPOService.addItem(subPoId, subcontractorId, 652.10, `Sub Item ${Date.now()}`);
+      await subcontractorPOService.completeLine(subPoId);
+
+      // Supplier Invoice Adjustments (API): Supplier PO → add item (0) → deliver → invoice (50) → resolve
+      const poId2 = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId2, supplierId, 0, `Invoice Item ${Date.now()}`);
+      await purchaseOrderService.deliverLine(poId2);
+      await invoiceService.createSupplierPOInvoice(poId2, 50);
+      await purchaseOrderService.resolvePurchaseOrder(poId2);
+    });
+
+    /** ID: TC_36_RQ4 Tags: Regression */
+    test('[TC_36_RQ4] @Regression: [Profitability – Detail/Costs Tab] Actuals Only – Verify Profit = Invoiced Sell − (Actual Costs + PO Resolved)', async () => {
+
+      const verifyProfit = async (tab: 'Costs' | 'Details') => {
+        await jobDetailsPage.navigateToJob(profitRedirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityActualsOnlySection).toBeVisible();
+        await expect.soft(loc.actualsProfit).toContainText('-£5,702.10');
+      };
+
+      await verifyProfit('Costs');
+      await verifyProfit('Details');
+    });
+
+    /** ID: TC_37_RQ4 Tags: Regression */
+    test('[TC_37_RQ4] @Regression: [Profitability – Detail/Costs Tab] Actuals Only – Verify Profit % = -100% when Invoiced Sell = 0 (division-by-zero rule)', async () => {
+
+      const verifyProfitPercent = async (tab: 'Costs' | 'Details') => {
+        await jobDetailsPage.navigateToJob(profitRedirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityActualsOnlySection).toBeVisible();
+        await expect.soft(loc.actualsProfitPercent).toContainText('-100.00%');
+      };
+
+      await verifyProfitPercent('Costs');
+      await verifyProfitPercent('Details');
+    });
+  }); // Actuals Profit Calculation
+
+  test.describe('Actuals Profit Calculation with Invoice', () => {
+    let invoicedProfitRedirectUrl: string;
+
+    test.beforeEach(async ({ page, jobService, customerService, purchaseOrderService, invoiceService }) => {
+      const subcontractorCostModal = new SubcontractorCostModal(page);
+
+      const [jobTypeId, customerRes] = await Promise.all([
+        jobService.getDefaultJobTypeId(),
+        customerService.createCustomer({ Name: `Test Profit Invoice Job ${Date.now()}` }),
+      ]);
+      const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+      const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+      if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+      const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+      invoicedProfitRedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+      console.log(`[Job] ${invoicedProfitRedirectUrl}`);
+
+      // Actual Costs setup (UI): Add Subcontractor cost — Cost Per Hour = 2000
+      await jobDetailsPage.navigateToJob(invoicedProfitRedirectUrl);
+      await jobDetailsPage.switchToTab('Costs');
+      await subcontractorCostModal.clickAddSubcontractor();
+      await subcontractorCostModal.costPerHourInput.fill('2000');
+      await subcontractorCostModal.saveModal();
+
+      const jobNumericId = invoicedProfitRedirectUrl.split('/').pop()!;
+
+      // Actual Costs setup (API): Supplier PO → add item (3000) → deliver
+      const supplierId = await purchaseOrderService.getFirstSupplierId();
+      const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId, supplierId, 3000, `PO Item ${Date.now()}`);
+      await purchaseOrderService.deliverLine(poId);
+
+      // Supplier Invoice Adjustments (API): Supplier PO → add item (0) → deliver → invoice (500) → resolve
+      const poId2 = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId2, supplierId, 0, `Invoice Item ${Date.now()}`);
+      await purchaseOrderService.deliverLine(poId2);
+      await invoiceService.createSupplierPOInvoice(poId2, 500);
+      await purchaseOrderService.resolvePurchaseOrder(poId2);
+
+      // Invoiced Sell (API): Create customer invoice = 7,000
+      await invoiceService.createCustomerInvoice(jobNumericId, 7000);
+    });
+
+    /** ID: TC_38_RQ4 Tags: Regression */
+    test('[TC_38_RQ4] @Regression: [Profitability – Detail/Costs Tab] Actuals Only – Verify Profit and Profit % when Invoiced Sell = £10,000, Actual Costs = £5,000, PO Resolved = £500', async () => {
+
+      const verifyProfitAndPercent = async (tab: 'Costs' | 'Details') => {
+        await jobDetailsPage.navigateToJob(invoicedProfitRedirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityActualsOnlySection).toBeVisible();
+        await expect.soft(loc.actualsInvoicedCustomer).toContainText('£10,000.00');
+        await expect.soft(loc.actualsProfit).toContainText('£4,500.00');
+        await expect.soft(loc.actualsProfitPercent).toContainText('45.00%');
+      };
+
+      await verifyProfitAndPercent('Costs');
+      await verifyProfitAndPercent('Details');
+    });
+  }); // Actuals Profit Calculation with Invoice
 }); // Detailed with Cost Breakdown View

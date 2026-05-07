@@ -98,6 +98,13 @@ export class PurchaseOrderService {
     if (!res.body?.success) throw new Error(`Could not add PO line item: status=${res.status} body=${JSON.stringify(res.body)}`);
   }
 
+  async resolvePurchaseOrder(poId: string, reason: string = 'Resolved'): Promise<void> {
+    const res = await this.client.post<any>(PURCHASE_ORDER_ENDPOINTS.RESOLVE, {
+      form: { PurchaseOrderId: poId, Reason: reason },
+    });
+    if (!res.ok) throw new Error(`Could not resolve PO ${poId}: status=${res.status} body=${JSON.stringify(res.body)}`);
+  }
+
   async deliverLine(poId: string): Promise<void> {
     const res = await this.client.post<any>(PURCHASE_ORDER_ENDPOINTS.DELIVER_LINE, {
       form: {

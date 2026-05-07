@@ -6,6 +6,8 @@ export const INVOICE_ENDPOINTS = {
   CREATE_CUSTOMER_INVOICE: '/Invoice/Create',
   SAVE_CUSTOMER_INVOICE_LINE: '/api/Invoice/SaveLine',
   APPROVE_CUSTOMER_INVOICE: '/api/Invoice/Approve',
+  GET_SUB_INVOICE_LINES: '/SubContractorPO/GetSubContractorInvoiceLines',
+  DELETE_SUB_INVOICE_LINE: '/SubContractorPO/DeleteSubContractorInvoiceLine',
   CREATE_CREDIT_INVOICE: '/Credit/Create',
   EDIT_CREDIT_NOTES: '/api/Credit/EditNotes',
   GET_CREDIT_REASONS: '/api/CreditReason/CreditReasonSearchJson',
