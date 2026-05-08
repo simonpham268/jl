@@ -100,6 +100,202 @@ test.describe('[Profitability - Detail/Costs Tab] Job Profitability Include WIP'
     });
   });
 
+  /** ID: TC_25_RQ4 Tags: Smoke, Regression */
+  test('[TC_25_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Job Profitability Include WIP - Verify Current Profit calculation', async ({ page, quoteService, customerService, siteService, jobService, purchaseOrderService, subcontractorPOService }) => {
+    const quoteSell = Math.floor(Math.random() * 900) + 100;
+    const jobLabourSell = Math.floor(Math.random() * 900) + 100;
+    const supplierPOCost = Math.floor(Math.random() * 900) + 100;
+    const subPOCost = Math.floor(Math.random() * 900) + 100;
+    const expectedCurrentProfit = quoteSell + jobLabourSell - supplierPOCost - subPOCost;
+    const customerName = `TC25 Auto ${Date.now()}`;
+    const quoteDescription = `TC25 Quote ${Date.now()}`;
+    const quoteLabourDesc = `Quote Labour ${Date.now()}`;
+    const jobLabourDesc = `Job Labour ${Date.now()}`;
+
+    const [jobTypeId, customerRes] = await Promise.all([
+      jobService.getDefaultJobTypeId(),
+      customerService.createCustomer({ Name: customerName }),
+    ]);
+
+    const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+    if (!customerId) throw new Error(`Failed to create customer. Response: ${JSON.stringify(customerRes.body)}`);
+
+    const siteRes = await siteService.createSite({ CustomerId: customerId, CustomerName: customerName, Name: `TC25 Site ${Date.now()}` });
+    const siteBody = siteRes.body as any;
+    const siteId = Number(siteBody?.AdditionalData?.SiteId ?? siteBody?.SiteId);
+    if (!siteId) throw new Error(`Failed to create site. Response: ${JSON.stringify(siteRes.body)}`);
+
+    const quoteRes = await quoteService.createQuote(
+      ApiQuoteDataBuilder.create().customerId(customerId).siteId(siteId).jobType(String(jobTypeId)).build(),
+    );
+    const quoteBody = quoteRes.body as any;
+    const quoteId = quoteBody?.AdditionalData?.QuoteId ?? quoteBody?.QuoteId
+      ?? quoteBody?.redirectUrl?.match(/\/(\d+)$/)?.[1];
+    if (!quoteId) throw new Error(`quoteId could not be created. Response: ${JSON.stringify(quoteRes.body)}`);
+
+    await quoteDetailPage.navigateTo(quoteId);
+    await quoteDetailPage.switchToTab('Prices');
+    await quoteLabourModal.clickAddLabour();
+    await quoteLabourModal.fillAddLabourCostModal({
+      description: quoteLabourDesc,
+      costPerHour: 0,
+      priceType: PriceType.FIX_PRICE,
+      sellPerHour: quoteSell,
+    });
+    await quoteLabourModal.saveModal();
+
+    await quoteDetailPage.switchToTab('Details');
+    await quoteDetailPage.enableEditMode();
+    await quoteDetailPage.fillDescription(quoteDescription);
+    await quoteDetailPage.saveChanges();
+
+    await quoteDetailPage.clickUpgrade();
+    await quoteDetailPage.clickUpgradeQuoteNext();
+    await quoteDetailPage.clickUpgradeQuoteSkipAndUpgrade();
+
+    expect(page.url()).toContain('/Job/Detail/');
+
+    await jobDetailsPage.switchToTab('Details');
+    const jobDescription = await jobDetailsPage.getDescription();
+    expect.soft(jobDescription).toContain(quoteDescription);
+
+    const urlMatch = page.url().match(/\/Job\/Detail\/(\d+)/);
+    if (!urlMatch) throw new Error(`Could not extract job ID from URL: ${page.url()}`);
+    const jobNumericId = urlMatch[1];
+    const jobPath = `/Job/Detail/${jobNumericId}`;
+
+    await jobDetailsPage.switchToTab('Costs');
+    await jobLabourModal.clickAddLabour();
+    await jobLabourModal.fillAddLabourCostModal({
+      description: jobLabourDesc,
+      costPerHour: 0,
+      priceType: PriceType.FIX_PRICE,
+      sellPerHour: jobLabourSell,
+    });
+    await jobLabourModal.saveModal();
+
+    const supplierId = await purchaseOrderService.getFirstSupplierId();
+    const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
+    await purchaseOrderService.addLineItem(poId, supplierId, supplierPOCost, `Supplier PO ${Date.now()}`);
+
+    const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
+    const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+    await subcontractorPOService.addItem(subPoId, subcontractorId, subPOCost, `Sub PO ${Date.now()}`);
+
+    const verifyCurrentProfit = async (tab: 'Costs' | 'Details') => {
+      await jobDetailsPage.navigateToJob(jobPath);
+      await jobDetailsPage.switchToTab(tab);
+      await jobDetailsPage.expandProfitOverview(tab);
+      const loc = jobDetailsPage.getProfitLocators(tab);
+      await expect.soft(loc.profitabilityIncludeWIPSection).toBeVisible();
+      const wipCurrentProfitText = (await loc.wipCurrentProfit.textContent()) ?? '';
+      expect.soft(wipCurrentProfitText).toMatch(CURRENCY_FORMAT);
+      expect.soft(parseCurrencyValue(wipCurrentProfitText)).toBeCloseTo(expectedCurrentProfit, 2);
+    };
+
+    await verifyCurrentProfit('Costs');
+    await verifyCurrentProfit('Details');
+  });
+
+  /** ID: TC_26_RQ4 Tags: Smoke, Regression */
+  test('[TC_26_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Job Profitability Include WIP - Verify Profit Margin calculation', async ({ page, quoteService, customerService, siteService, jobService, purchaseOrderService, subcontractorPOService }) => {
+    const quoteSell = Math.floor(Math.random() * 900) + 100;
+    const jobLabourSell = Math.floor(Math.random() * 900) + 100;
+    const supplierPOCost = Math.floor(Math.random() * 900) + 100;
+    const subPOCost = Math.floor(Math.random() * 900) + 100;
+    const totalJobSell = quoteSell + jobLabourSell;
+    const totalExpectedCost = supplierPOCost + subPOCost;
+    const expectedProfitMargin = (totalJobSell - totalExpectedCost) / totalJobSell * 100;
+    const customerName = `TC26 Auto ${Date.now()}`;
+    const quoteDescription = `TC26 Quote ${Date.now()}`;
+    const quoteLabourDesc = `Quote Labour ${Date.now()}`;
+    const jobLabourDesc = `Job Labour ${Date.now()}`;
+
+    const [jobTypeId, customerRes] = await Promise.all([
+      jobService.getDefaultJobTypeId(),
+      customerService.createCustomer({ Name: customerName }),
+    ]);
+
+    const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+    if (!customerId) throw new Error(`Failed to create customer. Response: ${JSON.stringify(customerRes.body)}`);
+
+    const siteRes = await siteService.createSite({ CustomerId: customerId, CustomerName: customerName, Name: `TC26 Site ${Date.now()}` });
+    const siteBody = siteRes.body as any;
+    const siteId = Number(siteBody?.AdditionalData?.SiteId ?? siteBody?.SiteId);
+    if (!siteId) throw new Error(`Failed to create site. Response: ${JSON.stringify(siteRes.body)}`);
+
+    const quoteRes = await quoteService.createQuote(
+      ApiQuoteDataBuilder.create().customerId(customerId).siteId(siteId).jobType(String(jobTypeId)).build(),
+    );
+    const quoteBody = quoteRes.body as any;
+    const quoteId = quoteBody?.AdditionalData?.QuoteId ?? quoteBody?.QuoteId
+      ?? quoteBody?.redirectUrl?.match(/\/(\d+)$/)?.[1];
+    if (!quoteId) throw new Error(`quoteId could not be created. Response: ${JSON.stringify(quoteRes.body)}`);
+
+    await quoteDetailPage.navigateTo(quoteId);
+    await quoteDetailPage.switchToTab('Prices');
+    await quoteLabourModal.clickAddLabour();
+    await quoteLabourModal.fillAddLabourCostModal({
+      description: quoteLabourDesc,
+      costPerHour: 0,
+      priceType: PriceType.FIX_PRICE,
+      sellPerHour: quoteSell,
+    });
+    await quoteLabourModal.saveModal();
+
+    await quoteDetailPage.switchToTab('Details');
+    await quoteDetailPage.enableEditMode();
+    await quoteDetailPage.fillDescription(quoteDescription);
+    await quoteDetailPage.saveChanges();
+
+    await quoteDetailPage.clickUpgrade();
+    await quoteDetailPage.clickUpgradeQuoteNext();
+    await quoteDetailPage.clickUpgradeQuoteSkipAndUpgrade();
+
+    expect(page.url()).toContain('/Job/Detail/');
+
+    await jobDetailsPage.switchToTab('Details');
+    const jobDescription = await jobDetailsPage.getDescription();
+    expect.soft(jobDescription).toContain(quoteDescription);
+
+    const urlMatch = page.url().match(/\/Job\/Detail\/(\d+)/);
+    if (!urlMatch) throw new Error(`Could not extract job ID from URL: ${page.url()}`);
+    const jobNumericId = urlMatch[1];
+    const jobPath = `/Job/Detail/${jobNumericId}`;
+
+    await jobDetailsPage.switchToTab('Costs');
+    await jobLabourModal.clickAddLabour();
+    await jobLabourModal.fillAddLabourCostModal({
+      description: jobLabourDesc,
+      costPerHour: 0,
+      priceType: PriceType.FIX_PRICE,
+      sellPerHour: jobLabourSell,
+    });
+    await jobLabourModal.saveModal();
+
+    const supplierId = await purchaseOrderService.getFirstSupplierId();
+    const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
+    await purchaseOrderService.addLineItem(poId, supplierId, supplierPOCost, `Supplier PO ${Date.now()}`);
+
+    const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
+    const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+    await subcontractorPOService.addItem(subPoId, subcontractorId, subPOCost, `Sub PO ${Date.now()}`);
+
+    const verifyProfitMargin = async (tab: 'Costs' | 'Details') => {
+      await jobDetailsPage.navigateToJob(jobPath);
+      await jobDetailsPage.switchToTab(tab);
+      await jobDetailsPage.expandProfitOverview(tab);
+      const loc = jobDetailsPage.getProfitLocators(tab);
+      await expect.soft(loc.profitabilityIncludeWIPSection).toBeVisible();
+      const wipProfitMarginText = (await loc.wipProfitMargin.textContent()) ?? '';
+      expect.soft(wipProfitMarginText).toMatch(/-?\d+[\d,.]*\.\d{2}%/);
+      expect.soft(parseCurrencyValue(wipProfitMarginText)).toBeCloseTo(expectedProfitMargin, 2);
+    };
+
+    await verifyProfitMargin('Costs');
+    await verifyProfitMargin('Details');
+  });
+
   /** ID: TC_24_RQ4 Tags: Smoke, Regression */
   test('[TC_24_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Job Profitability Include WIP - Verify Total Job Sell calculation', async ({ page, quoteService, customerService, siteService, jobService }) => {
     const quoteSell = Math.floor(Math.random() * 900) + 100;
@@ -191,98 +387,5 @@ test.describe('[Profitability - Detail/Costs Tab] Job Profitability Include WIP'
     });
   });
 
-  /** ID: TC_25_RQ4 Tags: Smoke, Regression */
-  test('[TC_25_RQ4] @Smoke @Regression: [Profitability - Detail/Costs Tab] Job Profitability Include WIP - Verify Current Profit calculation', async ({ page, quoteService, customerService, siteService, jobService, purchaseOrderService, subcontractorPOService }) => {
-    const quoteSell = Math.floor(Math.random() * 400) + 300;
-    const jobSell = Math.floor(Math.random() * 400) + 300;
-    const supplierPoAmount = Math.floor(Math.random() * 150) + 50;
-    const subPoAmount = Math.floor(Math.random() * 150) + 50;
-    const totalJobSell = quoteSell + jobSell;
-    const totalExpectedCost = supplierPoAmount + subPoAmount;
-    const expectedCurrentProfit = totalJobSell - totalExpectedCost;
-    const quoteLabourDescription = `Labour ${Date.now()}`;
-    const jobLabourDescription = `Job Labour ${Date.now()}`;
-    const quoteDescription = `TC25 Quote ${Date.now()}`;
-    const customerName = `TC25 Auto ${Date.now()}`;
-
-    const [jobTypeId, customerRes] = await Promise.all([
-      jobService.getDefaultJobTypeId(),
-      customerService.createCustomer({ Name: customerName }),
-    ]);
-
-    const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
-    if (!customerId) throw new Error(`Failed to create customer. Response: ${JSON.stringify(customerRes.body)}`);
-
-    const siteRes = await siteService.createSite({ CustomerId: customerId, CustomerName: customerName, Name: `TC25 Site ${Date.now()}` });
-    const siteBody = siteRes.body as any;
-    const siteId = Number(siteBody?.AdditionalData?.SiteId ?? siteBody?.SiteId);
-    if (!siteId) throw new Error(`Failed to create site. Response: ${JSON.stringify(siteRes.body)}`);
-
-    const quoteRes = await quoteService.createQuote(
-      ApiQuoteDataBuilder.create().customerId(customerId).siteId(siteId).jobType(String(jobTypeId)).build(),
-    );
-    const quoteBody = quoteRes.body as any;
-    const quoteId = quoteBody?.AdditionalData?.QuoteId ?? quoteBody?.QuoteId
-      ?? quoteBody?.redirectUrl?.match(/\/(\d+)$/)?.[1];
-    if (!quoteId) throw new Error(`quoteId could not be created. Response: ${JSON.stringify(quoteRes.body)}`);
-
-    await quoteDetailPage.navigateTo(quoteId);
-
-    await quoteDetailPage.switchToTab('Prices');
-    await quoteLabourModal.clickAddLabour();
-    await quoteLabourModal.fillAddLabourCostModal({
-      description: quoteLabourDescription,
-      costPerHour: 0,
-      priceType: PriceType.FIX_PRICE,
-      sellPerHour: quoteSell,
-    });
-    await quoteLabourModal.saveModal();
-
-    await quoteDetailPage.switchToTab('Details');
-    await quoteDetailPage.enableEditMode();
-    await quoteDetailPage.fillDescription(quoteDescription);
-    await quoteDetailPage.saveChanges();
-
-    await quoteDetailPage.clickUpgrade();
-    await quoteDetailPage.clickUpgradeQuoteNext();
-    await quoteDetailPage.clickUpgradeQuoteSkipAndUpgrade();
-
-    expect(page.url()).toContain('/Job/Detail/');
-
-    await jobDetailsPage.switchToTab('Details');
-    const jobDescription25 = await jobDetailsPage.getDescription();
-    expect.soft(jobDescription25).toContain(quoteDescription);
-
-    const jobIdMatch = page.url().match(/\/Job\/Detail\/(\d+)/);
-    if (!jobIdMatch) throw new Error(`Could not extract job ID from URL: ${page.url()}`);
-    const jobNumericId = jobIdMatch[1];
-
-    const supplierId = await purchaseOrderService.getFirstSupplierId();
-    const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
-    await purchaseOrderService.addLineItem(poId, supplierId, supplierPoAmount, `Supplier Item ${Date.now()}`);
-
-    const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
-    const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
-    await subcontractorPOService.addItem(subPoId, subcontractorId, subPoAmount, `Sub Item ${Date.now()}`);
-
-    await jobDetailsPage.switchToTab('Costs');
-    await jobLabourModal.clickAddLabour();
-    await jobLabourModal.fillAddLabourCostModal({
-      description: jobLabourDescription,
-      costPerHour: 0,
-      priceType: PriceType.FIX_PRICE,
-      sellPerHour: jobSell,
-    });
-    await jobLabourModal.saveModal();
-
-    await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
-      await jobDetailsPage.expandProfitOverview(tab);
-      const loc = jobDetailsPage.getProfitLocators(tab);
-      await expect(loc.profitabilityIncludeWIPSection).toBeVisible();
-
-      const wipCurrentProfitText = (await loc.wipCurrentProfit.textContent()) ?? '';
-      expect.soft(wipCurrentProfitText).toMatch(CURRENCY_FORMAT);
-      expect.soft(parseCurrencyValue(wipCurrentProfitText)).toBeCloseTo(expectedCurrentProfit, 2);
-    });
-  });
+  
 });
