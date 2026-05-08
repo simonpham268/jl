@@ -293,6 +293,173 @@ test.describe('Detailed with Cost Breakdown View', () => {
     });
   }); // Actuals & WIP Calculations
 
+  test.describe('Job Cost Actuals Calculation', () => {
+    let tc20RedirectUrl: string;
+
+    test.beforeEach(async ({ page, jobService, customerService, purchaseOrderService, subcontractorPOService }) => {
+      const subcontractorCostModal = new SubcontractorCostModal(page);
+
+      const [jobTypeId, customerRes] = await Promise.all([
+        jobService.getDefaultJobTypeId(),
+        customerService.createCustomer({ Name: `Test Job Cost Actuals ${Date.now()}` }),
+      ]);
+      const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+      const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+      if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+      const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+      tc20RedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+      console.log(`[Job] ${tc20RedirectUrl}`);
+
+      // Remaining Job Costs (UI): Add Subcontractor cost — Cost Per Hour = 200
+      await jobDetailsPage.navigateToJob(tc20RedirectUrl);
+      await jobDetailsPage.switchToTab('Costs');
+      await subcontractorCostModal.clickAddSubcontractor();
+      await subcontractorCostModal.costPerHourInput.fill('200');
+      await subcontractorCostModal.saveModal();
+
+      const jobNumericId = tc20RedirectUrl.split('/').pop()!;
+
+      // Delivered PO Costs (API): Supplier PO → add item (300) → deliver
+      const supplierId = await purchaseOrderService.getFirstSupplierId();
+      const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId, supplierId, 300, `PO Item ${Date.now()}`);
+      await purchaseOrderService.deliverLine(poId);
+
+      // Completed Subcontract PO Costs (API): Sub PO → add item (100) → complete
+      const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
+      const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+      await subcontractorPOService.addItem(subPoId, subcontractorId, 100, `Sub Item ${Date.now()}`);
+      await subcontractorPOService.completeLine(subPoId);
+    });
+
+    /** ID: TC_20_RQ4 Tags: Regression */
+    test('[TC_20_RQ4] @Regression: [Profitability – Detail/Costs Tab] Include WIP – Verify Job Cost Actuals = -(Remaining + Delivered PO + Completed Sub PO)', async () => {
+      const verifyJobCostActuals = async (tab: 'Costs' | 'Details') => {
+        await jobDetailsPage.navigateToJob(tc20RedirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityIncludeWIPSection).toBeVisible();
+        await expect.soft(loc.wipJobCostActuals).toContainText('-£600.00');
+      };
+
+      await verifyJobCostActuals('Costs');
+      await verifyJobCostActuals('Details');
+    });
+  }); // Job Cost Actuals Calculation
+
+  test.describe('Job Cost Committed Calculation', () => {
+    let tc21RedirectUrl: string;
+
+    test.beforeEach(async ({ jobService, customerService, purchaseOrderService, subcontractorPOService }) => {
+      const [jobTypeId, customerRes] = await Promise.all([
+        jobService.getDefaultJobTypeId(),
+        customerService.createCustomer({ Name: `Test Job Cost Committed ${Date.now()}` }),
+      ]);
+      const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+      const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+      if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+      const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+      tc21RedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+      console.log(`[Job] ${tc21RedirectUrl}`);
+
+      const jobNumericId = tc21RedirectUrl.split('/').pop()!;
+
+      // Undelivered PO Costs (API): Supplier PO → add item (250) → NOT delivered
+      const supplierId = await purchaseOrderService.getFirstSupplierId();
+      const poId = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId, supplierId, 250, `PO Item ${Date.now()}`);
+
+      // Incomplete Subcontract PO Costs (API): Sub PO → add item (150) → NOT completed
+      const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
+      const subPoId = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+      await subcontractorPOService.addItem(subPoId, subcontractorId, 150, `Sub Item ${Date.now()}`);
+    });
+
+    /** ID: TC_21_RQ4 Tags: Regression */
+    test('[TC_21_RQ4] @Regression: [Profitability – Detail/Costs Tab] Include WIP – Verify Job Cost Committed = -(Undelivered PO + Incomplete Sub PO)', async () => {
+      const verifyJobCostCommitted = async (tab: 'Costs' | 'Details') => {
+        await jobDetailsPage.navigateToJob(tc21RedirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityIncludeWIPSection).toBeVisible();
+        await expect.soft(loc.wipJobCostCommitted).toContainText('-£400.00');
+      };
+
+      await verifyJobCostCommitted('Costs');
+      await verifyJobCostCommitted('Details');
+    });
+  }); // Job Cost Committed Calculation
+
+  test.describe('Total Expected Cost Calculation', () => {
+    let tc22RedirectUrl: string;
+
+    test.beforeEach(async ({ page, jobService, customerService, purchaseOrderService, subcontractorPOService }) => {
+      const subcontractorCostModal = new SubcontractorCostModal(page);
+
+      const [jobTypeId, customerRes] = await Promise.all([
+        jobService.getDefaultJobTypeId(),
+        customerService.createCustomer({ Name: `Test Total Expected Cost ${Date.now()}` }),
+      ]);
+      const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+      const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+      if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+      const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+      tc22RedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+      console.log(`[Job] ${tc22RedirectUrl}`);
+
+      // Remaining Job Costs (UI): Subcontractor cost — Cost Per Hour = 200
+      await jobDetailsPage.navigateToJob(tc22RedirectUrl);
+      await jobDetailsPage.switchToTab('Costs');
+      await subcontractorCostModal.clickAddSubcontractor();
+      await subcontractorCostModal.costPerHourInput.fill('200');
+      await subcontractorCostModal.saveModal();
+
+      const jobNumericId = tc22RedirectUrl.split('/').pop()!;
+      const supplierId = await purchaseOrderService.getFirstSupplierId();
+
+      // Delivered PO Costs (API): Supplier PO → add item (300) → deliver
+      const poId1 = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId1, supplierId, 300, `PO Delivered ${Date.now()}`);
+      await purchaseOrderService.deliverLine(poId1);
+
+      // Completed Subcontract PO Costs (API): Sub PO → add item (100) → complete
+      const subcontractorId = await subcontractorPOService.getFirstSubcontractorId();
+      const subPoId1 = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+      await subcontractorPOService.addItem(subPoId1, subcontractorId, 100, `Sub Completed ${Date.now()}`);
+      await subcontractorPOService.completeLine(subPoId1);
+
+      // Undelivered PO Costs (API): Supplier PO → add item (250) → NOT delivered
+      const poId2 = await purchaseOrderService.createPO(jobNumericId, supplierId);
+      await purchaseOrderService.addLineItem(poId2, supplierId, 250, `PO Undelivered ${Date.now()}`);
+
+      // Incomplete Subcontract PO Costs (API): Sub PO → add item (150) → NOT completed
+      const subPoId2 = await subcontractorPOService.createPO(jobNumericId, subcontractorId);
+      await subcontractorPOService.addItem(subPoId2, subcontractorId, 150, `Sub Incomplete ${Date.now()}`);
+    });
+
+    /** ID: TC_22_RQ4 Tags: Regression */
+    test('[TC_22_RQ4] @Regression: [Profitability – Detail/Costs Tab] Include WIP – Verify Total Expected Cost = Job Cost Actuals + Job Cost Committed', async () => {
+      const verifyTotalExpectedCost = async (tab: 'Costs' | 'Details') => {
+        await jobDetailsPage.navigateToJob(tc22RedirectUrl);
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityIncludeWIPSection).toBeVisible();
+        await expect.soft(loc.wipJobCostActuals).toContainText('-£600.00');
+        await expect.soft(loc.wipJobCostCommitted).toContainText('-£400.00');
+        await expect.soft(loc.wipTotalExpectedCost).toContainText('-£1,000.00');
+      };
+
+      await verifyTotalExpectedCost('Costs');
+      await verifyTotalExpectedCost('Details');
+    });
+  }); // Total Expected Cost Calculation
+
   test.describe('Invoiced Customer Calculations', () => {
     let invoiceRedirectUrl: string;
 
