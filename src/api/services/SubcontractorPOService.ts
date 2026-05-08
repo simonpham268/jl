@@ -75,6 +75,13 @@ export class SubcontractorPOService {
     if (!res.body?.success) throw new Error(`Could not add Sub PO item: status=${res.status} body=${JSON.stringify(res.body)}`);
   }
 
+  async resolvePurchaseOrder(subPoId: string, reason: string = 'Resolved'): Promise<void> {
+    const res = await this.client.post<any>(SUBCONTRACTOR_PO_ENDPOINTS.RESOLVE, {
+      form: { PurchaseOrderId: subPoId, Reason: reason },
+    });
+    if (!res.ok) throw new Error(`Could not resolve Sub PO ${subPoId}: status=${res.status} body=${JSON.stringify(res.body)}`);
+  }
+
   async completeLine(subPoId: string): Promise<void> {
     const res = await this.client.post<any>(SUBCONTRACTOR_PO_ENDPOINTS.COMPLETE_LINE, {
       form: {

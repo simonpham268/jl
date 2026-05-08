@@ -152,7 +152,7 @@ export class InvoiceService {
     }
   }
 
-  async createSubcontractorPOInvoice(subPoId: string, amount: number): Promise<void> {
+  async createSubcontractorPOInvoice(subPoId: string, amount: number): Promise<string> {
     const headerRes = await this.client.post<any>(INVOICE_ENDPOINTS.SAVE_SUBCONTRACTOR, {
       form: {
         Id: '',
@@ -185,5 +185,33 @@ export class InvoiceService {
       },
     });
     if (!lineRes.body?.success) throw new Error(`Could not add Sub invoice line: status=${lineRes.status} body=${JSON.stringify(lineRes.body)}`);
+
+    return invoiceId;
+  }
+
+  async getSubInvoiceLines(invoiceId: string): Promise<{ id: string; pricePerUnit: number }[]> {
+    const { text } = await this.client.getText(INVOICE_ENDPOINTS.GET_SUB_INVOICE_LINES, {
+      params: { invoiceId },
+    });
+    const linesMatch = text.match(/"Lines"\s*:\s*(\[[\s\S]*?\])\s*,\s*"Totals"/);
+    if (!linesMatch) return [];
+    let lines: { Id: string; PricePerUnit: string }[];
+    try {
+      lines = JSON.parse(linesMatch[1]);
+    } catch {
+      return [];
+    }
+    return lines.map(l => ({
+      id: String(l.Id),
+      pricePerUnit: parseFloat(String(l.PricePerUnit).replace(/[^0-9.-]/g, '')),
+    }));
+  }
+
+  async deleteSubcontractorInvoiceLine(lineId: string, invoiceId: string): Promise<void> {
+    const res = await this.client.post<any>(
+      `${INVOICE_ENDPOINTS.DELETE_SUB_INVOICE_LINE}?id=${lineId}&invoiceId=${invoiceId}`,
+      { form: {} },
+    );
+    if (!res.body?.success) throw new Error(`Could not delete sub invoice line ${lineId}: status=${res.status} body=${JSON.stringify(res.body)}`);
   }
 }

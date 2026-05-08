@@ -22,8 +22,8 @@ export class HomePage extends BasePage {
     super(page);
 
     // User Menu
-    this.avatarButton = this.page.getByRole('link', { name: 'Q', exact: true });
-    this.logoffLink = this.page.getByRole('link', { name: /logoff|log off|logout|sign out/i });
+    this.avatarButton = this.page.locator('#accountMenu');
+    this.logoffLink = this.page.locator('#logOffMenu');
 
     // Login Page Elements
     this.submitButton = this.page.locator('button#loginButton, button:has-text("Log in")').first();
@@ -48,7 +48,7 @@ export class HomePage extends BasePage {
     await test.step('Perform logoff', async () => {
       await this.avatarButton.click();
       await this.logoffLink.click();
-      await this.page.waitForURL('**/account/login', { timeout: this.navigationTimeout });
+      await this.page.waitForURL(/Account\/Login/i, { timeout: this.navigationTimeout });
     });
   }
 

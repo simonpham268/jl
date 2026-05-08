@@ -13,6 +13,7 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
   readonly inputPriceRateSplitCost: Locator;
   readonly inputPriceRateSplitSell: Locator;
   readonly inputDescription: Locator;
+  readonly sellPerUnitAddInput: Locator;
 
   constructor(page: Page) {
     super(page, CostType.SCHEDULE_OF_RATES);
@@ -22,6 +23,7 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
     this.inputPriceRateSplitCost = this.page.locator('//*[contains(text(),"Price Using Rate Split")]/following-sibling::div//input[contains(@name,"Cost")]');
     this.inputPriceRateSplitSell = this.page.locator('//*[contains(text(),"Price Using Rate Split")]/following-sibling::div//input[contains(@name,"Sell")]');
     this.inputDescription = this.page.locator('[role="dialog"]').getByRole('textbox', { name: 'Description', exact: true });
+    this.sellPerUnitAddInput = this.page.locator('//input[contains(@name,\'SellPerUnitScheduleOfRates-Add\')]');
   }
 
   async clickAddScheduleOfRates(): Promise<void> {
@@ -73,6 +75,24 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
     });
   }
 
+  async fillSorModalByUplift(
+    data: { scheduleOfRateLibrary: string; scheduleOfRateItem: string; priceRateSell: number },
+    upliftPercent: number,
+  ): Promise<void> {
+    await test.step('Fill Add SOR Cost modal by Uplift %', async () => {
+      await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorLibrary, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateLibrary);
+      await this.sendKeyAndSelectItemOnDropdown(this.dropdownSorItem, this.jlDropdown.jlDropdownOptions, data.scheduleOfRateItem);
+      await this.inputPriceRateSplitCost.clear();
+      await this.inputPriceRateSplitCost.fill('0');
+      await this.inputPriceRateSplitSell.clear();
+      await this.inputPriceRateSplitSell.fill(String(data.priceRateSell));
+      const upliftInput = this.getUpliftPercentInput('Add');
+      await upliftInput.clear();
+      await upliftInput.fill(String(upliftPercent));
+      await upliftInput.press('Tab');
+    });
+  }
+
   async fillSorModalPriceAndDiscount(
     data: { scheduleOfRateLibrary: string; scheduleOfRateItem: string; priceRateSell: number },
     discount: number,
@@ -87,7 +107,6 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
       const discountInput = this.getDiscountPercentInput('Add');
       await discountInput.clear();
       await discountInput.fill(String(discount));
-      await discountInput.press('Tab');
     });
   }
 
@@ -95,6 +114,13 @@ export class ScheduleOfRatesCostModal extends BaseCostModal {
     await test.step(`Fill description: ${description}`, async () => {
       await this.inputDescription.clear();
       await this.inputDescription.fill(description);
+    });
+  }
+
+  async updateSellPerUnit(value: number): Promise<void> {
+    await test.step(`Update Sell Per Unit to ${value}`, async () => {
+      await this.sellPerUnitAddInput.clear();
+      await this.sellPerUnitAddInput.fill(String(value));
     });
   }
 
