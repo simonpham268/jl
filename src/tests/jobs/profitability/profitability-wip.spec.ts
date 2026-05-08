@@ -1,4 +1,5 @@
 import { test, expect } from '../../../fixtures/combined.fixture';
+import type { Page } from '@playwright/test';
 import { LoginPage } from '../../../pages/LoginPage';
 import { JobDetailsPage } from '../../../pages/Jobs/JobDetailsPage';
 import type { ProfitabilityTab } from '../../../pages/Jobs/JobDetailsPage';
@@ -22,7 +23,7 @@ async function createJobFromQuote(
   services: QuoteUpgradeServices,
   quoteDetailPage: QuoteDetailPage,
   quoteLabourModal: LabourCostModal,
-  page: import('@playwright/test').Page,
+  page: Page,
   opts: { prefix: string; quoteSell: number; description: string },
 ): Promise<{ jobNumericId: string; jobPath: string }> {
   const { quoteService, customerService, siteService, jobService } = services;
