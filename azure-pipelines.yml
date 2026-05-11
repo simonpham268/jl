@@ -4,7 +4,7 @@
 trigger:
   branches:
     include:
-      - master
+      - runcicd
   paths:
     exclude:
       - README.md
@@ -32,7 +32,7 @@ parameters:
 - name: planid
   displayName: 'Azure DevOps Test Plan ID (Optional)'
   type: string
-  default: ''
+  default: 'none'
 
 - name: branch
   displayName: 'Source Branch'
@@ -42,7 +42,7 @@ parameters:
 - name: specificTag
   displayName: 'Test Tag Filter (Optional - supports regex: smoke, OR logic smoke|regression, AND logic smoke.regression, etc.)'
   type: string
-  default: ''
+  default: 'none'
 
 - name: browser
   displayName: 'Browser Project'
@@ -80,7 +80,7 @@ parameters:
 - name: slackChannel
   displayName: 'Slack Channel for Reports (Optional)'
   type: string
-  default: ''
+  default: 'none'
 
 variables:
   # Build configuration
@@ -229,12 +229,12 @@ stages:
                   $delaySeconds = 0 
                 }
                 2 { 
-                  Write-Host "Agent 2: Waiting 2 minutes before starting..."
-                  $delaySeconds = 120 
+                  Write-Host "Agent 2: Waiting 1 minutes before starting..."
+                  $delaySeconds = 60 
                 }
                 3 { 
-                  Write-Host "Agent 3: Waiting 4 minutes before starting..."
-                  $delaySeconds = 240 
+                  Write-Host "Agent 3: Waiting 2 minutes before starting..."
+                  $delaySeconds = 120 
                 }
                 default {
                   $delaySeconds = 0
@@ -254,7 +254,7 @@ stages:
           }
           
           # Add tag filter if specified
-          if ("${{ parameters.specificTag }}" -ne "") {
+          if ("${{ parameters.specificTag }}" -ne "" -and "${{ parameters.specificTag }}" -ne "none") {
             $grepPattern = "${{ parameters.specificTag }}"
             
             # Handle multiple tags: convert smoke.regression to @smoke.*@regression
@@ -340,20 +340,28 @@ stages:
         script: |
           $artifactName = "AllureReport-${{ parameters.environment }}-${{ parameters.browser }}"
           $parallelExecution = "${{ parameters.parallelExecution }}"
-          
+          $shardIndex = "$(SHARD_INDEX)"
+
           if ($parallelExecution -eq "all-agents") {
             $detectedAgentCount = 3  # Fixed agent count
-            $shardIndex = "$(SHARD_INDEX)"
             if ($shardIndex -ne "") {
               $artifactName += "-Shard$shardIndex" + "of$detectedAgentCount"
             }
           }
-          
+
           $timestamp = Get-Date -Format "yyyyMMdd-HHmm"
           $artifactName += "-$timestamp"
-          
+
           Write-Host "Setting artifact name: $artifactName"
           Write-Host "##vso[task.setvariable variable=DYNAMIC_ARTIFACT_NAME]$artifactName"
+
+          # Set shard suffix used to name the raw results artifact for later merging
+          if ($parallelExecution -eq "all-agents" -and $shardIndex -ne "") {
+            $shardSuffix = "-Shard$shardIndex"
+          } else {
+            $shardSuffix = "-Single"
+          }
+          Write-Host "##vso[task.setvariable variable=SHARD_SUFFIX]$shardSuffix"
 
     # Publish Allure Report as Build Artifact
     - task: PublishBuildArtifacts@1
@@ -363,6 +371,16 @@ stages:
       inputs:
         pathToPublish: '$(allureReportPath)'
         artifactName: '$(DYNAMIC_ARTIFACT_NAME)'
+        publishLocation: 'Container'
+
+    # Publish raw Allure results (JSON) so the MergeAndReport stage can combine them
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Allure Results (Raw)'
+      condition: always()
+      continueOnError: true
+      inputs:
+        pathToPublish: '$(allureResultsPath)'
+        artifactName: 'AllureResults-${{ parameters.environment }}-${{ parameters.browser }}$(SHARD_SUFFIX)'
         publishLocation: 'Container'
 
     # Parse test results for Slack notification
@@ -426,3 +444,109 @@ stages:
           Write-Host "Test Summary:"
           Write-Host "Total: $totalTests, Passed: $passedTests, Failed: $failedTests, Skipped: $skippedTests"
           Write-Host "Success Rate: $successRate%, Overall Status: $overallStatus"
+
+- stage: MergeAndReport
+  displayName: 'Merge Allure Reports into Combined Report'
+  dependsOn: BuildAndTest
+  condition: and(always(), eq('${{ parameters.parallelExecution }}', 'all-agents'))
+  jobs:
+  - job: MergeAllureReports
+    displayName: 'Merge Shard Reports and Publish'
+    pool:
+      name: ${{ parameters.agentPool }}
+      ${{ if ne(parameters.agentLabel, 'none') }}:
+        demands:
+        - ${{ parameters.agentLabel }}
+    timeoutInMinutes: 30
+    steps:
+    - checkout: none
+
+    - task: NodeTool@0
+      displayName: 'Setup Node.js'
+      inputs:
+        versionSpec: '20.x'
+        checkLatest: true
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Shard 1 Results'
+      continueOnError: true
+      inputs:
+        buildType: 'current'
+        artifactName: 'AllureResults-${{ parameters.environment }}-${{ parameters.browser }}-Shard1'
+        targetPath: '$(Pipeline.Workspace)/shard1'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Shard 2 Results'
+      continueOnError: true
+      inputs:
+        buildType: 'current'
+        artifactName: 'AllureResults-${{ parameters.environment }}-${{ parameters.browser }}-Shard2'
+        targetPath: '$(Pipeline.Workspace)/shard2'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Shard 3 Results'
+      continueOnError: true
+      inputs:
+        buildType: 'current'
+        artifactName: 'AllureResults-${{ parameters.environment }}-${{ parameters.browser }}-Shard3'
+        targetPath: '$(Pipeline.Workspace)/shard3'
+
+    - task: PowerShell@2
+      displayName: 'Merge Allure Results and Generate Combined Report'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Installing Allure CLI..."
+          npm install -g allure-commandline --force
+
+          $mergedResultsPath = "$(System.DefaultWorkingDirectory)/merged-allure-results"
+          $mergedReportPath  = "$(System.DefaultWorkingDirectory)/merged-allure-report"
+
+          New-Item -ItemType Directory -Force -Path $mergedResultsPath | Out-Null
+          New-Item -ItemType Directory -Force -Path $mergedReportPath  | Out-Null
+
+          # Copy every file from each downloaded shard directory into the merged folder
+          $shardDirs = Get-ChildItem -Path "$(Pipeline.Workspace)" -Directory -Filter "shard*"
+          Write-Host "Found $($shardDirs.Count) shard directories"
+          $totalFiles = 0
+
+          foreach ($shardDir in $shardDirs) {
+            Write-Host "Processing $($shardDir.Name)..."
+            $files = Get-ChildItem -Path $shardDir.FullName -File -ErrorAction SilentlyContinue
+            Write-Host "  $($files.Count) files"
+
+            foreach ($file in $files) {
+              $dest = Join-Path $mergedResultsPath $file.Name
+              if (Test-Path $dest) {
+                # Allure uses UUIDs so collisions are rare; prefix with shard name as fallback
+                $dest = Join-Path $mergedResultsPath "$($shardDir.Name)_$($file.Name)"
+              }
+              Copy-Item $file.FullName -Destination $dest
+              $totalFiles++
+            }
+          }
+
+          Write-Host "Total files merged: $totalFiles"
+
+          if ($totalFiles -eq 0) {
+            Write-Host "##vso[task.logissue type=warning]No result files found to merge — skipping report generation"
+            exit 0
+          }
+
+          Write-Host "Generating combined Allure report..."
+          allure generate "$mergedResultsPath" --clean -o "$mergedReportPath"
+
+          if (Test-Path "$mergedReportPath/index.html") {
+            Write-Host "Combined Allure report generated successfully"
+          } else {
+            Write-Host "##vso[task.logissue type=warning]index.html not found after allure generate"
+          }
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Combined Allure Report'
+      condition: always()
+      continueOnError: true
+      inputs:
+        pathToPublish: '$(System.DefaultWorkingDirectory)/merged-allure-report'
+        artifactName: 'AllureReport-Combined-${{ parameters.environment }}-${{ parameters.browser }}'
+        publishLocation: 'Container'

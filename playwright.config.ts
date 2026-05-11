@@ -72,11 +72,9 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: null,
-        deviceScaleFactor: undefined,
+        viewport: { width: 1920, height: 1080 },
         launchOptions: {
           args: [
-            '--start-maximized',
             '--disable-notifications',
             '--disable-geolocation',
             '--disable-infobars',
