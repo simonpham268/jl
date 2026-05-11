@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pages/LoginPage';
-import { HomePage } from '../pages/HomePage';
-import { Sidebar } from '../pages/Sidebar';
-import { SettingsPage } from '../pages/Settings/SettingsPage';
-import { SystemSetupPage } from '../pages/Settings/SystemSetupPage';
-import type { RoundingSettingModel } from '../models/RoundingSettingModel';
-import { ROUNDING_OPTION, ROUNDING_DURATION } from '../constants/RoundingConst';
-import { requireEnv } from '../utils/require.env';
+import { LoginPage } from '../../pages/LoginPage';
+import { HomePage } from '../../pages/HomePage';
+import { Sidebar } from '../../pages/Sidebar';
+import { SettingsPage } from '../../pages/Settings/SettingsPage';
+import { SystemSetupPage } from '../../pages/Settings/SystemSetupPage';
+import type { RoundingSettingModel } from '../../models/RoundingSettingModel';
+import { ROUNDING_OPTION, ROUNDING_DURATION } from '../../constants/RoundingConst';
+import { requireEnv } from '../../utils/require.env';
 
 /**
  * Settings Smoke Test
@@ -127,6 +127,30 @@ test.describe('Settings Smoke', () => {
     expect(isCheckedAfterSave).toBe(isOn);
   });
 
+  test('[TC_07_RQ4] @Smoke: [Settings > System Settings] Verify tooltip content for "Profit Summary View" is displayed correctly', async ({ page }) => {
+    await systemSetupPage.profitSummaryViewInfoIcon.scrollIntoViewIfNeeded();
+    await systemSetupPage.profitSummaryViewInfoIcon.hover();
+
+    await expect(systemSetupPage.tooltip).toBeVisible();
+    const tooltipText = await systemSetupPage.tooltip.textContent();
+    expect(tooltipText).toContain('View costs, PO items, undelivered costs, sell values, and calculated profit.');
+
+    await page.mouse.move(0, 0);
+    await expect(systemSetupPage.tooltip).not.toBeVisible();
+  });
+
+  test('[TC_08_RQ4] @Smoke: [Settings > System Settings] Verify tooltip content for "Detailed with Cost Breakdown View" is displayed correctly', async ({ page }) => {
+    await systemSetupPage.detailedCostBreakdownInfoIcon.scrollIntoViewIfNeeded();
+    await systemSetupPage.detailedCostBreakdownInfoIcon.hover();
+
+    await expect(systemSetupPage.tooltip).toBeVisible();
+    const tooltipText = await systemSetupPage.tooltip.textContent();
+    expect(tooltipText).toContain('Detailed view of key metrics: quoted, current, and actual profit with cost breakdown.');
+
+    await page.mouse.move(0, 0);
+    await expect(systemSetupPage.tooltip).not.toBeVisible();
+  });
+
   test('[TC_02_RQ4] @Smoke @Regression: [Settings > System Settings] Verify only one "Job Profitability View" option can be selected at a time', async () => {
     const detailedRadio = systemSetupPage.getJobProfitabilityViewRadio('Detailed with Cost Breakdown View');
     const summaryRadio = systemSetupPage.getJobProfitabilityViewRadio('Profit Summary View');
@@ -152,6 +176,19 @@ test.describe('Settings Smoke', () => {
     } finally {
       await homePage.logoff().catch(() => {});
     }
+  });
+
+  test('[TC_07_RQ2] @Smoke: System Setup - Verify tooltip content for "Preserve Entered Uplift/Discount Percentage" is displayed correctly', async ({ page }) => {
+    await systemSetupPage.preserveUpliftDiscountInfoIcon.scrollIntoViewIfNeeded();
+    await systemSetupPage.preserveUpliftDiscountInfoIcon.hover();
+
+    await expect(systemSetupPage.tooltip).toBeVisible();
+    const tooltipText = await systemSetupPage.tooltip.textContent();
+    expect(tooltipText).toContain('When checked, the system keeps the exact percentage you entered.');
+    expect(tooltipText).toContain('If unchecked, the system prioritizes the final amount after rounding. As a result, the percentage may adjust slightly to match the rounded value.');
+
+    await page.mouse.move(0, 0);
+    await expect(systemSetupPage.tooltip).not.toBeVisible();
   });
 
   test('[TC_01_RQ4] @Smoke: System Setup - Verify "Job Profitability View" setting is displayed with two radio options in the Job Profitability section', async ({ page: _page }) => {

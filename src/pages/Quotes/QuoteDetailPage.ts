@@ -79,6 +79,7 @@ export class QuoteDetailPage extends BasePage {
   // ========================
   // Locators - Header Actions
   // ========================
+  readonly responsiveMenuToggle: Locator;
   readonly upgradeButton: Locator;
   readonly upgradeQuoteNextButton: Locator;
   readonly upgradeQuoteSkipAndUpgradeButton: Locator;
@@ -216,9 +217,11 @@ export class QuoteDetailPage extends BasePage {
     this.infoButton = page.getByRole('button', { name: 'Info' });
 
     // Header Actions
-    this.upgradeButton = page.locator('li').filter({ hasText: 'Upgrade' }).first();
+    this.responsiveMenuToggle = page.locator('.responsive-menu .btn-menu');
+    this.upgradeButton = page.locator('#UpgradeQuoteBtn');
     this.upgradeQuoteNextButton = page.getByRole('button', { name: 'Next' });
-    this.upgradeQuoteSkipAndUpgradeButton = page.getByRole('button', { name: 'Skip & Upgrade' });
+    this.upgradeQuoteSkipAndUpgradeButton = page.getByRole('button', { name: 'Skip & Upgrade' })
+      .or(page.getByRole('button', { name: 'Skip & Collect Later' }));
     this.rejectButton = page.locator('li').filter({ hasText: 'Reject' }).first()
       .or(page.getByRole('button', { name: /^reject$/i }));
     this.revertButton = page.getByRole('link', { name: /revert/i })
@@ -479,6 +482,7 @@ export class QuoteDetailPage extends BasePage {
    */
   async clickUpgrade(): Promise<void> {
     await test.step('Click Upgrade button', async () => {
+      await this.upgradeButton.waitFor({ state: 'visible' });
       await this.upgradeButton.click();
     });
   }
@@ -493,10 +497,11 @@ export class QuoteDetailPage extends BasePage {
     await test.step('Click Skip & Upgrade on Upgrade Quote popup', async () => {
       const upgradeTimeout = this.navigationTimeout;
       await this.upgradeQuoteSkipAndUpgradeButton.click();
-      await this.loadingOverlay.waitFor({
-        state: 'detached',
-        timeout: upgradeTimeout,
-      });
+      await this.loadingOverlay.waitFor({ state: 'detached', timeout: upgradeTimeout });
+      const skipCollectLater = this.page.getByRole('button', { name: 'Skip & Collect Later' });
+      if (await skipCollectLater.isVisible()) {
+        await skipCollectLater.click();
+      }
       await this.page.waitForURL(/\/Job\/Detail\/\d+/, { timeout: upgradeTimeout });
     });
   }
