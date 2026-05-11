@@ -24,6 +24,7 @@ export class SystemSetupPage extends BasePage {
   readonly dropdownRoundingDuration: Locator; // TODO: verify in DOM
   readonly preserveUpliftCheckbox: Locator; // TODO: verify in DOM
   readonly jlDropdown: JLDropdownElements;
+  readonly tooltip: Locator;
 
   // Rounding Type dropdown
   readonly roundingTypeCombobox: Locator;
@@ -41,13 +42,17 @@ export class SystemSetupPage extends BasePage {
   readonly preserveUpliftDiscountLabel: Locator;
   readonly preserveUpliftDiscountHelpText: Locator;
   readonly preserveUpliftDiscountVisual: Locator;
+  readonly preserveUpliftDiscountInfoIcon: Locator;
+
 
   // Job Profitability View
   readonly jobProfitabilityViewLabel: Locator;
   readonly profitSummaryViewRadio: Locator;
   readonly profitSummaryViewRadioVisual: Locator;
+  readonly profitSummaryViewInfoIcon: Locator;
   readonly detailedCostBreakdownRadio: Locator;
   readonly detailedCostBreakdownRadioVisual: Locator;
+  readonly detailedCostBreakdownInfoIcon: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -56,8 +61,10 @@ export class SystemSetupPage extends BasePage {
     this.jobProfitabilityViewLabel = page.getByText('Job Profitability View');
     this.profitSummaryViewRadio = page.locator('input[name="JobProfitabilityViewType"][value="1"]');
     this.profitSummaryViewRadioVisual = page.locator('.jl-radio:has(input[name="JobProfitabilityViewType"][value="1"]) span.my-shape');
+    this.profitSummaryViewInfoIcon = page.locator('//span[normalize-space()="Profit Summary View"]/span');
     this.detailedCostBreakdownRadio = page.locator('input[name="JobProfitabilityViewType"][value="2"]');
     this.detailedCostBreakdownRadioVisual = page.locator('.jl-radio:has(input[name="JobProfitabilityViewType"][value="2"]) span.my-shape');
+    this.detailedCostBreakdownInfoIcon = page.locator('//span[normalize-space()="Detailed with Cost Breakdown View"]/span');
 
     // Rounding Type
     this.roundingTypeCombobox = page.locator('#jlRoundingType__combobox');
@@ -89,7 +96,9 @@ export class SystemSetupPage extends BasePage {
     this.preserveUpliftDiscountVisual = page.locator(
       'label:has-text("Preserve Entered Uplift/Discount Percentage") span.my-checkbox',
     );
-
+    this.preserveUpliftDiscountInfoIcon = page.locator('//span[text()="Preserve Entered Uplift/Discount Percentage"]/ancestor::div/span');
+    
+    this.tooltip = page.locator('.popover-content');
     this.editButton = page.locator('#editButton'); // TODO: verify in DOM
     this.saveButton = page.locator(
       'button.jl-button-green.jlSaveEditAble.jl-button-save',
