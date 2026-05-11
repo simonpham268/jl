@@ -149,7 +149,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_13_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_13_RQ2 @Smoke [Job > Costs / SOR Items] Verify Uplift % is correctly calculated from entered Sell value', async ({ jobService }) => {
+  test('TC_13_RQ2 @Smoke [Job > Costs / SOR Items] Verify Uplift % is correctly calculated from entered Sell value', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -161,7 +161,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -192,7 +192,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     expect(parseFloat(actualUplift)).toBe(expectedUplift);
   });
 
-  test('TC_10_RQ2 @Smoke [Job > Costs/SOR Items Tab] Verify Uplift % is recalculated from rounded Sell value when “Preserve Entered Uplift/Discount Percentage” setting is off', async ({ jobService }) => {
+  test('TC_10_RQ2 @Smoke [Job > Costs/SOR Items Tab] Verify Uplift % is recalculated from rounded Sell value when “Preserve Entered Uplift/Discount Percentage” setting is off', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -262,7 +262,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_16_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_16_RQ2 @Smoke [Job > Costs/SOR Items Tab] Verify Sell is calculated from discount %', async ({ jobService }) => {
+  test('TC_16_RQ2 @Smoke [Job > Costs/SOR Items Tab] Verify Sell is calculated from discount %', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -274,7 +274,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -310,7 +310,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_17_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_17_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % value is preserved after saving when "Preserve Entered Uplift/Discount Percentage" setting is on', async ({ jobService }) => {
+  test('TC_17_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % value is preserved after saving when "Preserve Entered Uplift/Discount Percentage" setting is on', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -322,7 +322,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -358,7 +358,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_18_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_18_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is recalculated from rounded Sell value when "Preserve Entered Uplift/Discount Percentage" setting is off', async ({ jobService }) => {
+  test('TC_18_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is recalculated from rounded Sell value when "Preserve Entered Uplift/Discount Percentage" setting is off', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -370,7 +370,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -424,7 +424,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_21_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_21_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is correctly calculated from entered Sell value', async ({ jobService }) => {
+  test('TC_21_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is correctly calculated from entered Sell value', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -436,7 +436,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -474,7 +474,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_36_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_36_RQ2 @Smoke [Job > Schedule of Rates] Preserve entered uplift and discount percentages', async ({ jobService }) => {
+  test('TC_36_RQ2 @Smoke [Job > Schedule of Rates] Preserve entered uplift and discount percentages', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -486,7 +486,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -560,7 +560,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_23_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_23_RQ2 @Smoke [Job > Costs/SOR Items Tab] Verify previous discount is overridden when sell is entered', async ({ jobService }) => {
+  test('TC_23_RQ2 @Smoke [Job > Costs/SOR Items Tab] Verify previous discount is overridden when sell is entered', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -572,7 +572,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -613,7 +613,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_12_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_12_RQ2 @Smoke [Job > Costs / SOR Items] Verify Sell value is rounded correctly for .005 edge case (round half up)', async ({ jobService }) => {
+  test('TC_12_RQ2 @Smoke [Job > Costs / SOR Items] Verify Sell value is rounded correctly for .005 edge case (round half up)', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -625,7 +625,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -664,7 +664,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
   });
 
   /** ID: TC_15_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
-  test('TC_15_RQ2 @Smoke [Job > Costs / SOR Items] Verify previously entered Uplift % is overridden and recalculated when Sell value is updated', async ({ jobService }) => {
+  test('TC_15_RQ2 @Smoke [Job > Costs / SOR Items] Verify previously entered Uplift % is overridden and recalculated when Sell value is updated', async ({ jobService, customerService }) => {
     await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
     await systemSetupPage.clickEdit();
 
@@ -676,7 +676,7 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
     await systemSetupPage.clickSave();
 
-    const response = await jobService.createJob(createBasicApiJobData());
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
     if (!response.body) throw new Error('No response body from createJob');
     if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
 
@@ -716,5 +716,165 @@ test.describe('[Jobs > Schedule of Rates] Preserve entered uplift and discount p
     const actualUplift3 = await sorCostModal.getUpliftPercent('Add');
     const expectedUplift3 = parseFloat((((sellPerUnit2 - priceRateSell) / priceRateSell) * 100).toFixed(2));
     expect(parseFloat(actualUplift3)).toBe(expectedUplift3);
+  });
+
+  /** ID: TC_14_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_14_RQ2 @Smoke [Job > Costs / SOR Items] Verify Uplift % is recalculated correctly when Sell value is updated', async ({ jobService, customerService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: false,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
+    console.log('createJob response:', JSON.stringify(response, null, 2));
+
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSell14 = parseFloat((Math.random() * 50 + 5).toFixed(2));
+    const sellPerUnit14_1 = parseFloat((priceRateSell14 + Math.random() * 50 + 1).toFixed(2));
+
+    await sorCostModal.fillSorModalBySellPerUnit(
+      {
+        scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+        scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+        priceRateSell: priceRateSell14,
+      },
+      sellPerUnit14_1,
+    );
+
+    const actualUplift14_1 = await sorCostModal.getUpliftPercent('Add');
+    const expectedUplift14_1 = parseFloat((((sellPerUnit14_1 - priceRateSell14) / priceRateSell14) * 100).toFixed(2));
+    expect(parseFloat(actualUplift14_1)).toBe(expectedUplift14_1);
+
+    let sellPerUnit14_2: number;
+    do {
+      sellPerUnit14_2 = parseFloat((priceRateSell14 + Math.random() * 50 + 1).toFixed(2));
+    } while (sellPerUnit14_2 === sellPerUnit14_1);
+
+    await sorCostModal.updateSellPerUnit(sellPerUnit14_2);
+
+    const actualUplift14_2 = await sorCostModal.getUpliftPercent('Add');
+    const expectedUplift14_2 = parseFloat((((sellPerUnit14_2 - priceRateSell14) / priceRateSell14) * 100).toFixed(2));
+    expect(parseFloat(actualUplift14_2)).toBe(expectedUplift14_2);
+  });
+
+  /** ID: TC_20_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_20_RQ2 @Smoke [Job > Costs / SOR Items] Verify Sell value is correctly calculated and rounded to 2 decimal places when Discount % has decimal values', async ({ jobService, customerService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: false,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSell20 = parseFloat((Math.random() * 50 + 5).toFixed(2));
+    const discountPercent20 = parseFloat((Math.random() * 98 + 1).toFixed(2));
+
+    await sorCostModal.fillSorModalPriceAndDiscount(
+      {
+        scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+        scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+        priceRateSell: priceRateSell20,
+      },
+      discountPercent20,
+    );
+
+    const expectedSellPerUnit20 = roundTo2Decimals(
+      priceRateSell20 * (1 - discountPercent20 / 100),
+      roundingConfig.roundingOption ?? ROUNDING_OPTION.ROUND_UP,
+    ).toFixed(2);
+
+    const actualSellPerUnit20 = await sorCostModal.getSellPerHour('Add');
+    expect(actualSellPerUnit20).toBe(expectedSellPerUnit20);
+  });
+
+  /** ID: TC_22_RQ2 Tags: @Smoke @Regression @ScheduleOfRates @Jobs */
+  test('TC_22_RQ2 @Smoke [Job > Costs / SOR Items] Verify Discount % is recalculated correctly when Sell value is updated', async ({ jobService, customerService }) => {
+    await systemSetupPage.navigateTo(ROUTE.SYSTEM_SETUP);
+    await systemSetupPage.clickEdit();
+
+    const roundingConfig: RoundingSettingModel = {
+      roundingOption: ROUNDING_OPTION.ROUND_UP,
+      roundingDuration: ROUNDING_DURATION.MINUTES_5,
+      preserveUplift: false,
+    };
+    await systemSetupPage.configureSystemSettingsForRounding(roundingConfig);
+    await systemSetupPage.clickSave();
+
+    const response = await jobService.createJob(await createJobTestData(jobService, customerService));
+    if (!response.body) throw new Error('No response body from createJob');
+    if (!response.body.redirectUrl) throw new Error('Missing redirectUrl in job response');
+
+    await jobDetailsPage.navigateToJob(response.body.redirectUrl);
+    await jobDetailsPage.switchToTab('Costs');
+
+    await jobDetailsPage.clickEditSellingRate();
+    await jobDetailsPage.selectSellingRateOption('Schedule of Rates');
+    await expect(jobDetailsPage.getSellingRateQuickViewItem('Schedule of Rates')).toContainText('Chargeable');
+    await jobDetailsPage.saveSellingRateModal();
+
+    await sorCostModal.clickAddScheduleOfRates();
+
+    const priceRateSell22 = parseFloat((Math.random() * 40 + 10).toFixed(2));
+    const sellPerUnit22_1 = parseFloat((Math.random() * (priceRateSell22 - 1) + 0.5).toFixed(2));
+
+    await sorCostModal.fillSorModalBySellPerUnit(
+      {
+        scheduleOfRateLibrary: requireEnv('SCHEDULE_OF_RATE_LIBRARY'),
+        scheduleOfRateItem: requireEnv('SCHEDULE_OF_RATE_ITEM'),
+        priceRateSell: priceRateSell22,
+      },
+      sellPerUnit22_1,
+    );
+
+    const actualDiscount22_1 = await sorCostModal.getDiscountPercent('Add');
+    const expectedDiscount22_1 = parseFloat((((priceRateSell22 - sellPerUnit22_1) / priceRateSell22) * 100).toFixed(2));
+    expect(parseFloat(actualDiscount22_1)).toBe(expectedDiscount22_1);
+
+    let sellPerUnit22_2: number;
+    do {
+      sellPerUnit22_2 = parseFloat((Math.random() * (priceRateSell22 - 1) + 0.5).toFixed(2));
+    } while (sellPerUnit22_2 === sellPerUnit22_1);
+
+    await sorCostModal.updateSellPerUnit(sellPerUnit22_2);
+
+    const actualDiscount22_2 = await sorCostModal.getDiscountPercent('Add');
+    const expectedDiscount22_2 = parseFloat((((priceRateSell22 - sellPerUnit22_2) / priceRateSell22) * 100).toFixed(2));
+    expect(parseFloat(actualDiscount22_2)).toBe(expectedDiscount22_2);
   });
 });
