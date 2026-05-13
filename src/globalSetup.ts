@@ -33,7 +33,8 @@ export default async function globalSetup() {
   const password = requireEnv('PSW');
 
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await browser.newContext({ ignoreHTTPSErrors: true });
+  const page = await context.newPage();
   const loginPage = new LoginPage(page);
 
   try {
