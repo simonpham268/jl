@@ -6,12 +6,15 @@ import { SystemSetupPage } from '../../../pages/Settings/SystemSetupPage';
 import { QuoteDetailPage } from '../../../pages/Quotes/QuoteDetailPage';
 import { LabourCostModal, PriceType, type LabourCostModel } from '../../../modals/LabourCostModal';
 import { SubcontractorCostModal } from '../../../modals/SubcontractorCostModal';
+import { TravelCostModal } from '../../../modals/TravelCostModal';
 import { PriceType as CostPriceType } from '../../../models/CostModel';
 import { parseCurrencyValue, CURRENCY_FORMAT } from '../../../utils/currency.util';
 import { createBasicApiJobData } from '../../../data/apiData/job.api.data';
+import { createDynamicApiQuoteData } from '../../../data/apiData/quote.api.data';
 
 const profitabilityTabs: ProfitabilityTab[] = ['Details', 'Costs'];
 const EXPECTED_PROFIT_MARGIN_ROUNDING = 39.94;
+const COST_BREAKDOWN_CATEGORIES = ['Labour', 'Overtime', 'Travel', 'Mileage', 'Material', 'Expenses', 'Call-out', 'Other', 'Subcontractor', 'Schedule of Rates'] as const;
 
 const labourCostsValues = {
   calculation: [
@@ -160,6 +163,49 @@ test.describe('Detailed with Cost Breakdown View', () => {
         });
       });
     }); // Profit Margin Rounding
+
+    test.describe('Divide-by-Zero Handling', () => {
+      let jobId: number | undefined;
+      let quoteId: string | number | undefined;
+
+      test.beforeEach(async ({ page, quoteService, jobService, customerService }) => {
+        if (!quoteId) {
+          const [jobTypeId, customerRes] = await Promise.all([
+            jobService.getDefaultJobTypeId(),
+            customerService.createCustomer({ Name: `Test TC19 Quote ${Date.now()}` }),
+          ]);
+          const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+          const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+          if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+          const res = await quoteService.createQuote(createDynamicApiQuoteData(customerId, siteId, jobTypeId));
+          const body = res.body as any;
+          quoteId = body?.AdditionalData?.QuoteId ?? body?.QuoteId ?? body?.redirectUrl?.match(/\/(\d+)$/)?.[1];
+          if (!quoteId) throw new Error(`quoteId could not be created. Response: ${JSON.stringify(res.body)}`);
+
+          await quoteDetailPage.navigateTo(quoteId);
+          await quoteDetailPage.switchToTab('Prices');
+          await labourModal.addLabourCosts([
+            { description: 'cost 500 sell 0', costPerHour: 500, priceType: PriceType.FIX_PRICE, sellPerHour: 0 },
+          ]);
+          jobId = await QuoteDetailPage.upgradeToJobAndGetId(page, quoteDetailPage);
+        } else if (jobId) {
+          await jobDetailsPage.navigateToJob(`/Job/Detail/${jobId}`);
+        }
+      });
+
+      /** ID: TC_19_RQ4 Tags: Regression */
+      test('[TC_19_RQ4] @Regression: [Profitability - Detail/Costs Tab] Quoted Profitability - Verify Profit Margin displays 0.00% when Quoted Sell = 0 (divide-by-zero)', async () => {
+        await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
+          await jobDetailsPage.expandProfitOverview(tab);
+          const loc = jobDetailsPage.getProfitLocators(tab);
+          await expect.soft(loc.quotedProfitabilitySection).toBeVisible();
+
+          const { profitMargin } = await jobDetailsPage.getQuotedProfitMarginValue(tab);
+          expect.soft(profitMargin).toBe('0.00%');
+        });
+      });
+    }); // Divide-by-Zero Handling
   }); // Profit Overview - Quoted Profitability
 
   test.describe('Actuals & WIP Calculations', () => {
@@ -526,6 +572,52 @@ test.describe('Detailed with Cost Breakdown View', () => {
     });
   }); // Invoiced Customer Calculations
 
+  test.describe('Uninvoiced Sell Display', () => {
+    let tc35RedirectUrl: string;
+
+    test.beforeEach(async ({ page, jobService, customerService }) => {
+      const labourModal = new LabourCostModal(page);
+      const travelModal = new TravelCostModal(page);
+
+      if (!tc35RedirectUrl) {
+        const [jobTypeId, customerRes] = await Promise.all([
+          jobService.getDefaultJobTypeId(),
+          customerService.createCustomer({ Name: `Test Uninvoiced Sell ${Date.now()}` }),
+        ]);
+        const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+        const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+        if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+        const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+        tc35RedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+        console.log(`[Job] ${tc35RedirectUrl}`);
+
+        await jobDetailsPage.navigateToJob(tc35RedirectUrl);
+        await jobDetailsPage.switchToTab('Costs');
+
+        await labourModal.clickAddLabour();
+        await labourModal.fillAddLabourCostModal({ description: `Labour ${Date.now()}`, costPerHour: 0, priceType: PriceType.FIX_PRICE, sellPerHour: 2000 });
+        await labourModal.saveModal();
+
+        await travelModal.clickAddTravel();
+        await travelModal.fillAddTravelCostModal({ description: `Travel ${Date.now()}`, costPerHour: 0, priceType: PriceType.FIX_PRICE, sellPerHour: 19478 });
+        await travelModal.saveModal();
+      }
+      await jobDetailsPage.navigateToJob(tc35RedirectUrl);
+    });
+
+    /** ID: TC_35_RQ4 Tags: Regression */
+    test('[TC_35_RQ4] @Regression: [Profitability – Detail/Costs Tab] Actuals Only – Verify Uninvoiced = Uninvoiced Sell = £21,478.00', async () => {
+      await JobDetailsPage.forEachTab(jobDetailsPage, profitabilityTabs, async (tab) => {
+        await jobDetailsPage.expandProfitOverview(tab);
+        const loc = jobDetailsPage.getProfitLocators(tab);
+        await expect.soft(loc.profitabilityActualsOnlySection).toBeVisible();
+        await expect.soft(loc.actualsUninvoiced).toBeVisible();
+        await expect.soft(loc.actualsUninvoiced).toContainText('£21,478.00');
+      });
+    });
+  }); // Uninvoiced Sell Display
+
   test.describe('Actuals Profit Calculation', () => {
     let profitRedirectUrl: string;
 
@@ -668,4 +760,40 @@ test.describe('Detailed with Cost Breakdown View', () => {
       await verifyProfitAndPercent('Details');
     });
   }); // Actuals Profit Calculation with Invoice
+
+  test.describe('Cost Breakdown by Category – Null Data Display', () => {
+    let tc49RedirectUrl: string;
+
+    test.beforeEach(async ({ jobService, customerService }) => {
+      if (!tc49RedirectUrl) {
+        const [jobTypeId, customerRes] = await Promise.all([
+          jobService.getDefaultJobTypeId(),
+          customerService.createCustomer({ Name: `Test Null Display Job ${Date.now()}` }),
+        ]);
+        const customerId = Number(customerRes.body?.AdditionalData?.CustomerId);
+        const siteId = Number(customerRes.body?.AdditionalData?.SiteId);
+        if (!customerId || !siteId) throw new Error(`Failed to create customer/site. Response: ${JSON.stringify(customerRes.body)}`);
+
+        const jobData = createBasicApiJobData(customerId, siteId, jobTypeId);
+        tc49RedirectUrl = await JobDetailsPage.createJobAndGetRedirectUrl(jobService, jobData);
+        console.log(`[Job] ${tc49RedirectUrl}`);
+      }
+      await jobDetailsPage.navigateToJob(tc49RedirectUrl);
+    });
+
+    /** ID: TC_49_RQ4 Tags: Regression */
+    test('[TC_49_RQ4] @Regression: [Profitability – Detail/Costs Tab] Cost Breakdown by Category – Verify null/empty categories display hyphen "–" in Quoted, PO Committed, Actual, and Unallocated Cost columns', async () => {
+      const verifyNullDisplay = async (tab: ProfitabilityTab) => {
+        await jobDetailsPage.switchToTab(tab);
+        await jobDetailsPage.expandCostBreakdownByCategory(tab);
+        for (const category of COST_BREAKDOWN_CATEGORIES) {
+          const valueCells = jobDetailsPage.getCostBreakdownValueCells(tab, category);
+          await expect.soft(valueCells).toHaveText(['–', '–', '–', '–']);
+        }
+      };
+
+      await verifyNullDisplay('Costs');
+      await verifyNullDisplay('Details');
+    });
+  }); // Cost Breakdown by Category – Null Data Display
 }); // Detailed with Cost Breakdown View

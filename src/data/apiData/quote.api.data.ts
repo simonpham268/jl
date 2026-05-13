@@ -25,6 +25,16 @@ export function createBasicApiQuoteData(): any {
 /**
  * Create API quote data with custom fields
  */
+export function createDynamicApiQuoteData(customerId: number, siteId: number, jobTypeId: number | string): any {
+  return {
+    QuoteCustomerId: customerId,
+    QuoteSiteId: siteId,
+    Description: `Quote ${Date.now()}`,
+    JobTypeId: jobTypeId,
+    AssignedToUserId: parseInt(process.env.ASSIGNED_USER_ID ?? '2'),
+  };
+}
+
 export function createApiQuoteData(description: string, customFields: any = {}): any {
   const basicData = createBasicApiQuoteData();
   return {

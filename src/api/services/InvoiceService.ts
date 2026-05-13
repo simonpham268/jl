@@ -114,7 +114,7 @@ export class InvoiceService {
 
     const creditReasonId = await this.getFirstCreditReasonId();
     const notesRes = await this.client.post<any>(INVOICE_ENDPOINTS.EDIT_CREDIT_NOTES, {
-      form: { Id: creditId, Reason: '', Notes: '', CreditReasonId: creditReasonId },
+      form: { Id: creditId, Reason: 'Reason', Notes: '', CreditReasonId: creditReasonId },
     });
     if (!notesRes.body?.success) throw new Error(`Could not set credit reason: status=${notesRes.status} body=${JSON.stringify(notesRes.body)}`);
 
@@ -145,7 +145,7 @@ export class InvoiceService {
     if (!lineRes.body?.success) throw new Error(`Could not save credit line: status=${lineRes.status} body=${JSON.stringify(lineRes.body)}`);
 
     const approveRes = await this.client.post<any>(INVOICE_ENDPOINTS.APPROVE_CREDIT_INVOICE, {
-      form: { Id: creditId },
+      form: { Id: creditId},
     });
     if (!approveRes.ok || approveRes.body?.success === false) {
       throw new Error(`Could not approve credit invoice ${creditId}: status=${approveRes.status} body=${JSON.stringify(approveRes.body)}`);
