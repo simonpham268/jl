@@ -1,4 +1,6 @@
 import { test as base } from '@playwright/test';
+import { parentSuite, suite, subSuite } from 'allure-js-commons';
+import path from 'path';
 import { ApiClient } from '../api/base/ApiClient';
 import { CustomerService, JobService, SiteService, AssetService, QuoteService, PPMQuoteService, SettingService, PurchaseOrderService, SubcontractorPOService, InvoiceService } from '../api/services';
 import { findSuiteIdByTestCase, updateTestCaseStatus } from '../utils/azured-devops/azure';
@@ -110,7 +112,10 @@ interface CombinedFixtures {
     purchaseOrderService: PurchaseOrderService;
     subcontractorPOService: SubcontractorPOService;
     invoiceService: InvoiceService;
+    allureSuite: void;
 }
+
+const TESTS_ROOT = path.join(process.cwd(), 'src', 'tests');
 
 // Extend base test with API fixtures + Azure DevOps integration
 export const test = base.extend<CombinedFixtures>({
@@ -162,6 +167,25 @@ export const test = base.extend<CombinedFixtures>({
   invoiceService: async ({ apiClient }, use) => {
     await use(new InvoiceService(apiClient));
   },
+
+  allureSuite: [async ({}, use, testInfo) => {
+    const relativePath = path.relative(TESTS_ROOT, testInfo.file);
+    const parts = relativePath.split(path.sep);
+    const fileName = parts[parts.length - 1].replace('.spec.ts', '');
+    const folders = parts.slice(0, -1);
+
+    if (folders.length === 0) {
+      await suite(fileName);
+    } else if (folders.length === 1) {
+      await parentSuite(folders[0]);
+      await suite(fileName);
+    } else {
+      await parentSuite(folders[0]);
+      await suite(folders[1]);
+      await subSuite(fileName);
+    }
+    await use();
+  }, { auto: true }],
 });
 
 export { expect } from '@playwright/test';
