@@ -34,7 +34,7 @@ test.describe('Settings - User Permissions', () => {
       await staffPage.searchPermission('Asset - Upload Forms');
       await expect(staffPage.getPermissionInRoleIcon('Asset - Upload Forms')).toBeHidden();
       await expect(staffPage.getPermissionOffIcon('Asset - Upload Forms')).toBeVisible();
-      await expect(staffPage.getPermissionDenyRadio('Asset - Upload Forms')).toBeEnabled();
+      await expect(staffPage.getPermissionInheritRadio('Visit - Upload Forms')).toBeEnabled();
     }
   });
 
