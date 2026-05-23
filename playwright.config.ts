@@ -28,8 +28,8 @@ if (!fs.existsSync(envPath)) {
  */
 export default defineConfig({
   testDir: './src/tests',
-  globalSetup: './src/globalSetup.ts',
-  // globalTeardown: './src/globalTeardown.ts',
+  globalSetup: './src/global.setup.ts',
+  // globalTeardown: './src/global.teardown.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -63,7 +63,7 @@ export default defineConfig({
     video: 'retain-on-failure',
 
     /* Use saved authentication state */
-    storageState: '.auth/storageState.json',
+    storageState: '.auth/ait-admin.json',
   },
 
   /* Configure projects for major browsers */
@@ -87,26 +87,5 @@ export default defineConfig({
       },
 
     },
-
-    // {
-    //   name: 'firefox',
-    //   use: {
-    //     ...devices['Desktop Firefox'],
-    //     deviceScaleFactor: undefined,
-    //     launchOptions: {
-    //       args: [
-    //         '--start-maximized',
-    //         '--disable-notifications',
-    //         '--disable-geolocation',
-    //         '--disable-infobars',
-    //         '--disable-features=TranslateUI',
-    //         '--disable-translate',
-    //         '--lang=en-US',],
-    //
-    //     },
-    //     headless: !!process.env.CI,
-    //     viewport: null
-    //   },
-    // },
   ],
 });

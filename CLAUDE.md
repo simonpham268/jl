@@ -1,60 +1,152 @@
-# CLAUDE.md - Claude Code Instructions
+# CLAUDE.md — Claude Code Instructions
+
+> Playwright automation framework for **AIT** (Restful Booker Platform Demo — [automationintesting.online](https://automationintesting.online)).
+> Public booking flow + admin section (Rooms / Report / Branding / Messages) over REST API.
 
 ---
 
-## 1. Knowledge Base & MCP Tools
+## 1. Skills & Commands — When to Invoke
 
-| Tool | Data Source | When to Use |
-|------|-------------|-------------|
-| `search_sharepoint_docs(query)` | BA specs, Vibe specs (docx, pdf) | Find related specs, impact analysis |
-| `get_sharepoint_file_content(itemId)` | Full spec content | Deep dive into a specific spec |
-| `list_sharepoint_files(folderPath?, fileType?)` | SharePoint folders | Browse available specs |
-| `get_release_notes(keyword)` | JobLogic features 2019-2026, bug fixes | Check existing features, known bugs |
-| `list_doc_pages()` | Release note pages | Browse documentation index |
-| `search_notion_specs(query)` | Notion BA/Vibe specs (430+ pages, indexed) | Find specs, feature details, business rules |
-| `get_notion_page(pageId)` | Full Notion page content | Deep dive into a specific Notion spec |
-| `list_notion_specs(cursor?)` | All Notion spec titles + IDs | Browse Notion spec index |
+| User intent | Skill / Command |
+|---|---|
+| Convert a TC `.md` → Playwright spec | `implement-script` |
+| Fix a failing spec, diagnose flake | `fix-script` (delegates to `spec-runner` agent — never guess-fix) |
+| Reference AIT API quirks (status codes, validation lengths, lookup patterns) | `ait-api-quirks` skill (auto-loads when `roomService` / `/api/*` appears in code) |
+
+Full command instructions live in `.claude/commands/`. They internally delegate to:
+
+| Helper | Role | Location |
+|---|---|---|
+| `dom-inspector` agent | Drives Playwright MCP → returns locator recommendations | `.claude/agents/dom-inspector.md` |
+| `spec-runner` agent | Runs spec + parses failure → returns root-cause analysis | `.claude/agents/spec-runner.md` |
+| `pom-discoverer` agent | Scans POMs → returns class/method signatures table (use BEFORE writing/fixing a spec) | `.claude/agents/pom-discoverer.md` |
+| `pom-author` agent | Creates/extends POM files from a locator table + method intents | `.claude/agents/pom-author.md` |
+| `compliance-checker` agent | Audits a spec + its POMs against framework-rules conventions | `.claude/agents/compliance-checker.md` |
+| `spec-evaluator` agent | Computes a quality scorecard (pass/stability/coverage/lint) for a spec | `.claude/agents/spec-evaluator.md` |
+| `ait-api-quirks` skill | API response shapes + validation rules (room/booking) | `.claude/skills/ait-api-quirks/` |
+
+Framework rules live in `.claude/docs/`:
+- `framework-rules.md` — 10 sections covering spec discipline, POM, locators, login, API services, builders, DOM inspection, naming, ESLint, project layout
+- `intent-mapping.md` — intent → method mappings, AIT URL patterns
+- `healing-rules.md` — priority-ordered healing rules + AIT API quirks table
 
 ---
 
-## 2. Reading Local Files
+## 2. Project Structure
+
+```
+src/
+├── api/
+│   ├── base/          api.client.ts, api.response.ts
+│   ├── config/        api.config.ts
+│   ├── endpoints/     room.endpoints.ts (+ index.ts)
+│   ├── models/        room.model.ts (+ index.ts)
+│   └── services/      room.service.ts (createRoom, listRooms, findRoomByName, deleteRoom, createBooking, deleteBooking)
+├── cases/             {feature}.md — TC source markdown (currently booking.md)
+├── constants/         error-messages, http-status, rounding, route constants
+├── fixtures/          custom.fixture.ts (apiClient + roomService)
+├── pages/AIT/         admin-login, admin-rooms, admin-report, booking-home, reservation page objects
+├── tests/             {feature}.spec.ts — Playwright specs (booking, api-create-ui-verify, seed)
+├── utils/             require.env.ts
+├── global.setup.ts    Saves AIT admin storage state → .auth/ait-admin.json
+└── global.teardown.ts
+
+.claude/
+├── commands/          implement-script.md, fix-script.md
+├── agents/            dom-inspector.md, spec-runner.md, pom-discoverer.md, pom-author.md, compliance-checker.md, spec-evaluator.md
+├── skills/ait-api-quirks/SKILL.md
+└── docs/              framework-rules.md, intent-mapping.md, healing-rules.md
+```
+
+---
+
+## 3. Reading Local Files
 
 | File type | How to read |
 |-----------|------------|
-| `.md`, `.txt`, `.ts`, `.json` | Use Read tool directly |
-| `.docx` | Read tool cannot open binary — use Bash: `node -e "const mammoth = require('mammoth'); mammoth.extractRawText({path: 'FILE.docx'}).then(r => console.log(r.value))"` |
-| `.pdf` | Use Read tool directly. For PDFs > 10 pages, specify `pages` range (e.g. `"1-10"`) — max 20 pages per read |
-| `.xlsx` | Use Bash: `node -e "const x = require('xlsx'); const wb = x.readFile('FILE.xlsx'); console.log(x.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]))"` |
-
-Only fall back to `search_sharepoint_docs` if the file is **not available locally**.
+| `.md`, `.txt`, `.ts`, `.json`, `.yml` | Use `Read` tool directly |
+| `.docx` | `Read` cannot open binary — use Bash: `node -e "const m = require('mammoth'); m.extractRawText({path: 'FILE.docx'}).then(r => console.log(r.value))"` |
+| `.pdf` | `Read` tool — for PDFs > 10 pages specify `pages` range (e.g. `"1-10"`, max 20 pages per read) |
+| `.xlsx` | Bash: `node -e "const x = require('xlsx'); const wb = x.readFile('FILE.xlsx'); console.log(x.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]))"` |
 
 ---
 
-## 3. Skills — When to Invoke
+## 4. Test Case Format Rules
 
-| User says... | Skill to use |
-|---|---|
-| "gen test case", "tạo test case", "generate TC" | → `gen-tc` skill |
-| "gen script", "viết playwright", "gen spec" | → `gen-spec` skill |
-| "export excel", "xuất excel", "export TC" | → `export-tc` skill |
-| "fix test", "heal test", "sửa script", "fix script", "fix chô này", "fix spec" | → `heal` skill — **ALWAYS run test + `test_debug` BEFORE touching any code. Never guess-fix.** |
+Every TC (`src/cases/<feature>.md`) MUST follow:
 
-Full instructions for each skill are in `.claude/commands/`.
-
----
-
-## 3. Test Case Format Rules (shared across all TC work)
-
-1. Every step MUST have an Expected result
+1. Every step has an `Expected` result
 2. One specific UI action per step (click, type, select, navigate)
-3. Use exact UI element names — button text, field labels, menu names
-4. Specify navigation paths — `"Jobs > Log Job"`, `"Settings > Users > Add User"`
-5. Include element locations — `"left navigation sidebar"`, `"bottom of form"`
+3. Use exact UI element names — `'Reserve now'` button, `'Enter username'` placeholder
+4. Specify navigation paths — `"Admin > Rooms"`, `"Homepage > #booking section"`
+5. Include element locations when ambiguous — `"top-right of admin nav"`, `"first room card"`
 6. Minimum 5 steps per scenario
 7. No vague instructions:
 
 | Wrong | Right |
 |-------|-------|
-| "Navigate to Jobs" | "Click 'Jobs' menu in left navigation sidebar" |
-| "Select customer" | "Click 'Customer' dropdown, then click 'ABC Corp' from list" |
-| "Save the job" | "Click 'Save' button at bottom right of form" |
+| "Navigate to admin" | "Click `'Login'` button after entering credentials on `/admin`" |
+| "Fill the form" | "Enter `'simmon'` in firstname, `'pham'` in lastname, `'01234567890'` in phone" |
+| "Click submit" | "Click `'Reserve now'` button at the bottom of the reservation form" |
+
+---
+
+## 5. Key Framework Conventions (cheatsheet)
+
+| Rule | Detail |
+|---|---|
+| Locator priority | Role → Placeholder → Label → data-testid → ID → CSS → Text |
+| POM locators | ALL `readonly` in constructor, NEVER local `const` in methods |
+| POM methods | Wrap in `await test.step('...', async () => { ... })` |
+| Spec body | NO `page.click/fill/locator/goto` — only POM method calls. NO `test.step` wrappers. NO step comments |
+| Login pattern | Admin: `adminLoginPage.goToBaseURL()` in `beforeEach`. Public: `test.use({ storageState: { cookies: [], origins: [] } })` |
+| Test header | `/** ID: TC001 Tags: smoke, regression */` above each `test()` |
+| Test name | `[TC001] @Smoke @Regression: <description>` |
+| Import (API + UI) | `import { test, expect } from '../fixtures/custom.fixture';` |
+| Import (UI only) | `import { test, expect } from '@playwright/test';` |
+
+---
+
+## 6. AIT API Quirks (top 3 — full list in `ait-api-quirks` skill)
+
+1. **`POST /api/room/` returns 200 + `{success: true}`** — NO `roomid` in response. Use `roomService.findRoomByName(name)` to look up the ID.
+2. **`POST /api/booking/` validation lengths**: `firstname`/`lastname` 3–30 chars, `phone` 11–21 chars. `'QA'` (2 chars) gets rejected with `"size must be between 3 and 30"`.
+3. **`GET /api/booking/` requires `?roomid=N`** query param — without it returns `400 "Room ID is required"`.
+
+---
+
+## 7. Common Commands
+
+```bash
+# Run tests
+npm test                                              # All tests, chromium, uat env (config default)
+npm run test:uat                                      # Explicit uat env
+npm run test:staging                                  # Staging env
+npm run test:prelive                                  # Prelive env
+npm run test:live                                     # Live env
+npm run test:firefox                                  # Firefox project
+npm run test:quick                                    # Line reporter, chromium
+npx playwright test src/tests/<file>.spec.ts          # Single file
+npx playwright test --grep "TC001" --workers=1       # Single test, sequential
+
+# Lint
+npm run lint                                          # ESLint over src/
+npm run lint:fix                                      # ESLint with --fix
+
+# Reports
+npm run allure:generate                               # Build Allure report
+npm run allure                                        # Generate + open
+
+# Browser install (once per machine)
+npm run install:browsers
+```
+
+---
+
+## 8. Stale-cache Troubleshooting
+
+If a code change doesn't take effect:
+
+1. Verify the file on disk matches your edit (`Read` it back)
+2. Clear Playwright transform cache: `rm -rf c:/Users/$USER/AppData/Local/Temp/playwright-transform-cache`
+3. If `global.setup.ts` or `playwright.config.ts` changed but MCP still uses old version → restart Claude Code (MCP server caches modules in Node `require.cache`)

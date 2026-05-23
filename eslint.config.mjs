@@ -67,7 +67,6 @@ export default tseslint.config(
       'build/',
       'allure-*/',
       'test-results/',
-      'src/api/joblogic/',
     ],
   }
 );

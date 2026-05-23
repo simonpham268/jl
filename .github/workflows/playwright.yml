@@ -1,0 +1,265 @@
+# GitHub Actions workflow for Playwright Test Automation
+#
+# Triggers:
+#   - workflow_dispatch: manual trigger from the Actions tab. Lets the user
+#     pick environment, tag filter, browser, and an optional branch override.
+#   - schedule: cron-based runs at fixed times. Edit the cron expression
+#     below to change the cadence. Times are in UTC.
+#
+# Parallelism: a single runner is used. Tests run in parallel inside that
+# runner via Playwright's worker pool (configured in playwright.config.ts).
+#
+# Results: Allure report is published as a workflow artifact that you can
+# download from the run summary page. (Optional: enable GitHub Pages to
+# auto-host the report — see the commented `deploy-pages` job at the bottom.)
+
+name: Playwright Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        type: choice
+        default: 'uat'
+        options:
+          - uat
+          - staging
+          - prelive
+          - live
+      tag:
+        description: 'Tag filter (e.g. smoke, smoke|regression for OR, smoke.regression for AND). Leave blank to run all.'
+        type: string
+        default: ''
+      browser:
+        description: 'Browser project'
+        type: choice
+        default: 'chromium'
+        options:
+          - chromium
+          - firefox
+      ref:
+        description: 'Branch / tag / SHA to test against (optional — defaults to the ref the workflow was triggered on)'
+        type: string
+        default: ''
+
+  schedule:
+    # Default: every weekday at 02:00 UTC (= 09:00 ICT / Vietnam).
+    # Edit or add more cron lines as needed. https://crontab.guru/
+    - cron: '0 2 * * 1-5'
+
+# Allow only one concurrent run per (workflow, ref) so back-to-back triggers
+# don't fight over the same allure-results folder.
+concurrency:
+  group: playwright-${{ github.workflow }}-${{ github.event.inputs.ref || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  test:
+    name: Playwright (${{ github.event.inputs.environment || 'uat' }} / ${{ github.event.inputs.browser || 'chromium' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'uat' }}
+      CI: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          fetch-depth: 0
+          lfs: true
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps ${{ github.event.inputs.browser || 'chromium' }}
+
+      - name: Validate test discovery
+        run: |
+          echo "Listing discoverable tests..."
+          npx playwright test --list > test-list.txt
+          count=$(wc -l < test-list.txt)
+          echo "Found $count test entries"
+          if [ "$count" -eq 0 ]; then
+            echo "::warning::No tests discovered during build validation"
+            exit 1
+          fi
+
+      - name: Build grep pattern from tag input
+        id: grep
+        shell: bash
+        run: |
+          raw="${{ github.event.inputs.tag }}"
+          if [ -z "$raw" ]; then
+            echo "pattern=" >> "$GITHUB_OUTPUT"
+            echo "No tag filter — running all tests"
+            exit 0
+          fi
+          # Mirrors the Azure pipeline transforms:
+          #   smoke.regression -> @smoke.*@regression   (AND)
+          #   smoke|regression -> @smoke|@regression    (OR)
+          #   smoke            -> @smoke                (single)
+          # Anything already starting with @ is passed through unchanged.
+          case "$raw" in
+            @*)        pat="$raw" ;;
+            *.*)       pat="@${raw//./.*@}" ;;
+            *\|*)      pat="@${raw//|/|@}" ;;
+            *)         pat="@$raw" ;;
+          esac
+          echo "pattern=$pat" >> "$GITHUB_OUTPUT"
+          echo "Tag filter resolved to: $pat"
+
+      - name: Display run parameters
+        run: |
+          echo "Environment : ${{ github.event.inputs.environment || 'uat' }}"
+          echo "Browser     : ${{ github.event.inputs.browser || 'chromium' }}"
+          echo "Tag filter  : ${{ steps.grep.outputs.pattern || '(none — all tests)' }}"
+          echo "Ref tested  : ${{ github.event.inputs.ref || github.ref }}"
+          echo "Trigger     : ${{ github.event_name }}"
+          echo "Run number  : ${{ github.run_number }}"
+
+      - name: Run Playwright tests
+        id: run_tests
+        continue-on-error: true
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'uat' }}
+          CI: 'true'
+        run: |
+          browser="${{ github.event.inputs.browser || 'chromium' }}"
+          pat="${{ steps.grep.outputs.pattern }}"
+
+          args=(--project="$browser")
+          if [ -n "$pat" ]; then
+            args+=(--grep="$pat")
+          fi
+
+          echo "Executing: npx playwright test ${args[*]}"
+          npx playwright test "${args[@]}"
+
+      - name: Upload raw Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ github.event.inputs.environment || 'uat' }}-${{ github.event.inputs.browser || 'chromium' }}-${{ github.run_number }}
+          path: allure-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Generate Allure HTML report
+        if: always()
+        run: |
+          npm install -g allure-commandline --force
+          mkdir -p allure-report
+          if [ -d allure-results ] && [ -n "$(ls -A allure-results 2>/dev/null)" ]; then
+            echo "Generating Allure report..."
+            allure generate allure-results --clean -o allure-report
+          else
+            echo "No allure-results found — emitting placeholder report"
+            echo "<h1>No test results produced</h1>" > allure-report/index.html
+          fi
+
+      - name: Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ github.event.inputs.environment || 'uat' }}-${{ github.event.inputs.browser || 'chromium' }}-${{ github.run_number }}
+          path: allure-report
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Playwright traces & screenshots (test-results/)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.event.inputs.environment || 'uat' }}-${{ github.run_number }}
+          path: test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Summarise results
+        if: always()
+        shell: bash
+        run: |
+          total=0; passed=0; failed=0; skipped=0
+          if [ -d allure-results ]; then
+            for f in allure-results/*-result.json; do
+              [ -f "$f" ] || continue
+              total=$((total+1))
+              status=$(node -e "try{const j=require('./'+process.argv[1]);process.stdout.write(j.status||'')}catch(e){}" "$f")
+              case "$status" in
+                passed)        passed=$((passed+1)) ;;
+                failed|broken) failed=$((failed+1)) ;;
+                skipped)       skipped=$((skipped+1)) ;;
+                *)             skipped=$((skipped+1)) ;;
+              esac
+            done
+          fi
+          rate=0
+          if [ "$total" -gt 0 ]; then
+            rate=$(awk "BEGIN { printf \"%.2f\", ($passed/$total)*100 }")
+          fi
+
+          {
+            echo "## Playwright Test Summary"
+            echo ""
+            echo "| Metric | Value |"
+            echo "|---|---|"
+            echo "| Environment | ${{ github.event.inputs.environment || 'uat' }} |"
+            echo "| Browser | ${{ github.event.inputs.browser || 'chromium' }} |"
+            echo "| Tag filter | ${{ steps.grep.outputs.pattern || '(none)' }} |"
+            echo "| Total | $total |"
+            echo "| Passed | $passed |"
+            echo "| Failed | $failed |"
+            echo "| Skipped | $skipped |"
+            echo "| Success rate | ${rate}% |"
+            echo ""
+            echo "Download the **allure-report-...** artifact from this run page, unzip it, and open \`index.html\` to view the full report."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Fail the job if any test failed (run step had continueOnError to ensure
+          # the report is still uploaded above).
+          if [ "$failed" -gt 0 ]; then
+            echo "::error::$failed test(s) failed"
+            exit 1
+          fi
+
+  deploy-report:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report-${{ github.event.inputs.environment || 'uat' }}-${{ github.event.inputs.browser || 'chromium' }}-${{ github.run_number }}
+          path: allure-report
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

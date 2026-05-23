@@ -10,49 +10,6 @@
         "-c",
         "playwright.config.ts"
       ]
-    },
-    "sharepoint-docs": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "tsx",
-        "--tsconfig",
-        "./mcp-servers/tsconfig.json",
-        "./mcp-servers/sharepoint-server.ts"
-      ]
-    },
-    "release-notes": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "tsx",
-        "--tsconfig",
-        "./mcp-servers/tsconfig.json",
-        "./mcp-servers/release-notes-server.ts"
-      ],
-      "env": {
-        "RELEASE_NOTES_URL": "https://support.joblogic.com/docs/latest-release-notes"
-      }
-    },
-    "notion-specs": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "tsx",
-        "--tsconfig",
-        "./mcp-servers/tsconfig.json",
-        "./mcp-servers/notion-server.ts"
-      ]
-    },
-    "test-cases": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "tsx",
-        "--tsconfig",
-        "./mcp-servers/tsconfig.json",
-        "./mcp-servers/test-cases-server.ts"
-      ]
     }
   }
 }
