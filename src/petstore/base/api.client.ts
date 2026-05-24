@@ -37,30 +37,28 @@ export class PetstoreClient {
   }
 
   async get<T>(endpoint: string, options?: { headers?: Headers }): Promise<ApiResponse<T>> {
-    const response = await this.request.get(this.url(endpoint), {
-      headers: this.mergeHeaders(options?.headers),
-    });
-    return this.parseResponse<T>(response);
+    return this.send<T>('get', endpoint, options);
   }
 
   async post<T>(endpoint: string, options?: { data?: unknown; headers?: Headers }): Promise<ApiResponse<T>> {
-    const response = await this.request.post(this.url(endpoint), {
-      data: options?.data,
-      headers: this.mergeHeaders(options?.headers),
-    });
-    return this.parseResponse<T>(response);
+    return this.send<T>('post', endpoint, options);
   }
 
   async put<T>(endpoint: string, options?: { data?: unknown; headers?: Headers }): Promise<ApiResponse<T>> {
-    const response = await this.request.put(this.url(endpoint), {
-      data: options?.data,
-      headers: this.mergeHeaders(options?.headers),
-    });
-    return this.parseResponse<T>(response);
+    return this.send<T>('put', endpoint, options);
   }
 
   async delete<T>(endpoint: string, options?: { headers?: Headers }): Promise<ApiResponse<T>> {
-    const response = await this.request.delete(this.url(endpoint), {
+    return this.send<T>('delete', endpoint, options);
+  }
+
+  private async send<T>(
+    method: 'get' | 'post' | 'put' | 'delete',
+    endpoint: string,
+    options?: { data?: unknown; headers?: Headers },
+  ): Promise<ApiResponse<T>> {
+    const response = await this.request[method](this.url(endpoint), {
+      data: options?.data,
       headers: this.mergeHeaders(options?.headers),
     });
     return this.parseResponse<T>(response);
