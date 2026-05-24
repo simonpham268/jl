@@ -67,7 +67,6 @@ src/
 | `.md`, `.txt`, `.ts`, `.json`, `.yml` | Use `Read` tool directly |
 | `.docx` | `Read` cannot open binary — use Bash: `node -e "const m = require('mammoth'); m.extractRawText({path: 'FILE.docx'}).then(r => console.log(r.value))"` |
 | `.pdf` | `Read` tool — for PDFs > 10 pages specify `pages` range (e.g. `"1-10"`, max 20 pages per read) |
-| `.xlsx` | Bash: `node -e "const x = require('xlsx'); const wb = x.readFile('FILE.xlsx'); console.log(x.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]))"` |
 
 ---
 

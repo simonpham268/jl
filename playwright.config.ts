@@ -23,6 +23,13 @@ if (!fs.existsSync(envPath)) {
   }
 }
 
+// Merge .env.local on top (local dev secrets — gitignored).
+// CI sets the same vars via GitHub Secrets injected as job env, so this is a no-op there.
+const localPath = path.resolve(__dirname, '.env.local');
+if (fs.existsSync(localPath)) {
+  dotenv.config({ path: localPath, override: true, quiet: true });
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -55,7 +62,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: requireEnv('BASE_URL'),
+    baseURL: requireEnv('AIT_BASE_URL'),
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

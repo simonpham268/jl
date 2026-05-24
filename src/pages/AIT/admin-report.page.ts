@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
+import { ADMIN_ROUTES } from '../../constants';
 import { BasePage } from '../base.page';
 
 export class AdminReportPage extends BasePage {
@@ -12,7 +13,7 @@ export class AdminReportPage extends BasePage {
 
   async navigateToReport(): Promise<void> {
     await test.step('Navigate to Report section', async () => {
-      await this.page.goto(`${this.baseURL}/admin/report`);
+      await this.page.goto(`${this.baseURL}${ADMIN_ROUTES.REPORT}`);
       await expect(this.reportNavLink).toBeVisible();
     });
   }

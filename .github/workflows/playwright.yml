@@ -68,6 +68,11 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'uat' }}
       CI: 'true'
+      # Secrets injected from repo Settings → Secrets and variables → Actions
+      AIT_ADMIN_USERNAME: ${{ secrets.AIT_ADMIN_USERNAME }}
+      AIT_ADMIN_PASSWORD: ${{ secrets.AIT_ADMIN_PASSWORD }}
+      PETSTORE_USERNAME: ${{ secrets.PETSTORE_USERNAME }}
+      PETSTORE_PASSWORD: ${{ secrets.PETSTORE_PASSWORD }}
 
     steps:
       - name: Checkout

@@ -48,7 +48,7 @@ First run takes longer — `global.setup.ts` opens a browser, logs into AIT admi
 │     ├─ framework-rules.md    # 24 rules: POM, locators, ESLint, ...
 │     ├─ intent-mapping.md     # Keyword → method mapping
 │     └─ healing-rules.md      # Priority-ordered healing playbook
-├─ .env.{uat,staging,prelive} # Environment configs (BASE_URL, timeouts, ...)
+├─ .env.{uat,staging,prelive} # Environment configs (AIT_BASE_URL, PETSTORE_BASE_URL, ...)
 ├─ allure-report/            # Generated Allure HTML (gitignored)
 ├─ allure-results/           # Raw Allure result files (gitignored)
 ├─ template/                 # Excel templates for test case export
@@ -151,15 +151,29 @@ npm run install:browsers
 
 ---
 
-## Environment variables (`.env.uat`)
+## Environment variables
+
+### Public config — committed in `.env.{uat,staging,prelive}`
 
 | Variable | Purpose |
 |---|---|
-| `BASE_URL` | Primary base URL (= `AIT_BASE_URL` for this project) |
-| `AIT_BASE_URL` | AIT site URL — `https://automationintesting.online` |
+| `AIT_BASE_URL` | AIT site URL per environment |
+| `PETSTORE_BASE_URL` | Petstore API URL per environment |
 | `TIMEOUT_ELEMENT` | Default element wait (ms, default 5000) |
 | `TIMEOUT_NAVIGATION` | Page navigation wait (ms, default 60000) |
 | `TIMEOUT_WAIT_DISAPPEAR` | Wait-for-hidden timeout (ms, default 10000) |
+
+### Secrets — NOT committed
+
+Schema lives in [`.env.local.example`](.env.local.example). Setup:
+
+**Local dev (one-time):**
+```bash
+cp .env.local.example .env.local      # then fill credentials
+```
+`.env.local` is gitignored; dotenv merges it on top of `.env.{environment}` automatically.
+
+**CI:** add the same vars as GitHub Secrets (repo Settings → Secrets and variables → Actions). The workflow injects them as job env.
 
 ---
 

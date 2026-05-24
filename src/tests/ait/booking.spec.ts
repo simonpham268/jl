@@ -1,6 +1,7 @@
 import { test } from '@playwright/test';
-import { BookingHomePage } from '../pages/AIT/booking-home.page';
-import { ReservationPage } from '../pages/AIT/reservation.page';
+import { AIT_ERRORS } from '../../constants';
+import { BookingHomePage } from '../../pages/AIT/booking-home.page';
+import { ReservationPage } from '../../pages/AIT/reservation.page';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -24,6 +25,6 @@ test.describe('Public booking — reservation validation', () => {
       email: 'simonpham268@gmail.com',
       phone: '0905321920',
     });
-    await reservationPage.assertValidationError('size must be between 11 and 21');
+    await reservationPage.assertValidationError(AIT_ERRORS.PHONE_SIZE);
   });
 });

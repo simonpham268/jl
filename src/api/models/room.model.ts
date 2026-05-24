@@ -1,6 +1,8 @@
+export type RoomType = 'Single' | 'Twin' | 'Double' | 'Family' | 'Suite';
+
 export interface CreateRoomRequest {
     roomName: string;
-    type: string;
+    type: RoomType;
     accessible: boolean;
     image?: string;
     description?: string;
@@ -15,7 +17,7 @@ export interface CreateRoomResponse {
 export interface Room {
     roomid: number;
     roomName: string;
-    type: string;
+    type: RoomType;
     accessible: boolean;
     image?: string;
     description?: string;

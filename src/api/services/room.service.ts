@@ -9,14 +9,12 @@ import type {
   CreateBookingRequest,
   CreateBookingResponse,
 } from '../models/room.model';
-import { requireEnv } from '../../utils/require.env';
 
 export class RoomService {
   private client: ApiClient;
 
   constructor(client: ApiClient) {
     this.client = client;
-    this.client.setBaseURL(requireEnv('AIT_BASE_URL'));
   }
 
   async createRoom(data: CreateRoomRequest): Promise<ApiResponse<CreateRoomResponse>> {
