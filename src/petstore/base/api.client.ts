@@ -1,7 +1,7 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import type { ApiResponse } from './api.response';
 import { PETSTORE_CONFIG } from '../config/api.config';
-import { requireEnv } from '../../utils/require.env';
+import { requireEnv } from '../../utils/env';
 
 type Headers = Record<string, string>;
 

@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { ADMIN_ROUTES } from './constants';
 import { AUTH_ENDPOINTS, PETSTORE_CONFIG } from './petstore';
-import { requireEnv } from './utils/require.env';
+import { requireEnv } from './utils/env';
 
 export default async function globalSetup() {
   // Clean up test result directories

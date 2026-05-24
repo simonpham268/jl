@@ -1,7 +1,8 @@
 # CLAUDE.md — Claude Code Instructions
 
-> Playwright automation framework for **AIT** (Restful Booker Platform Demo — [automationintesting.online](https://automationintesting.online)).
-> Public booking flow + admin section (Rooms / Report / Branding / Messages) over REST API.
+> Multi-domain Playwright automation framework.
+> - **AIT** (Restful Booker Platform Demo — [automationintesting.online](https://automationintesting.online)) — public booking + admin (Rooms / Report) over REST API, cookie auth via `storageState`.
+> - **Petstore** (Swagger demo — [petstore.swagger.io](https://petstore.swagger.io)) — pure API, Bearer JWT auth via fixture.
 
 ---
 
@@ -36,26 +37,37 @@ Framework rules live in `.claude/docs/`:
 
 ```
 src/
-├── api/
-│   ├── base/          api.client.ts, api.response.ts
-│   ├── config/        api.config.ts
-│   ├── endpoints/     room.endpoints.ts (+ index.ts)
-│   ├── models/        room.model.ts (+ index.ts)
-│   └── services/      room.service.ts (createRoom, listRooms, findRoomByName, deleteRoom, createBooking, deleteBooking)
-├── cases/             {feature}.md — TC source markdown (currently booking.md)
-├── constants/         error-messages, http-status, rounding, route constants
-├── fixtures/          custom.fixture.ts (apiClient + roomService)
-├── pages/AIT/         admin-login, admin-rooms, admin-report, booking-home, reservation page objects
-├── tests/             {feature}.spec.ts — Playwright specs (booking, api-create-ui-verify, seed)
-├── utils/             require.env.ts
-├── global.setup.ts    Saves AIT admin storage state → .auth/ait-admin.json
+├── api/                          AIT API (cookie auth — inherits playwright.config storageState)
+│   ├── base/                     api.client.ts (HTTP wrapper), api.response.ts (ApiResponse<T>)
+│   ├── config/                   api.config.ts (defaultHeaders)
+│   ├── endpoints/                room.endpoints.ts (+ index.ts)
+│   ├── models/                   room.model.ts — Room, Booking, RoomType union (+ index.ts)
+│   └── services/                 room.service.ts — create/list/find/delete room + booking
+├── petstore/                     Petstore API (Bearer JWT — token file via fixture)
+│   ├── base/                     PetstoreClient (.setBearerToken), ApiResponse
+│   ├── builders/                 pet.builder.ts (fluent builder)
+│   ├── config/                   PETSTORE_CONFIG (tokenFile path)
+│   ├── endpoints/                auth.endpoints, pet.endpoints (+ index)
+│   ├── models/                   auth.model (Login req/resp), pet.model (Pet, PetStatus)
+│   ├── services/                 AuthService, PetService (+ index)
+│   └── index.ts                  top-level barrel
+├── cases/                        {feature}.md — TC source markdown
+├── constants/                    AIT_ERRORS, HTTP_STATUS, ADMIN_ROUTES (+ index barrel)
+├── data/                         AIT builders — room.builder, booking.builder (+ index barrel)
+├── fixtures/                     custom.fixture.ts (apiClient, roomService, petstoreClient, petService)
+├── pages/AIT/                    admin-login, admin-rooms, admin-report, booking-home, reservation
+├── tests/
+│   ├── ait/                      AIT specs — booking.spec, api-create-ui-verify.spec
+│   └── petstore/                 Petstore specs — pet.spec
+├── utils/                        env.ts (requireEnv helper)
+├── global.setup.ts               AIT browser login → storage state; Petstore API login → token file
 └── global.teardown.ts
 
 .claude/
-├── commands/          implement-script.md, fix-script.md
-├── agents/            dom-inspector.md, spec-runner.md, pom-discoverer.md, pom-author.md, compliance-checker.md, spec-evaluator.md
+├── commands/                     implement-script.md, fix-script.md
+├── agents/                       dom-inspector, spec-runner, pom-discoverer, pom-author, compliance-checker, spec-evaluator
 ├── skills/ait-api-quirks/SKILL.md
-└── docs/              framework-rules.md, intent-mapping.md, healing-rules.md
+└── docs/                         framework-rules.md, intent-mapping.md, healing-rules.md
 ```
 
 ---
@@ -98,11 +110,14 @@ Every TC (`src/cases/<feature>.md`) MUST follow:
 | POM locators | ALL `readonly` in constructor, NEVER local `const` in methods |
 | POM methods | Wrap in `await test.step('...', async () => { ... })` |
 | Spec body | NO `page.click/fill/locator/goto` — only POM method calls. NO `test.step` wrappers. NO step comments |
-| Login pattern | Admin: `adminLoginPage.goToBaseURL()` in `beforeEach`. Public: `test.use({ storageState: { cookies: [], origins: [] } })` |
+| Login pattern | AIT admin: cookie via `storageState`. Public booking: `test.use({ storageState: { cookies: [], origins: [] } })`. Petstore: Bearer header via fixture |
 | Test header | `/** ID: TC001 Tags: smoke, regression */` above each `test()` |
 | Test name | `[TC001] @Smoke @Regression: <description>` |
-| Import (API + UI) | `import { test, expect } from '../fixtures/custom.fixture';` |
-| Import (UI only) | `import { test, expect } from '@playwright/test';` |
+| Test location | AIT specs → `src/tests/ait/`. Petstore specs → `src/tests/petstore/` |
+| Data | Inline OK if 1 spec. Builders if shared: AIT in `src/data/`, Petstore in `src/petstore/builders/` |
+| Constants | `AIT_ERRORS`, `HTTP_STATUS`, `ADMIN_ROUTES` — import from `src/constants` |
+| Import (API + UI) | `import { test, expect } from '../../fixtures/custom.fixture';` |
+| Import (UI only, opt out of storageState) | `import { test, expect } from '@playwright/test';` |
 
 ---
 
@@ -117,16 +132,20 @@ Every TC (`src/cases/<feature>.md`) MUST follow:
 ## 7. Common Commands
 
 ```bash
-# Run tests
-npm test                                              # All tests, chromium, uat env (config default)
-npm run test:uat                                      # Explicit uat env
-npm run test:staging                                  # Staging env
-npm run test:prelive                                  # Prelive env
-npm run test:live                                     # Live env
+# Run tests — by env
+npm test                                              # All tests, chromium, uat env (default)
+npm run test:uat | test:staging | test:prelive | test:live
+
+# Run tests — by domain
+npm run test:ait                                      # AIT specs only
+npm run test:petstore                                 # Petstore specs only
+npm run test:smoke                                    # @Smoke tag (cross-domain)
+
+# Run tests — other
 npm run test:firefox                                  # Firefox project
 npm run test:quick                                    # Line reporter, chromium
-npx playwright test src/tests/<file>.spec.ts          # Single file
-npx playwright test --grep "TC001" --workers=1       # Single test, sequential
+npx playwright test src/tests/ait/<file>.spec.ts      # Single file
+npx playwright test --grep "TC001" --workers=1        # Single test, sequential
 
 # Lint
 npm run lint                                          # ESLint over src/

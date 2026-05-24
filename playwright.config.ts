@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
-import { requireEnv } from './src/utils/require.env';
+import { requireEnv } from './src/utils/env';
 
 // Load environment variables dynamically based on pipeline parameter
 const environment = process.env.ENVIRONMENT || 'uat';

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { test } from '@playwright/test';
-import { requireEnv } from '../utils/require.env';
+import { requireEnv } from '../utils/env';
 
 /**
  * Base class for all page objects.
