@@ -13,6 +13,10 @@ yarn.lock
 # Authentication
 /.auth
 
+# k6
+/k6/dist/
+/k6/reports/*.json
+
 # Test Reports
 /allure-results/
 /allure-report/
